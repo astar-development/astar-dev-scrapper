@@ -5,7 +5,7 @@
 ///     Provides properties to define the text of the file name part,
 ///     whether it should be included in searches, and the associated classifications.
 /// </summary>
-public sealed class FileNamePart : AuditableEntity
+public class FileNamePart : AuditableEntity
 {
     /// <summary>
     ///     Gets or sets the unique identifier for the <see cref="FileNamePart" /> entity.
