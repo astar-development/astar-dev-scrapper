@@ -79,7 +79,15 @@ public sealed class FileDetail
     /// <summary>
     /// </summary>
     public DeletionStatus DeletionStatus { get; set; } = new();
+
+    /// <summary>
+    ///    Gets or sets the width of the image. I know, shocking...
+    /// </summary>
     public int Height { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the height of the image. I know, shocking...
+    /// </summary>
     public int Width { get; set; }
 
     /// <summary>

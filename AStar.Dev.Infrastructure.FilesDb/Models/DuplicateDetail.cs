@@ -6,7 +6,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 ///     The <see cref="DuplicatesDetails" /> class defines the fields that will be mapped from the vw_DuplicatesDetails in the database
 /// </summary>
 [Keyless]
-public class DuplicatesDetails
+public sealed class DuplicatesDetails
 {
     /// <summary>
     ///     The ID of the <see cref="FileDetail" /> in the Duplicates list

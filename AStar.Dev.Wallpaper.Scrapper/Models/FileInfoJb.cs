@@ -1,6 +1,6 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public class FileInfoJb
+public sealed class FileInfoJb
 {
     public string FileName { get; set; } = string.Empty;
 

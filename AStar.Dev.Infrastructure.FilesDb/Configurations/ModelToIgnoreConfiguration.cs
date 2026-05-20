@@ -6,7 +6,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Configurations;
 
 /// <summary>
 /// </summary>
-public class ModelToIgnoreConfiguration : IEntityTypeConfiguration<ModelToIgnore>
+public sealed class ModelToIgnoreConfiguration : IEntityTypeConfiguration<ModelToIgnore>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<ModelToIgnore> builder)

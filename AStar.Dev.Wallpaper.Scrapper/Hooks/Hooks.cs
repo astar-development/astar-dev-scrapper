@@ -12,7 +12,7 @@ using Serilog.Exceptions;
 namespace AStar.Dev.Wallpaper.Scrapper.Hooks;
 
 [Binding]
-public class Hooks
+public sealed class Hooks
 {
     private readonly IBrowser            browser;
     private readonly ObjectContainer     container;

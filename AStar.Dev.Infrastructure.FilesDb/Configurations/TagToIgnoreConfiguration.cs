@@ -6,7 +6,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Configurations;
 
 /// <summary>
 /// </summary>
-public class TagToIgnoreConfiguration : IEntityTypeConfiguration<TagToIgnore>
+public sealed class TagToIgnoreConfiguration : IEntityTypeConfiguration<TagToIgnore>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<TagToIgnore> builder)

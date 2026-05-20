@@ -1,6 +1,6 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public class Formatteroptions
+public sealed class Formatteroptions
 {
     public bool               SingleLine        { get; set; }
     public bool               IncludeScopes     { get; set; }

@@ -3,7 +3,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 /// <summary>
 /// </summary>
 #pragma warning disable CA1716
-public class Event
+public sealed class Event
     #pragma warning restore CA1716
 {
     /// <summary>

@@ -6,7 +6,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Configurations;
 
 /// <summary>
 /// </summary>
-public class FileAccessDetailConfiguration : IEntityTypeConfiguration<FileAccessDetail>
+public sealed class FileAccessDetailConfiguration : IEntityTypeConfiguration<FileAccessDetail>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<FileAccessDetail> builder)

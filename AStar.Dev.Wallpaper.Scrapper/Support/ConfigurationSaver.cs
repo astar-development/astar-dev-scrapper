@@ -6,7 +6,7 @@ using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
-public class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logging logging, Logger logger)
+public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logging logging, Logger logger)
 {
     private readonly JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase, };
     private readonly Logging               logging               = logging             ?? throw new ArgumentNullException();

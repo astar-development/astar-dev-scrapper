@@ -1,6 +1,6 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public class SearchConfiguration
+public sealed class SearchConfiguration
 {
     public string BaseUrl { get; set; } = string.Empty;
 

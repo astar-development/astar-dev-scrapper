@@ -3,7 +3,7 @@ using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public class TopWallpapersPage(IPage page, SearchConfiguration searchConfiguration)
+public sealed class TopWallpapersPage(IPage page, SearchConfiguration searchConfiguration)
 {
     private ILocator PageCount => page.GetByText("Page ", new PageGetByTextOptions { Exact = false, });
 

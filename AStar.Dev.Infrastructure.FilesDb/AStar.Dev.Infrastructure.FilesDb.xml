@@ -664,6 +664,16 @@
             <summary>
             </summary>
         </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.FileDetail.Height">
+            <summary>
+               Gets or sets the width of the image. I know, shocking...
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.FileDetail.Width">
+            <summary>
+              Gets or sets the height of the image. I know, shocking...
+            </summary>
+        </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.FileDetail.ToString">
             <summary>
                 Returns this object in JSON format

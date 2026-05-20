@@ -14,7 +14,7 @@ using SearchConfiguration = AStar.Dev.Wallpaper.Scrapper.Models.SearchConfigurat
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public class ImagePage(
+public sealed class ImagePage(
     IPage                  page,
     SearchConfiguration    searchConfiguration,
     ScrapeDirectories      scrapeDirectories,
@@ -195,7 +195,7 @@ public class ImagePage(
                 await ImageSaveHelper.SaveImage(image, imageNameWithPath);
                 var fileInfo = new FileInfo(imageNameWithPath);
 
-                var fileDetail = new FileDetail { DirectoryName = directoryName, FileName = filename, FileSize = fileInfo.Length, };
+                var fileDetail = new FileDetail { DirectoryName = new DirectoryName(directoryName), FileName = new FileName(filename), FileSize = fileInfo.Length, };
 
                 if(fileDetail.IsImage)
                 {
