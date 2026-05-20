@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="AStar.Dev.Guard.Clauses/AStar.Dev.Guard.Clauses.csproj" />
+  <Project Path="AStar.Dev.Infrastructure.FilesDb/AStar.Dev.Infrastructure.FilesDb.csproj" />
+  <Project Path="AStar.Dev.Utilities/AStar.Dev.Utilities.csproj" />
+  <Project Path="AStar.Dev.Wallpaper.Scrapper/AStar.Dev.Wallpaper.Scrapper.csproj" />
+</Solution>

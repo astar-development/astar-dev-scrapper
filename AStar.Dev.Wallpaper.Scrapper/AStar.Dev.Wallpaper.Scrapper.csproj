@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <UserSecretsId>c35e09dc-dc30-416a-95a6-ec1a5ba1b43f</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="Drivers\**" />
+        <EmbeddedResource Remove="Drivers\**" />
+        <None Remove="Drivers\**" />
+        <SpecFlowFeatureFiles Remove="Drivers\**" />
+        <SpecFlowObsoleteCodeBehindFiles Remove="Drivers\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AStar.GuardClauses" Version="0.1.1" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+        <PackageReference Include="Microsoft.Playwright.Xunit" Version="1.59.0" />
+        <PackageReference Include="Selenium.WebDriver" Version="4.44.0" />
+        <PackageReference Include="Serilog.Exceptions" Version="8.4.0+build.694" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+        <PackageReference Include="Serilog.Sinks.Seq" Version="9.1.0" />
+        <PackageReference Include="Reqnroll.xUnit" Version="3.3.4" />
+        <PackageReference Include="Shouldly" Version="4.3.0" />
+        <PackageReference Include="SkiaSharp" Version="3.119.2" />
+        <PackageReference Include="xunit" Version="2.9.3" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../AStar.Dev.Guard.Clauses/AStar.Dev.Guard.Clauses.csproj" />
+        <ProjectReference Include="../AStar.Dev.Infrastructure.FilesDb/AStar.Dev.Infrastructure.FilesDb.csproj" />
+        <ProjectReference Include="../AStar.Dev.Utilities/AStar.Dev.Utilities.csproj" />
+    </ItemGroup>
+
+</Project>
