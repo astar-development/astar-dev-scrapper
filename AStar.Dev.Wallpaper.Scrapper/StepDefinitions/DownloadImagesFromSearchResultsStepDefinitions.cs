@@ -10,7 +10,7 @@ using Serilog.Core;
 namespace AStar.Dev.Wallpaper.Scrapper.StepDefinitions;
 
 [Binding]
-public class DownloadImagesFromSearchResultsStepDefinitions(
+public sealed class DownloadImagesFromSearchResultsStepDefinitions(
     SearchResultsPage   searchResultsPage,
     ImagePageService    imagePageService,
     SearchConfiguration searchConfiguration,

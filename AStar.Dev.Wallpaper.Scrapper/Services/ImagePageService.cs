@@ -5,7 +5,7 @@ using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public class ImagePageService(ImagePage imagePage, Logger logger)
+public sealed class ImagePageService(ImagePage imagePage, Logger logger)
 {
     public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks)
     {
@@ -18,7 +18,7 @@ public class ImagePageService(ImagePage imagePage, Logger logger)
 
                 using var context = new FilesContext(new DbContextOptions<FilesContext>());
 
-                if(await context.Files.FirstOrDefaultAsync(fileInfoJb => fileInfoJb.FileName.Contains(fileName)) != null)
+                if(await context.Files.FirstOrDefaultAsync(fileInfoJb => fileInfoJb.FileName.Value.Contains(fileName)) != null)
                 {
                     logger.Information("Not downloading {fileName} as we already have it...", fileName);
 

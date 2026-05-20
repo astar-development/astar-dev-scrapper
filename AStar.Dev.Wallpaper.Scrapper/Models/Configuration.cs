@@ -1,6 +1,6 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public class Configuration
+public sealed class Configuration
 {
     public Logging Logging { get; set; } = new();
 

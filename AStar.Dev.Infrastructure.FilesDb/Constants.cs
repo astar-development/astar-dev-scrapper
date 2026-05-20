@@ -2,7 +2,7 @@
 
 /// <summary>
 /// </summary>
-public class Constants
+public sealed class Constants
 {
     /// <summary>
     /// </summary>

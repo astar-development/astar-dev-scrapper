@@ -1,6 +1,6 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public class ScrapeConfiguration
+public sealed class ScrapeConfiguration
 {
     public ConnectionStrings ConnectionStrings { get; set; } = new();
 

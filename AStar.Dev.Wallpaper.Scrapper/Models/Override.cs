@@ -1,6 +1,6 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public class Override
+public sealed class Override
 {
     public string? Microsoft                            { get; set; }
     public string? MicrosoftIdentityWebTokenAcquisition { get; set; }

@@ -3,7 +3,7 @@ using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public class SubscriptionsImagesListPage(IPage page, SearchConfiguration searchConfiguration)
+public sealed class SubscriptionsImagesListPage(IPage page, SearchConfiguration searchConfiguration)
 {
     private ILocator ImagePreviews => page.GetByRole(AriaRole.Link);
 

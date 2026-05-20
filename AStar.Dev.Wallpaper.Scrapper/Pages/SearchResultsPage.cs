@@ -3,7 +3,7 @@ using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public class SearchResultsPage(IPage page, Logger logger)
+public sealed class SearchResultsPage(IPage page, Logger logger)
 {
     private ILocator NewSubscriptionWallpapersHeader => page.GetByText("New Subscription Wallpapers", new PageGetByTextOptions { Exact = false, });
 

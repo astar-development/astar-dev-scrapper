@@ -1,6 +1,6 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public class Category
+public sealed class Category
 {
     public string Id { get; set; } = string.Empty;
 

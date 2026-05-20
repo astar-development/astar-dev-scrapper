@@ -7,7 +7,7 @@ using Serilog.Core;
 namespace AStar.Dev.Wallpaper.Scrapper.StepDefinitions;
 
 [Binding]
-public class SharedStepDefinitions(LoginPage loginPage, UserConfiguration userConfiguration, SearchConfiguration searchConfiguration, ConfigurationSaver configurationSaver, Logger logger)
+public sealed class SharedStepDefinitions(LoginPage loginPage, UserConfiguration userConfiguration, SearchConfiguration searchConfiguration, ConfigurationSaver configurationSaver, Logger logger)
     : IDisposable
 {
     private readonly ConfigurationSaver  configurationSaver  = configurationSaver  ?? throw new ArgumentNullException();

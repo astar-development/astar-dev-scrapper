@@ -1,6 +1,6 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public class UserConfiguration
+public sealed class UserConfiguration
 {
     public string LoginEmailAddress { get; set; } = string.Empty;
 

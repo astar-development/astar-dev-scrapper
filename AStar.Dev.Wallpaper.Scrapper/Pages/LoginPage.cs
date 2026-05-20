@@ -4,7 +4,7 @@ using Shouldly;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public class LoginPage(IPage page, SearchConfiguration searchConfiguration)
+public sealed class LoginPage(IPage page, SearchConfiguration searchConfiguration)
 {
     private readonly SearchConfiguration searchConfiguration = searchConfiguration ?? throw new ArgumentNullException();
 

@@ -4,7 +4,7 @@
 ///     Represents a classification of files, providing metadata about the type of files
 ///     and associated entities such as file details and file name parts.
 /// </summary>
-public class FileClassification : AuditableEntity
+public sealed class FileClassification : AuditableEntity
 {
     /// <summary>
     ///     Gets or sets the unique identifier for the file classification.

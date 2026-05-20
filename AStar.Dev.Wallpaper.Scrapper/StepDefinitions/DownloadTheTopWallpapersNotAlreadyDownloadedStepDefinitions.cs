@@ -9,7 +9,7 @@ using Serilog.Core;
 namespace AStar.Dev.Wallpaper.Scrapper.StepDefinitions;
 
 [Binding]
-public class DownloadTheTopWallpapersNotAlreadyDownloadedStepDefinitions(
+public sealed class DownloadTheTopWallpapersNotAlreadyDownloadedStepDefinitions(
     TopWallpapersPage   topWallpapersPage,
     ImagePageService    imagePageService,
     SearchConfiguration searchConfiguration,

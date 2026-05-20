@@ -6,7 +6,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Configurations;
 
 /// <summary>
 /// </summary>
-public class FileClassificationConfiguration : IEntityTypeConfiguration<FileClassification>
+public sealed class FileClassificationConfiguration : IEntityTypeConfiguration<FileClassification>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<FileClassification> builder)

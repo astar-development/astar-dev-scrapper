@@ -1,6 +1,6 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public class ScrapeDirectories
+public sealed class ScrapeDirectories
 {
     public string RootDirectory { get; set; } = string.Empty;
 

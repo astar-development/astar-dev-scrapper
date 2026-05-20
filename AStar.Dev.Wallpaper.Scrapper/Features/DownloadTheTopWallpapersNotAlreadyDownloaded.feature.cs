@@ -174,7 +174,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Features
         
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Reqnroll", "3.0.0.0")]
         [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-        public class FixtureData : object, global::Xunit.IAsyncLifetime
+        public sealed class FixtureData : object, global::Xunit.IAsyncLifetime
         {
             
             async global::System.Threading.Tasks.Task global::Xunit.IAsyncLifetime.InitializeAsync()

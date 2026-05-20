@@ -6,7 +6,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Configurations;
 
 /// <summary>
 /// </summary>
-public class EventConfiguration : IEntityTypeConfiguration<Event>
+public sealed class EventConfiguration : IEntityTypeConfiguration<Event>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Event> builder)

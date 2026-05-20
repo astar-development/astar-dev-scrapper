@@ -6,7 +6,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Configurations;
 
 /// <summary>
 /// </summary>
-public class FileNamePartConfiguration : IEntityTypeConfiguration<FileNamePart>
+public sealed class FileNamePartConfiguration : IEntityTypeConfiguration<FileNamePart>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<FileNamePart> builder)

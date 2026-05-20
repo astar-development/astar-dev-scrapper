@@ -1,6 +1,6 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public class Writeto
+public sealed class Writeto
 {
     public string? Name   { get; set; }
     public Args?   Args   { get; set; }
