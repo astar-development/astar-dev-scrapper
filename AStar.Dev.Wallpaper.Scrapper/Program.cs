@@ -1,4 +1,3 @@
-using System.Reflection;
 using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
@@ -11,13 +10,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Exceptions;
 
-ScrapeConfiguration scrapeConfiguration = ConfigurationFactory.Configuration();
-
-var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).CombinePath("..", "..", "..");
-IConfigurationRoot configuration = new ConfigurationBuilder()
-    .SetBasePath(assemblyPath)
-    .AddJsonFile("appsettings.json")
-    .Build();
+(ScrapeConfiguration scrapeConfiguration, IConfigurationRoot configuration) = ConfigurationFactory.Configuration();
 
 Logger logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -48,18 +41,6 @@ IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOpt
     Locale       = "en-US",
     TimezoneId   = "America/New_York",
 });
-
-await context.AddInitScriptAsync("""
-    Object.defineProperty(navigator, 'webdriver',  { get: () => undefined });
-    Object.defineProperty(navigator, 'plugins',    { get: () => [1, 2, 3, 4, 5] });
-    Object.defineProperty(navigator, 'languages',  { get: () => ['en-US', 'en'] });
-    window.chrome = { runtime: {}, loadTimes: function(){}, csi: function(){}, app: {} };
-    const _origQuery = window.navigator.permissions.query.bind(window.navigator.permissions);
-    window.navigator.permissions.query = (p) =>
-        p.name === 'notifications'
-            ? Promise.resolve({ state: Notification.permission })
-            : _origQuery(p);
-    """);
 
 var chromeCookies = await ChromeCookieExtractor.ExtractAsync("wallhaven.cc", logger);
 logger.Information("Extracted {Count} cookies from Chrome profile", chromeCookies.Count);

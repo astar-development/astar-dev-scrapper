@@ -7,12 +7,13 @@ namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
 public class ConfigurationFactory
 {
-    public static ScrapeConfiguration Configuration()
+    public static (ScrapeConfiguration ScrapeConfiguration, IConfigurationRoot Configuration) Configuration()
     {
         var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).CombinePath("..", "..", "..");
 
-        IConfiguration config = new ConfigurationBuilder()
-                               .AddJsonFile(Path.Combine(assemblyPath, "appsettings.json"), false, true)
+        IConfigurationRoot config = new ConfigurationBuilder()
+                               .SetBasePath(assemblyPath)
+                               .AddJsonFile("appsettings.json", false, true)
                                .AddUserSecrets<ConfigurationFactory>(true, true)
                                .Build();
 
@@ -36,7 +37,7 @@ public class ConfigurationFactory
 
         if(lastIndexOfEqualsInSubscriptions < scrapeConfiguration.SearchConfiguration.Subscriptions.Length) scrapeConfiguration.SearchConfiguration.Subscriptions = scrapeConfiguration.SearchConfiguration.Subscriptions[..lastIndexOfEqualsInSubscriptions];
 
-        return scrapeConfiguration;
+        return (scrapeConfiguration, config);
     }
 
     private static bool SubscriptionsStartingPageIsOutsideValidRange(ScrapeConfiguration scrapeConfiguration)
