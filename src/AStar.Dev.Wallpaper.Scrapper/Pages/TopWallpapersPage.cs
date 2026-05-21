@@ -1,41 +1,21 @@
-﻿using AStar.Dev.Wallpaper.Scrapper.Models;
-using Microsoft.Playwright;
+using AStar.Dev.Wallpaper.Scrapper.ApiClient;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public sealed class TopWallpapersPage(IPage page, SearchConfiguration searchConfiguration)
+public sealed class TopWallpapersPage(WallhavenApiClient apiClient, SearchConfiguration searchConfiguration)
 {
-    private ILocator PageCount => page.GetByText("Page ", new PageGetByTextOptions { Exact = false, });
+    private WallhavenSearchResponse? lastResponse;
 
-    private ILocator ImagePreviews => page.GetByRole(AriaRole.Link);
-
-    public async Task<IResponse?> LoadTopWallpapersPageAsync(int pageNumber)
-        => _ = await page.GotoAsync($"{searchConfiguration.TopWallpapers}{pageNumber}");
-
-    public async Task<int> PageInfoAsync()
+    public async Task<bool> LoadTopWallpapersPageAsync(int pageNumber)
     {
-        var text = await PageCount.First.TextContentAsync();
+        lastResponse = await apiClient.SearchAsync(searchConfiguration.TopWallpapers, pageNumber);
 
-        if(text is null) return 0;
-
-        var firstSlashIndex = text.IndexOf("/", StringComparison.Ordinal) + 1;
-        var pages           = text[firstSlashIndex..].Trim();
-
-        return Convert.ToInt32(pages);
+        return true;
     }
 
-    public async Task<IReadOnlyCollection<string>> GetImagePageLinks()
-    {
-        List<string>            wantedLinks   = [];
-        IReadOnlyList<ILocator> imagePreviews = await ImagePreviews.AllAsync();
+    public int PageInfo() => lastResponse?.Meta.LastPage ?? 0;
 
-        foreach(ILocator imagePreview in imagePreviews)
-        {
-            var hrefString = await imagePreview.GetAttributeAsync("href");
-
-            if(hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
-        }
-
-        return wantedLinks.Take(24).ToList();
-    }
+    public IReadOnlyCollection<WallhavenWallpaper> GetWallpapers()
+        => lastResponse?.Data ?? [];
 }

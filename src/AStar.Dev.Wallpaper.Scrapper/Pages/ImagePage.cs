@@ -1,13 +1,13 @@
-﻿using AStar.Dev.Infrastructure.FilesDb.Data;
+using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Technical.Debt.Reporting;
 using AStar.Dev.Utilities;
+using AStar.Dev.Wallpaper.Scrapper.ApiClient;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using AStar.GuardClauses;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Playwright;
 using Serilog.Core;
 using SkiaSharp;
 using ScrapeDirectories = AStar.Dev.Wallpaper.Scrapper.Models.ScrapeDirectories;
@@ -16,7 +16,6 @@ using SearchConfiguration = AStar.Dev.Wallpaper.Scrapper.Models.SearchConfigurat
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
 public sealed class ImagePage(
-    IPage                  page,
     SearchConfiguration    searchConfiguration,
     ScrapeDirectories      scrapeDirectories,
     ConnectionStrings      connectionStrings,
@@ -28,34 +27,28 @@ public sealed class ImagePage(
     private readonly ScrapeDirectories   scrapeDirectories   = GuardAgainst.Null(scrapeDirectories);
     private readonly SearchConfiguration searchConfiguration = GuardAgainst.Null(searchConfiguration);
 
-    public async Task GetImageFromPage(string link)
+    public async Task ProcessWallpaperAsync(WallhavenWallpaper wallpaper)
     {
-        _ = await page.GotoAsync(link);
+        var directoryName                            = Path.Combine(scrapeDirectories.RootDirectory, scrapeDirectories.BaseSaveDirectory, scrapeDirectories.SubDirectoryName);
+        var (directoryNameUpdated, filePrefix, skip) = ProcessTheImageTags(wallpaper.Tags, directoryName);
 
-        IReadOnlyList<ILocator> tags          = await page.Locator(".tagname").AllAsync();
-        var             directoryName = Path.Combine(scrapeDirectories.RootDirectory, scrapeDirectories.BaseSaveDirectory, scrapeDirectories.SubDirectoryName);
-        var (directoryNameUpdated, filePrefix, skip) = await ProcessTheImageTags(tags, directoryName);
-
-        await GetTheImage(skip, directoryNameUpdated, filePrefix);
+        await GetTheImage(skip, directoryNameUpdated, filePrefix, wallpaper);
     }
 
-    private async Task<(string directoryName, string filePrefix, bool skip)> ProcessTheImageTags(IEnumerable<ILocator> tags, string directoryName)
+    private (string directoryName, string filePrefix, bool skip) ProcessTheImageTags(IEnumerable<WallhavenTag> tags, string directoryName)
     {
         var skip                     = false;
         var skip2                    = false;
         var filePrefix               = string.Empty;
         var alreadyContainsModelName = false;
-        var tagsToAddToDatabase      = new List<string>();
 
-        foreach(ILocator tag in tags)
+        foreach(var tag in tags)
         {
-            var (tagText, tagToUse) = await GetTags(tag);
+            var tagText  = tag.Name;
+            var tagToUse = tag.Category.Trim();
 
-            if(tagToUse == null) continue;
-
-            tagToUse = tagToUse.Trim();
-            skip     = IsOneOfTheImageTagsToExcludeCompletely(tagToUse);
-            skip2    = IsOneOfTheImageTagsToExcludeCompletely(tagText);
+            skip  = IsOneOfTheImageTagsToExcludeCompletely(tagToUse);
+            skip2 = IsOneOfTheImageTagsToExcludeCompletely(tagText);
 
             if(skip || skip2) break;
 
@@ -63,9 +56,7 @@ public sealed class ImagePage(
 
             alreadyContainsModelName = alreadyContainsModelNameUpdated;
             directoryName            = directoryNameUpdated;
-
-            filePrefix = UpdateFilePrefixForVehicles(tagToUse, filePrefixUpdated);
-            tagsToAddToDatabase.Add(tagText);
+            filePrefix               = UpdateFilePrefixForVehicles(tagToUse, filePrefixUpdated);
 
             if(UpdateToTagIsNotRequired(tagToUse, tagText, filePrefix)) continue;
 
@@ -87,14 +78,6 @@ public sealed class ImagePage(
 
     private bool UpdateToTagIsNotRequired(string tagToUse, string tagText, string filePrefix)
         => TagIsNotCelebEtc(tagToUse) || FilePrefixDoesNotNeedUpdating(tagText, filePrefix);
-
-    private static async Task<(string tagText, string? tagToUse)> GetTags(ILocator tag)
-    {
-        var tagText  = await tag.InnerTextAsync();
-        var tagToUse = await tag.GetAttributeAsync("original-title");
-
-        return (tagText, tagToUse);
-    }
 
     private bool FilePrefixDoesNotNeedUpdating(string tagText, string filePrefix)
         => IsWantedText(tagText) || !filePrefix.Contains(tagText);
@@ -121,21 +104,6 @@ public sealed class ImagePage(
            !tagToUse.Equals("car", StringComparison.CurrentCultureIgnoreCase) &&
            !TagContains(tagToUse, "cars");
 
-    /// <summary>
-    ///     This method suffers the same flaw as the earlier version: the previous "moreThan" and this "alreadyContains" don't actually work the way intended
-    /// </summary>
-    /// <param name="tagToUse">
-    /// </param>
-    /// <param name="tagText">
-    /// </param>
-    /// <param name="filePrefix">
-    /// </param>
-    /// <param name="alreadyContainsModelName">
-    /// </param>
-    /// <param name="directoryName">
-    /// </param>
-    /// <returns>
-    /// </returns>
     private (string filePrefix, bool alreadyContainsModelName, string directoryName) UpdateFilePrefixForModels(string tagToUse,
                                                                                                                string tagText,
                                                                                                                string filePrefix,
@@ -164,60 +132,49 @@ public sealed class ImagePage(
     }
 
     [Refactor(2, 5, "Too long!")]
-    private async Task GetTheImage(bool skip, string directoryName, string filePrefix)
+    private async Task GetTheImage(bool skip, string directoryName, string filePrefix, WallhavenWallpaper wallpaper)
     {
-        if(!skip)
+        if(skip) return;
+
+        var delay = Random.Shared.Next(searchConfiguration.ImagePauseInSeconds, searchConfiguration.ImagePauseInSeconds + 4);
+        Thread.Sleep(TimeSpan.FromSeconds(delay));
+        directoryName = DirectoryHelper.CreateDirectoryIfRequired(directoryName);
+
+        if(filePrefix.StartsWith("-")) filePrefix = filePrefix[1..];
+        if(filePrefix.Contains('/'))   filePrefix = filePrefix.Replace("/", "aka");
+
+        var sourcePath = wallpaper.Path;
+        var index      = sourcePath.LastIndexOf("/", StringComparison.Ordinal) + 1;
+        var filename   = sourcePath[index..];
+
+        var fileNameCombined  = string.IsNullOrEmpty(filePrefix) ? filename : $"{filePrefix} {filename}";
+        var imageNameWithPath = directoryName + "\\" + fileNameCombined;
+        var image             = await ImageRetrieverHelper.GetTheImageAsync(sourcePath);
+
+        logger.Information("About to save {filename} as {imageNameWithPath} as we do not appear to have it.", filename, imageNameWithPath);
+        await ImageSaveHelper.SaveImage(image, imageNameWithPath);
+
+        var fileInfo   = new FileInfo(imageNameWithPath);
+        var fileDetail = new FileDetail { Id = FileId.CreateNewId(), DirectoryName = new DirectoryName(directoryName), FileName = new FileName(filename), FileSize = fileInfo.Length, IsImage = filename.IsImage() };
+
+        if(fileDetail.IsImage)
         {
-            var delay = Random.Shared.Next(searchConfiguration.ImagePauseInSeconds, searchConfiguration.ImagePauseInSeconds + 4);
-            Thread.Sleep(TimeSpan.FromSeconds(delay));
-            directoryName = DirectoryHelper.CreateDirectoryIfRequired(directoryName);
+            var imageDetail = SKImage.FromEncodedData(imageNameWithPath);
 
-            if(filePrefix.StartsWith("-")) filePrefix = filePrefix[1..];
-
-            if(filePrefix.Contains('/')) filePrefix = filePrefix.Replace("/", "aka");
-
-            ILocator imageTag   = page.Locator("#wallpaper");
-            var sourcePath = await imageTag.GetAttributeAsync("src");
-
-            if(sourcePath != null)
+            if(image is null)
+                File.Delete(imageNameWithPath);
+            else
             {
-                var index            = sourcePath.LastIndexOf("/", StringComparison.Ordinal) + 1;
-                var filename         = sourcePath[index..];
-                var fileNameCombined = string.Empty;
-
-                if(!string.IsNullOrEmpty(filePrefix))
-                    fileNameCombined += filePrefix + " " + filename;
-                else
-                    fileNameCombined = filename;
-
-                var imageNameWithPath = directoryName + "\\" + fileNameCombined;
-                var image             = await ImageRetrieverHelper.GetTheImageAsync(sourcePath);
-                logger.Information("About to save {filename} as {imageNameWithPath} as we do not appear to have it.", filename, imageNameWithPath);
-                await ImageSaveHelper.SaveImage(image, imageNameWithPath);
-                var fileInfo = new FileInfo(imageNameWithPath);
-
-                var fileDetail = new FileDetail { Id = FileId.CreateNewId(), DirectoryName = new DirectoryName(directoryName), FileName = new FileName(filename), FileSize = fileInfo.Length, IsImage= filename.IsImage() };
-
-                if(fileDetail.IsImage)
-                {
-                    var imageDetail = SKImage.FromEncodedData(imageNameWithPath);
-
-                    if(image is null)
-                        File.Delete(imageNameWithPath);
-                    else
-                    {
-                        fileDetail.Height = imageDetail.Height;
-                        fileDetail.Width  = imageDetail.Width;
-                        fileDetail.ImageDetail = new ImageDetail { Height = imageDetail.Height, Width = imageDetail.Width };
-                        fileDetail.FileAccessDetail = new FileAccessDetail { DetailsLastUpdated = DateTime.UtcNow };
-                    }
-                }
-
-                await using var context = new FilesContext(new DbContextOptions<FilesContext>());
-                _ = await context.Files.AddAsync(fileDetail);
-                _ = await context.SaveChangesAsync();
+                fileDetail.Height           = imageDetail.Height;
+                fileDetail.Width            = imageDetail.Width;
+                fileDetail.ImageDetail      = new ImageDetail { Height = imageDetail.Height, Width = imageDetail.Width };
+                fileDetail.FileAccessDetail = new FileAccessDetail { DetailsLastUpdated = DateTime.UtcNow };
             }
         }
+
+        await using var context = new FilesContext(new DbContextOptions<FilesContext>());
+        _                       = await context.Files.AddAsync(fileDetail);
+        _                       = await context.SaveChangesAsync();
     }
 
     private bool IsOneOfTheImageTagsToExcludeCompletely(string tagText)

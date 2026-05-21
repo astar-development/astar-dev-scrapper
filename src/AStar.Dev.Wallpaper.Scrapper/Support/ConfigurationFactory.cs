@@ -39,6 +39,17 @@ internal class ConfigurationFactory
         return scrapeConfiguration;
     }
 
+    public static Logging Logging()
+    {
+        var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).CombinePath("..", "..", "..");
+
+        IConfiguration config = new ConfigurationBuilder()
+                               .AddJsonFile(Path.Combine(assemblyPath, "appsettings.json"), false, true)
+                               .Build();
+
+        return config.GetSection("Logging").Get<Logging>() ?? new Logging();
+    }
+
     private static bool SubscriptionsStartingPageIsOutsideValidRange(ScrapeConfiguration scrapeConfiguration)
         => scrapeConfiguration.SearchConfiguration.SubscriptionsStartingPageNumber <= 0 ||
            scrapeConfiguration.SearchConfiguration.SubscriptionsStartingPageNumber > scrapeConfiguration.SearchConfiguration.SubscriptionsTotalPages;

@@ -1,10 +1,10 @@
-﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
+namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
 public sealed class SearchConfiguration
 {
     public string BaseUrl { get; set; } = string.Empty;
 
-    public string LoginUrl { get; set; } = string.Empty;
+    public string ApiKey { get; set; } = string.Empty;
 
     public Category[] SearchCategories { get; set; } = [];
 
@@ -23,10 +23,6 @@ public sealed class SearchConfiguration
     public int StartingPageNumber { get; set; } = 1;
 
     public int TotalPages { get; set; }
-
-    public bool UseHeadless { get; set; }
-
-    public float? SlowMotionDelay { get; set; }
 
     public int SubscriptionsStartingPageNumber { get; set; }
 
