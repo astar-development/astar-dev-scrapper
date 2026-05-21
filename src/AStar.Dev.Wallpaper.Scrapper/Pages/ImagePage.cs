@@ -1,6 +1,7 @@
 ﻿using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Technical.Debt.Reporting;
+using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Support;
@@ -195,7 +196,7 @@ public sealed class ImagePage(
                 await ImageSaveHelper.SaveImage(image, imageNameWithPath);
                 var fileInfo = new FileInfo(imageNameWithPath);
 
-                var fileDetail = new FileDetail { DirectoryName = new DirectoryName(directoryName), FileName = new FileName(filename), FileSize = fileInfo.Length, };
+                var fileDetail = new FileDetail { Id = FileId.CreateNewId(), DirectoryName = new DirectoryName(directoryName), FileName = new FileName(filename), FileSize = fileInfo.Length, IsImage= filename.IsImage() };
 
                 if(fileDetail.IsImage)
                 {
@@ -207,6 +208,8 @@ public sealed class ImagePage(
                     {
                         fileDetail.Height = imageDetail.Height;
                         fileDetail.Width  = imageDetail.Width;
+                        fileDetail.ImageDetail = new ImageDetail { Height = imageDetail.Height, Width = imageDetail.Width };
+                        fileDetail.FileAccessDetail = new FileAccessDetail { DetailsLastUpdated = DateTime.UtcNow };
                     }
                 }
 

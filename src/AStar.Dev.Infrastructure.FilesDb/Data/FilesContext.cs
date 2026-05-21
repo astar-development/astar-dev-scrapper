@@ -50,11 +50,11 @@ public sealed class FilesContext : DbContext
     /// </summary>
     public DbSet<ModelToIgnore> ModelsToIgnore { get; set; } = null!;
 
-    // /// <inheritdoc />
-    // protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    // {
-    //     _ = optionsBuilder.UseSqlServer("Data Source=localhost,35179;Initial Catalog=filesDb;User ID=sa;Password=<SecurePasswordHere1!>;TrustServerCertificate=True");
-    // }
+    /// <inheritdoc />
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        _ = optionsBuilder.UseSqlite("Data Source=/home/jbarden/Documents/Scrapper/FilesDb.db");
+    }
 
     /// <summary>
     ///     Gets or sets the File Classifications

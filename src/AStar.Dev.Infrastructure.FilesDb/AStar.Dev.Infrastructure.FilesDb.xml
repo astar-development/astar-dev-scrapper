@@ -125,6 +125,9 @@
                 The list of models to ignore completely
             </summary>
         </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
+            <inheritdoc />
+        </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.FileClassifications">
             <summary>
                 Gets or sets the File Classifications
@@ -225,28 +228,16 @@
             <returns>
             </returns>
         </member>
-        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.InitialCreation">
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.ChangeFileIdType">
             <inheritdoc />
         </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.InitialCreation.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.ChangeFileIdType.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.InitialCreation.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.ChangeFileIdType.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.InitialCreation.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.RestructureDeletionAndImageDetails">
-            <inheritdoc />
-        </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.RestructureDeletionAndImageDetails.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.RestructureDeletionAndImageDetails.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.RestructureDeletionAndImageDetails.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.ChangeFileIdType.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity">
@@ -713,7 +704,7 @@
             </summary>
             <param name="Value">The value of the File Id</param>
         </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.FileId.#ctor(System.Int32)">
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.FileId.#ctor(System.Guid)">
             <summary>
                 Defines the FileId
             </summary>
@@ -721,6 +712,12 @@
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.FileId.Value">
             <summary>The value of the File Id</summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.FileId.CreateNewId">
+            <summary>
+               Creates a new FileId with a new Guid value
+            </summary>
+            <returns>A new FileId instance</returns>
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.FileName">
             <summary>

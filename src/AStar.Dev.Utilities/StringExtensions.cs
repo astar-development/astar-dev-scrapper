@@ -1,3 +1,4 @@
+using System.Net.WebSockets;
 using System.Text.Json;
 
 namespace AStar.Dev.Utilities;
@@ -69,13 +70,15 @@ public static class StringExtensions
     /// <returns></returns>
     public static bool IsImage(this string fileName)
     {
-        if (string.IsNullOrEmpty(fileName)) return false;
+        if (fileName.IsNullOrWhiteSpace()) return false;
+        var extension = Path.GetExtension(fileName);
+        if (extension.IsNullOrWhiteSpace()) return false;
+        var extensionWithoutDot = extension.TrimStart('.');
+        if (extensionWithoutDot.IsNullOrWhiteSpace()) return false;
 
-        return fileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
-        || fileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
-        || fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
-        || fileName.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase)
-        || fileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+        var validExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".bmp", ".gif" };
+        
+        return validExtensions.Contains(extensionWithoutDot);
     }
 
     /// <summary>
