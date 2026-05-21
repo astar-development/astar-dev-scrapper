@@ -22,7 +22,6 @@
         <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.8" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
-        <PackageReference Include="Microsoft.Playwright.Xunit" Version="1.59.0" />
         <PackageReference Include="Selenium.WebDriver" Version="4.44.0" />
         <PackageReference Include="Serilog.Exceptions" Version="8.4.0+build.694" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
@@ -41,7 +40,7 @@
 
     <ItemGroup>
         <None Update="appsettings.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>CopyAlways</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
