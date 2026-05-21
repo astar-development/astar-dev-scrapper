@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Reflection;
 using System.Text.Json;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using Serilog.Core;
@@ -62,12 +61,7 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
     }
 
     private static void SaveRedactedAppSettings(string content)
-    {
-        const string navigateUp   = """..\..\..\..\""";
-        var          assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + navigateUp;
-
-        File.WriteAllText(Path.Combine(assemblyPath, "appSettings.json"), content);
-    }
+        => File.WriteAllText(Path.Combine(ApplicationMetadata.ApplicationFolder, "appSettings.json"), content);
 
     private void UpdateCategoryNames()
     {

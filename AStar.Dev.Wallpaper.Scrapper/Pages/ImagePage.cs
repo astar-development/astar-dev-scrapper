@@ -2,9 +2,7 @@
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Technical.Debt.Reporting;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
-using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Support;
-using AStar.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using Serilog.Core;
@@ -18,15 +16,10 @@ public sealed class ImagePage(
     IPage                  page,
     SearchConfiguration    searchConfiguration,
     ScrapeDirectories      scrapeDirectories,
-    ConnectionStrings      connectionStrings,
     TagsToIgnoreCompletely tagsToIgnoreCompletely,
     TagsTextToIgnore       tagsTextToIgnore,
     Logger                 logger)
 {
-    private readonly ConnectionStrings   connectionStrings   = GuardAgainst.Null(connectionStrings);
-    private readonly ScrapeDirectories   scrapeDirectories   = GuardAgainst.Null(scrapeDirectories);
-    private readonly SearchConfiguration searchConfiguration = GuardAgainst.Null(searchConfiguration);
-
     public async Task GetImageFromPage(string link)
     {
         _ = await page.GotoAsync(link);

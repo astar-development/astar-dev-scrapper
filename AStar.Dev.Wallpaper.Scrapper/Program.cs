@@ -1,14 +1,17 @@
-using AStar.Dev.Utilities;
+using AStar.Dev.Infrastructure.FilesDb.Data;
+using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Playwright;
 using Serilog;
 using Serilog.Core;
 using Serilog.Exceptions;
+using System.Text.Json;
 
 (ScrapeConfiguration scrapeConfiguration, IConfigurationRoot configuration) = ConfigurationFactory.Configuration();
 
@@ -71,13 +74,11 @@ var imagePage = new ImagePage(
     page,
     scrapeConfiguration.SearchConfiguration,
     scrapeConfiguration.ScrapeDirectories,
-    scrapeConfiguration.ConnectionStrings,
     tagsToIgnoreCompletely,
     tagsTextToIgnore,
     logger);
 var imagePageService = new ImagePageService(imagePage, logger);
 
-// If cookies gave us a valid session, wallhaven redirects /login → home; skip re-login
 await loginPage.GoToLoginPageAsync();
 if(page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
 {
@@ -94,6 +95,19 @@ var runAll           = args.Length == 0;
 var runSearch        = runAll || args.Contains("search",        StringComparer.OrdinalIgnoreCase);
 var runSubscriptions = runAll || args.Contains("subscriptions", StringComparer.OrdinalIgnoreCase);
 var runTopWallpapers = runAll || args.Contains("topwallpapers", StringComparer.OrdinalIgnoreCase);
+
+await using var dbContext = new FilesContext(new DbContextOptions<FilesContext>());
+dbContext.Database.Migrate();
+dbContext.TagsToIgnore.AddRange(tagsTextToIgnore.Tags.Select(tag => new TagToIgnore { Value = tag }));
+dbContext.ModelsToIgnore.AddRange(tagsToIgnoreCompletely.Tags.Select(tag => new ModelToIgnore { Value = tag }));
+dbContext.ScrapeConfiguration.Add(new ScrapeConfigurationEntity
+{
+    ConnectionStrings = JsonSerializer.Deserialize<AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings>(JsonSerializer.Serialize(scrapeConfiguration.ConnectionStrings))!,
+    UserConfiguration = JsonSerializer.Deserialize<AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration>(JsonSerializer.Serialize(scrapeConfiguration.UserConfiguration))!,
+    SearchConfiguration = JsonSerializer.Deserialize<AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration>(JsonSerializer.Serialize(scrapeConfiguration.SearchConfiguration))!,
+    ScrapeDirectories = JsonSerializer.Deserialize<AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories>(JsonSerializer.Serialize(scrapeConfiguration.ScrapeDirectories))!,
+});
+await dbContext.SaveChangesAsync();
 
 if(runSearch)
 {

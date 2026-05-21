@@ -1,20 +1,15 @@
 {
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Wallpaper Scrapper (all scenarios)",
-            "type": "coreclr",
+            "name": "C#: AStar.Dev.Wallpaper.Scrapper Debug",
+            "type": "dotnet",
             "request": "launch",
-            "preLaunchTask": "build",
-            "program": "/usr/bin/dotnet",
-            "args": [
-                "test",
-                "--no-build",
-                "${workspaceFolder}/AStar.Dev.Wallpaper.Scrapper/AStar.Dev.Wallpaper.Scrapper.csproj"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "stopAtEntry": false
+            "projectPath": "${workspaceFolder}/AStar.Dev.Wallpaper.Scrapper/AStar.Dev.Wallpaper.Scrapper.csproj"
         }
+
     ]
 }

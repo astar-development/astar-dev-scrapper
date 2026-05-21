@@ -15,12 +15,13 @@ public sealed class FileNamePart : AuditableEntity
     public int Id { get; set; }
 
     /// <summary>
+    ///     Gets or sets the text content of the file name part.
     /// </summary>
     public string Text { get; set; } = string.Empty;
 
     /// <summary>
-    ///     Gets or sets a value indicating whether this classification should be included in search results.
-    ///     This property determines if files associated with this classification are considered searchable.
+    ///     Gets or sets a value indicating whether this filename part should be included in search results.
+    ///     This property determines if files associated with this filename part are considered searchable.
     /// </summary>
     public bool IncludeInSearch { get; set; }
 }

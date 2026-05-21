@@ -35,7 +35,7 @@ public sealed class FileDetail
     /// <summary>
     ///     Gets or sets the ID of the <see href="FileDetail"></see>. I know, shocking...
     /// </summary>
-    public FileId Id { get; set; }
+    public FileId Id { get; set; } = FileId.CreateNew();
 
     /// <summary>
     /// </summary>

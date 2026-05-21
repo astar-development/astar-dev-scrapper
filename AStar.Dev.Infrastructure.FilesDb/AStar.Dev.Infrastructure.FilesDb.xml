@@ -125,6 +125,14 @@
                 The list of models to ignore completely
             </summary>
         </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.ScrapeConfiguration">
+            <summary>
+               Gets or sets the Scrape Configuration details for the scraper, including connection strings, user configuration, search configuration, and scrape directories. This property serves as a central point for managing all the necessary settings and parameters that the scraper needs to operate effectively. The ScrapeConfiguration property allows for flexible configuration of different aspects of the scraping process, enabling the scraper to adapt to various environments and requirements without hardcoding sensitive information directly into the codebase. Proper management of scrape configuration is crucial for ensuring that the scraper can operate efficiently and securely, allowing it to access necessary resources and perform its tasks without issues.
+            </summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
+            <inheritdoc />
+        </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.FileClassifications">
             <summary>
                 Gets or sets the File Classifications
@@ -225,28 +233,16 @@
             <returns>
             </returns>
         </member>
-        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.InitialCreation">
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddStrongIds">
             <inheritdoc />
         </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.InitialCreation.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddStrongIds.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.InitialCreation.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddStrongIds.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.InitialCreation.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.RestructureDeletionAndImageDetails">
-            <inheritdoc />
-        </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.RestructureDeletionAndImageDetails.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.RestructureDeletionAndImageDetails.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.RestructureDeletionAndImageDetails.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddStrongIds.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity">
@@ -264,6 +260,16 @@
             <summary>
                 Gets or sets the date and time when the entity was last modified.
                 This property is automatically updated whenever changes are made to the entity and saved to the database.
+            </summary>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings">
+            <summary>
+            Represents the connection strings required for the scraper to connect to various databases or services. This class is essential for configuring the scraper's access to necessary resources, such as a SQLite database for storing scraped data or a logging service for recording the scraping process. The ConnectionStrings property allows for flexible configuration of different connection strings, enabling the scraper to adapt to various environments and requirements without hardcoding sensitive information directly into the codebase. Proper management of connection strings is crucial for ensuring secure and efficient operation of the scraper, as it may need to connect to multiple services or databases during its execution.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings.Sqlite">
+            <summary>
+            The connection string for the SQLite database. This string contains the necessary information for the scraper to establish a connection to the SQLite database, such as the file path, credentials, and any additional parameters required for authentication and communication. The Sqlite connection string is crucial for enabling the scraper to store and retrieve data efficiently, allowing it to manage the scraped data effectively and maintain a persistent record of its operations. Proper configuration of the SQLite connection string ensures that the scraper can access the database securely and perform necessary read/write operations without issues.
             </summary>
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.DeletionStatus">
@@ -713,7 +719,7 @@
             </summary>
             <param name="Value">The value of the File Id</param>
         </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.FileId.#ctor(System.Int32)">
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.FileId.#ctor(System.Guid)">
             <summary>
                 Defines the FileId
             </summary>
@@ -721,6 +727,13 @@
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.FileId.Value">
             <summary>The value of the File Id</summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.FileId.CreateNew">
+             <summary>
+                Creates a new instance of the FileId struct with a new Guid value
+            
+             </summary>
+             <returns>A new FileId instance</returns>
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.FileName">
             <summary>
@@ -756,12 +769,13 @@
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.FileNamePart.Text">
             <summary>
+                Gets or sets the text content of the file name part.
             </summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.FileNamePart.IncludeInSearch">
             <summary>
-                Gets or sets a value indicating whether this classification should be included in search results.
-                This property determines if files associated with this classification are considered searchable.
+                Gets or sets a value indicating whether this filename part should be included in search results.
+                This property determines if files associated with this filename part are considered searchable.
             </summary>
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.FileSize">
@@ -856,6 +870,28 @@
             <summary>
             </summary>
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ModelId">
+            <summary>
+                Defines the ModelId
+            </summary>
+            <param name="Value">The value of the Model Id</param>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.ModelId.#ctor(System.Guid)">
+            <summary>
+                Defines the ModelId
+            </summary>
+            <param name="Value">The value of the Model Id</param>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ModelId.Value">
+            <summary>The value of the Model Id</summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.ModelId.CreateNew">
+             <summary>
+                Creates a new instance of the ModelId struct with a new Guid value
+            
+             </summary>
+             <returns>A new ModelId instance</returns>
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ModelToIgnore">
             <summary>
                 The <see href="ModelToIgnore"></see> class
@@ -878,6 +914,171 @@
             <returns>
                 This object serialized as a JSON object
             </returns>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity">
+            <summary>
+            Represents the configuration details required for the scraping process, including connection strings, user configuration, search configuration, and scrape directories. This class serves as a central point for managing all the necessary settings and parameters that the scraper needs to operate effectively. The ConnectionStrings property contains the information required to connect to various databases or services, while the UserConfiguration property holds the authentication details for accessing user-specific content on the target website. The SearchConfiguration property defines the parameters for performing searches on the target website, such as search queries and filters. Finally, the ScrapeDirectories property specifies the directories where scraped data should be stored. Proper management of these configurations is crucial for ensuring that the scraper can operate efficiently and securely, allowing it to access necessary resources and perform its tasks without issues.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity.ConnectionStrings">
+            <summary>
+            The connection strings required for the scraper to connect to various databases or services. This property is essential for configuring the scraper's access to necessary resources, such as a SQLite database for storing scraped data or a logging service for recording the scraping process. The ConnectionStrings property allows for flexible configuration of different connection strings, enabling the scraper to adapt to various environments and requirements without hardcoding sensitive information directly into the codebase. Proper management of connection strings is crucial for ensuring secure and efficient operation of the scraper, as it may need to connect to multiple services or databases during its execution.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity.UserConfiguration">
+            <summary>
+            Represents user configuration details, including login email address, username, password, and session cookie. This information is essential for authenticating the scraper with the target website, allowing it to access user-specific content and perform actions that require authentication. The LoginEmailAddress and Username are used for identifying the user account, while the Password is necessary for logging in. The SessionCookie can be used to maintain an authenticated session without needing to log in repeatedly, improving the efficiency of the scraping process and reducing the likelihood of triggering anti-bot measures on the target website.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity.SearchConfiguration">
+            <summary>
+            Represents the search configuration details for the scraper, including search queries, filters, and other parameters that define how the scraper should perform searches on the target website. This property is crucial for guiding the scraper's behavior when it comes to finding and retrieving specific content from the website. The SearchConfiguration allows for flexible and dynamic configuration of search parameters, enabling the scraper to adapt to different search requirements and scenarios without needing to modify the codebase. Proper management of search configuration is essential for ensuring that the scraper can effectively find and retrieve the desired content while adhering to any constraints or limitations imposed by the target website.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity.ScrapeDirectories">
+            <summary>
+            Represents the directories where scraped data should be stored. This property is essential for organizing and managing the output of the scraping process, allowing the scraper to save retrieved data in a structured and accessible manner. The ScrapeDirectories property can include paths for different types of data, such as images, metadata, or logs, enabling the scraper to maintain a clear separation of different data categories. Proper management of scrape directories is crucial for ensuring that the scraper can efficiently store and retrieve scraped data, as well as for maintaining an organized file system that facilitates easy access and analysis of the collected information.
+            </summary>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories">
+            <summary>
+            Directories used for scraping, including root directory, base save directory, and any subdirectories. This allows for flexible organization of scraped data and easy configuration of save paths.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories.RootDirectory">
+            <summary>
+            The root directory for all scraping activities. This is the base path under which all scraped data will be organized. It can be set to a specific location on the file system where the user wants to store the scraped images and related data. The base save directory and any subdirectories will be created under this root directory.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories.BaseSaveDirectory">
+            <summary>
+            The base save directory is a subdirectory under the root directory where the scraped images will be saved. This allows for better organization of the scraped data, as users can specify different base save directories for different scraping sessions or categories. For example, if the root directory is set to "C:\ScrapedData", the base save directory could be "Wallpapers" or "SearchResults", resulting in a full path like "C:\ScrapedData\Wallpapers". This structure helps keep the scraped data organized and easily accessible.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories.BaseDirectory">
+            <summary>
+            Subdirectories are additional folders that can be created under the base save directory to further organize the scraped data. For example, if the base save directory is "C:\ScrapedData\Wallpapers", subdirectories could be created for different categories or search terms, such as "Nature", "Cityscapes", or "Abstract". This allows users to easily navigate and manage their scraped images by categorizing them into relevant folders. The subdirectory name can be dynamically generated based on the search criteria or category being scraped, providing a flexible and organized way to store the scraped data.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories.BaseDirectoryFamous">
+            <summary>
+            The base directory for famous wallpapers is a specific subdirectory under the root directory where wallpapers that are categorized as "famous" will be saved. This allows for a clear distinction between regular scraped wallpapers and those that are considered famous or highly popular. For example, if the root directory is "C:\ScrapedData", the base directory for famous wallpapers could be "FamousWallpapers", resulting in a full path like "C:\ScrapedData\FamousWallpapers". This helps users easily identify and access the wallpapers that are categorized as famous, keeping them organized separately from other scraped data.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories.SubDirectoryName">
+            <summary>
+            The subdirectory name is an additional folder that can be created under the base save directory to further organize the scraped data. This allows users to create specific folders for different search criteria, categories, or sessions. For example, if the base save directory is "C:\ScrapedData\Wallpapers", a subdirectory could be created for a specific search term like "Nature", resulting in a full path like "C:\ScrapedData\Wallpapers\Nature". This structure helps keep the scraped data organized and easily accessible based on the user's preferences and the context of the scraping session.
+            </summary>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories">
+            <summary>
+            Represents a search category with its associated metadata, including the category's unique identifier, name, last known image count, last page visited, and total pages available. This information is crucial for managing and tracking the scraping process for each category, allowing for efficient navigation through search results and ensuring that the scraper can resume from the last visited page in case of interruptions. The LastKnownImageCount helps in determining if there are new images to scrape since the last run, while LastPageVisited and TotalPages assist in navigating through paginated search results effectively.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.Id">
+            <summary>
+            The unique identifier for the search category. This ID is used to distinguish between different categories and is essential for tracking the scraping progress for each specific category. It allows the scraper to identify which category it is currently processing and to store relevant data accordingly.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.Name">
+            <summary>
+            The name of the search category. This is a human-readable string that describes the category being scraped, such as "Nature", "Cityscapes", or "Abstract". The name helps users understand the context of the category and can be used for organizing and labeling the scraped data. It also provides clarity when reviewing logs or reports related to the scraping process, making it easier to identify which categories were processed and how many images were scraped for each category.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.LastKnownImageCount">
+            <summary>
+            The last known image count for the search category. This property keeps track of the number of images that were last scraped for this category. It is useful for determining if there are new images to scrape since the last run, allowing the scraper to focus on new content and avoid re-scraping already processed images. By comparing the current image count with the last known count, the scraper can efficiently manage its resources and prioritize categories that have new content available.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.LastPageVisited">
+            <summary>
+            The last page visited for the search category. This property is crucial for managing the pagination of search results. It allows the scraper to resume from the last visited page in case of interruptions, ensuring that it does not miss any images or re-scrape already processed pages. By keeping track of the last page visited, the scraper can efficiently navigate through paginated search results and maintain a consistent scraping process across multiple runs.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.TotalPages">
+            <summary>
+            The total number of pages available for the search category. This property provides insight into the scope of the scraping task for each category, allowing the scraper to plan its navigation through the search results effectively. Knowing the total pages helps in estimating the time required for scraping and in managing expectations regarding the volume of data that will be collected for each category. It also assists in determining when to stop scraping for a category, ensuring that the scraper does not attempt to access non-existent pages and handles pagination gracefully.
+            </summary>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration">
+            <summary>
+            Represents the search configuration for the scraping process, including the base URL, API key, search categories, search string, top wallpapers, search string prefix and suffix, subscriptions, image pause duration, starting page numbers, and total pages for search results, subscriptions, and top wallpapers. This configuration is essential for guiding the scraper on how to navigate the target website, what criteria to use for searching and categorizing images, and how to manage pagination effectively. The properties in this class allow for flexible and dynamic configuration of the scraping process, enabling users to customize their scraping sessions according to their specific needs and preferences.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.BaseUrl">
+            <summary>
+            The base URL of the target website to be scraped. This is the starting point for the scraper and is essential for constructing the full URLs for search queries, image pages, and other relevant endpoints. The base URL should be set to the main domain of the website being scraped, such as "https://example.com". It serves as the foundation for all subsequent navigation and scraping activities, allowing the scraper to access the necessary pages and resources to collect the desired data effectively.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.ApiKey">
+            <summary>
+            The API key is a unique identifier used to authenticate requests to the target website's API, if applicable. This key is essential for accessing certain features or data that may be restricted to authenticated users or for making authorized requests to the website's API endpoints. The API key should be kept secure and should not be shared publicly, as it may grant access to sensitive information or allow unauthorized actions if misused. In the context of web scraping, the API key can help ensure that the scraper can access the necessary data while adhering to the website's usage policies and rate limits.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.SearchCategories">
+            <summary>
+            The search categories represent the different categories or topics that the scraper will target during the scraping process. Each category includes its unique identifier, name, last known image count, last page visited, and total pages available. This information is crucial for managing and tracking the scraping progress for each category, allowing the scraper to efficiently navigate through search results and resume from the last visited page in case of interruptions. The search categories help organize the scraping process and ensure that the scraper can focus on specific areas of interest while collecting relevant data effectively.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.SearchString">
+            <summary>
+            The search string is a specific query or keyword that the scraper will use to perform searches on the target website. This string can be customized to target specific types of content or to refine the search results based on user preferences. The search string is essential for guiding the scraper in finding relevant images and data that match the specified criteria, allowing for a more focused and efficient scraping process. By using a well-defined search string, users can ensure that the scraper collects data that is most relevant to their interests and needs.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.TopWallpapers">
+            <summary>
+            The top wallpapers property represents a specific category or section on the target website that features the most popular or highly rated wallpapers. This property is essential for guiding the scraper to access and collect data from this particular section, allowing users to obtain high-quality and trending wallpapers. By targeting the top wallpapers, users can ensure that they are collecting content that is currently in demand and has a higher likelihood of being of interest to a wider audience. This can be particularly useful for users who want to stay updated with the latest trends in wallpaper designs and styles.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.SearchStringPrefix">
+            <summary>
+            The search string prefix and suffix are additional components that can be added to the search string to further refine and customize the search queries. The prefix can be used to specify certain criteria or filters that should be applied before the main search string, while the suffix can be used to add additional parameters or conditions after the main search string. These components allow for greater flexibility in constructing search queries, enabling users to target specific types of content or to exclude certain results based on their preferences. By using a combination of the search string, prefix, and suffix, users can create more complex and effective search queries that yield more relevant results during the scraping process.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.SearchStringSuffix">
+            <summary>
+            The search string suffix is an additional component that can be added to the search string to further refine and customize the search queries. It can be used to specify certain criteria or filters that should be applied after the main search string, allowing for greater flexibility in constructing search queries. By using a combination of the search string, prefix, and suffix, users can create more complex and effective search queries that yield more relevant results during the scraping process. The suffix can help target specific types of content or exclude certain results based on user preferences, enhancing the overall efficiency and relevance of the scraping activities.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.Subscriptions">
+            <summary>
+            The subscriptions property represents a specific section or feature on the target website that allows users to subscribe to certain categories, topics, or content creators. This property is essential for guiding the scraper to access and collect data from this particular section, enabling users to obtain content that they have subscribed to or are interested in following. By targeting the subscriptions, users can ensure that they are collecting data that is relevant to their specific interests and preferences, allowing for a more personalized and engaging scraping experience. This can be particularly useful for users who want to stay updated with content from their favorite categories or creators on the target website.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.ImagePauseInSeconds">
+            <summary>
+            The image pause duration in seconds is a configurable parameter that determines the amount of time the scraper will wait between processing individual images during the scraping process. This pause is essential for managing the scraper's behavior and ensuring that it does not overwhelm the target website with rapid requests, which could lead to rate limiting or blocking. By introducing a pause between image processing, users can help ensure that the scraper operates within acceptable limits and adheres to the website's usage policies, while also allowing for a more controlled and efficient scraping process. The duration of the pause can be adjusted based on the user's preferences and the target website's responsiveness, providing flexibility in managing the scraping activities effectively.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.StartingPageNumber">
+            <summary>
+            The starting page numbers and total pages for search results, subscriptions, and top wallpapers are crucial parameters for managing the pagination of the scraping process. These properties allow the scraper to keep track of where it left off in previous runs and to navigate through paginated search results effectively. By maintaining the starting page numbers, the scraper can resume from the last visited page in case of interruptions, ensuring that it does not miss any images or re-scrape already processed pages. The total pages provide insight into the scope of the scraping task for each category, allowing the scraper to plan its navigation through the search results effectively and to manage expectations regarding the volume of data that will be collected for each category.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.TotalPages">
+            <summary>
+            The total pages for search results, subscriptions, and top wallpapers provide insight into the scope of the scraping task for each category, allowing the scraper to plan its navigation through the search results effectively. Knowing the total pages helps in estimating the time required for scraping and in managing expectations regarding the volume of data that will be collected for each category. It also assists in determining when to stop scraping for a category, ensuring that the scraper does not attempt to access non-existent pages and handles pagination gracefully.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.SubscriptionsStartingPageNumber">
+            <summary>
+            The starting page numbers for subscriptions and top wallpapers are crucial parameters for managing the pagination of the scraping process specifically for these categories. These properties allow the scraper to keep track of where it left off in previous runs for subscriptions and top wallpapers, enabling it to resume from the last visited page in case of interruptions. This ensures that the scraper does not miss any images or re-scrape already processed pages within these specific categories, allowing for a more efficient and organized scraping process.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.SubscriptionsTotalPages">
+            <summary>
+            The total pages for subscriptions and top wallpapers provide insight into the scope of the scraping task for these specific categories, allowing the scraper to plan its navigation through the search results effectively. Knowing the total pages for subscriptions and top wallpapers helps in estimating the time required for scraping and in managing expectations regarding the volume of data that will be collected for each category. It also assists in determining when to stop scraping for these categories, ensuring that the scraper does not attempt to access non-existent pages and handles pagination gracefully.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.TopWallpapersTotalPages">
+            <summary>
+            The starting page number and total pages for top wallpapers are crucial parameters for managing the pagination of the scraping process specifically for the top wallpapers category. These properties allow the scraper to keep track of where it left off in previous runs for top wallpapers, enabling it to resume from the last visited page in case of interruptions. This ensures that the scraper does not miss any images or re-scrape already processed pages within the top wallpapers category, allowing for a more efficient and organized scraping process. Additionally, knowing the total pages for top wallpapers helps in estimating the time required for scraping and in managing expectations regarding the volume of data that will be collected for this category, ensuring that the scraper can navigate through the search results effectively and handle pagination gracefully.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.TopWallpapersStartingPageNumber">
+            <summary>
+            The starting page number for top wallpapers is a crucial parameter for managing the pagination of the scraping process specifically for the top wallpapers category. This property allows the scraper to keep track of where it left off in previous runs for top wallpapers, enabling it to resume from the last visited page in case of interruptions. This ensures that the scraper does not miss any images or re-scrape already processed pages within the top wallpapers category, allowing for a more efficient and organized scraping process. Additionally, knowing the starting page number for top wallpapers helps in estimating the time required for scraping and in managing expectations regarding the volume of data that will be collected for this category, ensuring that the scraper can navigate through the search results effectively and handle pagination gracefully.
+            </summary>
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.SearchType">
             <summary>
@@ -929,6 +1130,28 @@
                 Order by the name ascending
             </summary>
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.TagId">
+            <summary>
+                Defines the TagId
+            </summary>
+            <param name="Value">The value of the Tag Id</param>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.TagId.#ctor(System.Guid)">
+            <summary>
+                Defines the TagId
+            </summary>
+            <param name="Value">The value of the Tag Id</param>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.TagId.Value">
+            <summary>The value of the Tag Id</summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.TagId.CreateNew">
+             <summary>
+                Creates a new instance of the TagId struct with a new Guid value
+            
+             </summary>
+             <returns>A new TagId instance</returns>
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.TagToIgnore">
             <summary>
                 The <see href="TagToIgnore"></see> class
@@ -957,6 +1180,31 @@
             <returns>
                 This object serialized as a JSON object
             </returns>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration">
+            <summary>
+            Represents user configuration details, including login email address, username, password, and session cookie. This information is essential for authenticating the scraper with the target website, allowing it to access user-specific content and perform actions that require authentication. The LoginEmailAddress and Username are used for identifying the user account, while the Password is necessary for logging in. The SessionCookie can be used to maintain an authenticated session without needing to log in repeatedly, improving the efficiency of the scraping process and reducing the likelihood of triggering anti-bot measures on the target website.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration.LoginEmailAddress">
+            <summary>
+            The login email address is the email associated with the user's account on the target website. It is used as part of the authentication process when logging in to the website. The scraper will use this email address, along with the password, to authenticate and gain access to user-specific content and features on the website. Providing a valid login email address is crucial for successful authentication and ensuring that the scraper can access the necessary data for scraping.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration.Username">
+            <summary>
+            The username is the unique identifier for the user's account on the target website. It is used in conjunction with the password to authenticate the user and gain access to their account. The scraper will use the username during the login process to identify which account it is trying to access. Providing a valid username is essential for successful authentication and ensuring that the scraper can access the necessary data for scraping.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration.Password">
+            <summary>
+            The password is the secret key associated with the user's account on the target website. It is used in conjunction with the username to authenticate the user and gain access to their account. The scraper will use the password during the login process to verify the user's identity and ensure that it has permission to access the account. Providing a valid password is crucial for successful authentication and ensuring that the scraper can access the necessary data for scraping. It is important to handle the password securely and avoid exposing it in logs or code repositories to prevent unauthorized access to the user's account.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration.SessionCookie">
+            <summary>
+            The session cookie is a piece of data that is stored in the user's browser after a successful login to the target website. It is used to maintain an authenticated session without needing to log in repeatedly. The scraper can use the session cookie to access user-specific content and perform actions that require authentication without having to go through the login process each time. This can improve the efficiency of the scraping process and reduce the likelihood of triggering anti-bot measures on the target website. Providing a valid session cookie allows the scraper to maintain an authenticated session and access the necessary data for scraping without needing to log in repeatedly.
+            </summary>
         </member>
     </members>
 </doc>
