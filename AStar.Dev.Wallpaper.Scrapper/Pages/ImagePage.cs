@@ -2,6 +2,7 @@
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Technical.Debt.Reporting;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
@@ -14,8 +15,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
 public sealed class ImagePage(
     IPage                  page,
-    SearchConfiguration    searchConfiguration,
-    ScrapeDirectories      scrapeDirectories,
+    ScrapeConfiguration    scrapeConfiguration,
     TagsToIgnoreCompletely tagsToIgnoreCompletely,
     TagsTextToIgnore       tagsTextToIgnore,
     Logger                 logger)
@@ -25,7 +25,7 @@ public sealed class ImagePage(
         _ = await page.GotoAsync(link);
 
         IReadOnlyList<ILocator> tags          = await page.Locator(".tagname").AllAsync();
-        var             directoryName = Path.Combine(scrapeDirectories.RootDirectory, scrapeDirectories.BaseSaveDirectory, scrapeDirectories.SubDirectoryName);
+        var             directoryName = Path.Combine(scrapeConfiguration.ScrapeDirectories.RootDirectory, scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory, scrapeConfiguration.ScrapeDirectories.SubDirectoryName);
         var (directoryNameUpdated, filePrefix, skip) = await ProcessTheImageTags(tags, directoryName);
 
         await GetTheImage(skip, directoryNameUpdated, filePrefix);
@@ -62,7 +62,7 @@ public sealed class ImagePage(
             if(UpdateToTagIsNotRequired(tagToUse, tagText, filePrefix)) continue;
 
             filePrefix    = string.Join("-", filePrefix, tagText);
-            directoryName = scrapeDirectories.BaseDirectoryFamous + tagText;
+            directoryName = scrapeConfiguration.ScrapeDirectories.BaseDirectoryFamous + tagText;
         }
 
         filePrefix = UpdateFilePrefixIfRequired(filePrefix);
@@ -144,7 +144,7 @@ public sealed class ImagePage(
 
                 if(!alreadyContainsModelName)
                 {
-                    directoryName            += $@"\..\named\{tagText}\{scrapeDirectories.SubDirectoryName}";
+                    directoryName            += $@"\..\named\{tagText}\{scrapeConfiguration.ScrapeDirectories.SubDirectoryName}";
                     alreadyContainsModelName =  true;
                 }
             }
@@ -160,7 +160,7 @@ public sealed class ImagePage(
     {
         if(!skip)
         {
-            var delay = Random.Shared.Next(searchConfiguration.ImagePauseInSeconds, searchConfiguration.ImagePauseInSeconds + 4);
+            var delay = Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4);
             Thread.Sleep(TimeSpan.FromSeconds(delay));
             directoryName = DirectoryHelper.CreateDirectoryIfRequired(directoryName);
 

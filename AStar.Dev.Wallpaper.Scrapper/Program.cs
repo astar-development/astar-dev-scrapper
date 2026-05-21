@@ -113,8 +113,7 @@ page.SetDefaultTimeout(60_000);
 var loginPage = new LoginPage(page, scrapeConfiguration.SearchConfiguration);
 var imagePage = new ImagePage(
     page,
-    scrapeConfiguration.SearchConfiguration,
-    scrapeConfiguration.ScrapeDirectories,
+    scrapeConfiguration,
     tagsToIgnoreCompletely,
     tagsTextToIgnore,
     logger);
