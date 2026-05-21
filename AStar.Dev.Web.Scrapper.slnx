@@ -3,5 +3,4 @@
   <Project Path="AStar.Dev.Infrastructure.FilesDb/AStar.Dev.Infrastructure.FilesDb.csproj" />
   <Project Path="AStar.Dev.Utilities/AStar.Dev.Utilities.csproj" />
   <Project Path="AStar.Dev.Wallpaper.Scrapper/AStar.Dev.Wallpaper.Scrapper.csproj" />
-  <Project Path="AStar.Dev.Wallpaper.Scrapper.Tests/AStar.Dev.Wallpaper.Scrapper.Tests.csproj" />
 </Solution>
