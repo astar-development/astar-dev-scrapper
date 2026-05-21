@@ -3,7 +3,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 /// <summary>
 ///    The <see cref="AuditableEntity"></see> class provides common properties for tracking the creation and modification of entities.
 /// </summary>
-public sealed class AuditableEntity
+public class AuditableEntity
 {
     /// <summary>
     ///     Gets or sets the date and time when the entity was created.

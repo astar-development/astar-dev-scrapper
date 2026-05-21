@@ -4,13 +4,11 @@ using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using Microsoft.Playwright;
-using Reqnroll;
 using Serilog.Core;
 
-namespace AStar.Dev.Wallpaper.Scrapper.StepDefinitions;
+namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
-[Binding]
-public sealed class DownloadImagesFromSearchResultsStepDefinitions(
+public sealed class SearchWorkflow(
     SearchResultsPage   searchResultsPage,
     ImagePageService    imagePageService,
     SearchConfiguration searchConfiguration,
@@ -18,25 +16,19 @@ public sealed class DownloadImagesFromSearchResultsStepDefinitions(
     ConfigurationSaver  configurationSaver,
     Logger              logger)
 {
-    private readonly ConfigurationSaver  configurationSaver  = configurationSaver  ?? throw new ArgumentNullException();
-    private readonly ImagePageService    imagePageService    = imagePageService    ?? throw new ArgumentNullException();
-    private readonly SearchResultsPage   searchResultsPage   = searchResultsPage   ?? throw new ArgumentNullException();
-    private          ScrapeDirectories   scrapeDirectories   = scrapeDirectories   ?? throw new ArgumentNullException();
-    private          SearchConfiguration searchConfiguration = searchConfiguration ?? throw new ArgumentNullException();
+    private ScrapeDirectories   _scrapeDirectories   = scrapeDirectories   ?? throw new ArgumentNullException(nameof(scrapeDirectories));
+    private SearchConfiguration _searchConfiguration = searchConfiguration ?? throw new ArgumentNullException(nameof(searchConfiguration));
 
-    [Then("I can download the pictures I don't currently have")]
-    public async Task ThenICanDownloadThePicturesIDoNotCurrentlyHave()
+    public async Task RunAsync()
     {
         try
         {
-            List<Category> searchCategories = FilterSearchCategories(searchConfiguration.SearchCategories.ToList());
-
+            List<Category> searchCategories = FilterSearchCategories(_searchConfiguration.SearchCategories.ToList());
             await ProcessSearchCategories(searchCategories);
         }
         catch(Exception exception)
         {
             logger.Error(exception.GetBaseException().Message);
-
             throw;
         }
     }
@@ -45,11 +37,11 @@ public sealed class DownloadImagesFromSearchResultsStepDefinitions(
     {
         foreach(Category searchCategory in searchCategories)
         {
-            var combinedSearchString = $"{searchConfiguration.SearchStringPrefix}{searchCategory.Id}{searchConfiguration.SearchStringSuffix}";
+            var combinedSearchString = $"{_searchConfiguration.SearchStringPrefix}{searchCategory.Id}{_searchConfiguration.SearchStringSuffix}";
 
-            searchConfiguration = UpdateSearchDetailsIfRequired(combinedSearchString);
+            _searchConfiguration = UpdateSearchDetailsIfRequired(combinedSearchString);
 
-            IResponse? pageDetails = await searchResultsPage.LoadSearchPageAsync(combinedSearchString, searchConfiguration.StartingPageNumber);
+            IResponse? pageDetails = await searchResultsPage.LoadSearchPageAsync(combinedSearchString, _searchConfiguration.StartingPageNumber);
 
             if(pageDetails is { Ok: false, }) throw new InvalidOperationException("Could not get the image page after retry...");
 
@@ -59,18 +51,17 @@ public sealed class DownloadImagesFromSearchResultsStepDefinitions(
             if(SearchCategoryHasBeenFullyVisited(combinedSearchString, searchCategory, imageCount))
             {
                 logger.Debug("{Category} category has been fully visited...", searchCategory.Name);
-
                 continue;
             }
 
-            searchCategory.LastKnownImageCount     = imageCount;
-            searchCategory.LastPageVisited         = 1;
-            searchConfiguration.StartingPageNumber = 1;
+            searchCategory.LastKnownImageCount       = imageCount;
+            searchCategory.LastPageVisited           = 1;
+            _searchConfiguration.StartingPageNumber  = 1;
 
             logger.Debug("Visiting {Category} now...", searchCategory.Name);
-            scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
+            _scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
 
-            _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(scrapeDirectories.RootDirectory, scrapeDirectories.BaseDirectory, subDirectoryName));
+            _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
 
             await ProcessAllCategoryPages(searchCategory, combinedSearchString);
         }
@@ -82,17 +73,16 @@ public sealed class DownloadImagesFromSearchResultsStepDefinitions(
         stopwatch.Start();
         logger.Debug("About to visit the specific {Category} pages now...", searchCategory.Name);
 
-        for(var currentPageNumber = searchConfiguration.StartingPageNumber; currentPageNumber <= searchConfiguration.TotalPages; currentPageNumber++)
+        for(var currentPageNumber = _searchConfiguration.StartingPageNumber; currentPageNumber <= _searchConfiguration.TotalPages; currentPageNumber++)
         {
             Thread.Sleep(2_000);
-            logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, searchConfiguration.TotalPages, searchCategory.Name);
-            searchConfiguration.StartingPageNumber = currentPageNumber;
-            searchCategory.LastPageVisited         = currentPageNumber;
+            logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, _searchConfiguration.TotalPages, searchCategory.Name);
+            _searchConfiguration.StartingPageNumber = currentPageNumber;
+            searchCategory.LastPageVisited          = currentPageNumber;
             configurationSaver.SaveUpdatedConfiguration();
             _ = await searchResultsPage.LoadSearchPageAsync(combinedSearchString, currentPageNumber);
 
             IReadOnlyCollection<string> imagePageLinks = await searchResultsPage.ImagePageLinksAsync();
-
             await imagePageService.GetTheImagePagesAsync(imagePageLinks);
         }
 
@@ -102,34 +92,30 @@ public sealed class DownloadImagesFromSearchResultsStepDefinitions(
 
     private ScrapeDirectories UpdateSubDirectoryIfRequired(string subDirectoryName)
     {
-        if(subDirectoryName.Length > 0) scrapeDirectories.SubDirectoryName = subDirectoryName;
-
-        return scrapeDirectories;
+        if(subDirectoryName.Length > 0) _scrapeDirectories.SubDirectoryName = subDirectoryName;
+        return _scrapeDirectories;
     }
 
     private SearchConfiguration UpdateSearchDetailsIfRequired(string combinedSearchString)
     {
-        if(searchConfiguration.SearchString == combinedSearchString) return searchConfiguration;
-
-        searchConfiguration.StartingPageNumber = 1;
-        searchConfiguration.SearchString       = combinedSearchString;
-
-        return searchConfiguration;
+        if(_searchConfiguration.SearchString == combinedSearchString) return _searchConfiguration;
+        _searchConfiguration.StartingPageNumber = 1;
+        _searchConfiguration.SearchString       = combinedSearchString;
+        return _searchConfiguration;
     }
 
     private bool SearchCategoryHasBeenFullyVisited(string combinedSearchString, Category searchCategory, int imageCount)
-        => searchConfiguration.SearchString == combinedSearchString && searchCategory.LastKnownImageCount == imageCount;
+        => _searchConfiguration.SearchString == combinedSearchString && searchCategory.LastKnownImageCount == imageCount;
 
     private List<Category> FilterSearchCategories(List<Category> searchCategories)
     {
         for(var i = 0; i < searchCategories.Count; i++)
         {
-            var combinedSearchString = $"{searchConfiguration.SearchStringPrefix}{searchCategories[i].Id}{searchConfiguration.SearchStringSuffix}";
+            var combinedSearchString = $"{_searchConfiguration.SearchStringPrefix}{searchCategories[i].Id}{_searchConfiguration.SearchStringSuffix}";
 
-            if(combinedSearchString != searchConfiguration.SearchString) continue;
+            if(combinedSearchString != _searchConfiguration.SearchString) continue;
 
             searchCategories = searchCategories.Skip(i).ToList();
-
             break;
         }
 
@@ -138,6 +124,6 @@ public sealed class DownloadImagesFromSearchResultsStepDefinitions(
 
     private void UpdateSearchTotalPagesIfRequired(int pageCount)
     {
-        if(searchConfiguration.TotalPages != pageCount) searchConfiguration.TotalPages = pageCount;
+        if(_searchConfiguration.TotalPages != pageCount) _searchConfiguration.TotalPages = pageCount;
     }
 }

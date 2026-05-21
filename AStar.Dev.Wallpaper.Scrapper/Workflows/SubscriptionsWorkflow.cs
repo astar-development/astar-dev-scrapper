@@ -3,13 +3,11 @@ using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using Microsoft.Playwright;
-using Reqnroll;
 using Serilog.Core;
 
-namespace AStar.Dev.Wallpaper.Scrapper.StepDefinitions;
+namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
-[Binding]
-public sealed class DownloadSubscriptionImagesNotDownloadedStepDefinitions(
+public sealed class SubscriptionsWorkflow(
     SubscriptionsImagesListPage subscriptionsImagesListPage,
     ImagePageService            imagePageService,
     SearchConfiguration         searchConfiguration,
@@ -17,8 +15,7 @@ public sealed class DownloadSubscriptionImagesNotDownloadedStepDefinitions(
     ConfigurationSaver          configurationSaver,
     Logger                      logger)
 {
-    [Then("I can download the new Subscription files")]
-    public async Task ThenICanDownloadTheNewSubscriptionFiles()
+    public async Task RunAsync()
     {
         try
         {
@@ -27,7 +24,6 @@ public sealed class DownloadSubscriptionImagesNotDownloadedStepDefinitions(
         catch(Exception exception)
         {
             logger.Error(exception.GetBaseException().Message);
-
             throw;
         }
     }

@@ -1,17 +1,18 @@
 ﻿using System.Reflection;
+using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
-internal class ConfigurationFactory
+public class ConfigurationFactory
 {
     public static ScrapeConfiguration Configuration()
     {
-        var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + """..\..\..\..\""";
+        var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).CombinePath("..", "..", "..");
 
         IConfiguration config = new ConfigurationBuilder()
-                               .AddJsonFile(Path.Combine(assemblyPath, "appSettings.json"), false, true)
+                               .AddJsonFile(Path.Combine(assemblyPath, "appsettings.json"), false, true)
                                .AddUserSecrets<ConfigurationFactory>(true, true)
                                .Build();
 

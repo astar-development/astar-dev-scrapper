@@ -3,21 +3,18 @@ using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using Microsoft.Playwright;
-using Reqnroll;
 using Serilog.Core;
 
-namespace AStar.Dev.Wallpaper.Scrapper.StepDefinitions;
+namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
-[Binding]
-public sealed class DownloadTheTopWallpapersNotAlreadyDownloadedStepDefinitions(
+public sealed class TopWallpapersWorkflow(
     TopWallpapersPage   topWallpapersPage,
     ImagePageService    imagePageService,
     SearchConfiguration searchConfiguration,
     ConfigurationSaver  configurationSaver,
     Logger              logger)
 {
-    [Then("I can download the top wallpapers I do not already have")]
-    public async Task ThenICanDownloadTheTopWallpapersIDoNotAlreadyHave()
+    public async Task RunAsync()
     {
         try
         {
@@ -26,7 +23,6 @@ public sealed class DownloadTheTopWallpapersNotAlreadyDownloadedStepDefinitions(
         catch(Exception exception)
         {
             logger.Error(exception.GetBaseException().Message);
-
             throw;
         }
     }

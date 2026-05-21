@@ -1,0 +1,139 @@
+using System.Reflection;
+using AStar.Dev.Utilities;
+using AStar.Dev.Wallpaper.Scrapper.Models;
+using AStar.Dev.Wallpaper.Scrapper.Pages;
+using AStar.Dev.Wallpaper.Scrapper.Services;
+using AStar.Dev.Wallpaper.Scrapper.Support;
+using AStar.Dev.Wallpaper.Scrapper.Workflows;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Playwright;
+using Serilog;
+using Serilog.Core;
+using Serilog.Exceptions;
+
+ScrapeConfiguration scrapeConfiguration = ConfigurationFactory.Configuration();
+
+var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).CombinePath("..", "..", "..");
+IConfigurationRoot configuration = new ConfigurationBuilder()
+    .SetBasePath(assemblyPath)
+    .AddJsonFile("appsettings.json")
+    .Build();
+
+Logger logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.Seq("http://localhost:5341")
+    .Enrich.WithExceptionDetails()
+    .Enrich.FromLogContext()
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
+
+var logging = new Logging();
+configuration.GetSection("Logging").Bind(logging);
+
+using IPlaywright playwright = await Playwright.CreateAsync();
+
+IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+{
+    Headless = false,
+    SlowMo   = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
+    Channel  = "chrome",
+    Args     = ["--disable-blink-features=AutomationControlled"],
+});
+
+IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
+{
+    BaseURL      = scrapeConfiguration.SearchConfiguration.BaseUrl,
+    ViewportSize = new ViewportSize { Width = 1920, Height = 1080 },
+    Locale       = "en-US",
+    TimezoneId   = "America/New_York",
+});
+
+await context.AddInitScriptAsync("""
+    Object.defineProperty(navigator, 'webdriver',  { get: () => undefined });
+    Object.defineProperty(navigator, 'plugins',    { get: () => [1, 2, 3, 4, 5] });
+    Object.defineProperty(navigator, 'languages',  { get: () => ['en-US', 'en'] });
+    window.chrome = { runtime: {}, loadTimes: function(){}, csi: function(){}, app: {} };
+    const _origQuery = window.navigator.permissions.query.bind(window.navigator.permissions);
+    window.navigator.permissions.query = (p) =>
+        p.name === 'notifications'
+            ? Promise.resolve({ state: Notification.permission })
+            : _origQuery(p);
+    """);
+
+var chromeCookies = await ChromeCookieExtractor.ExtractAsync("wallhaven.cc", logger);
+logger.Information("Extracted {Count} cookies from Chrome profile", chromeCookies.Count);
+var injected = 0;
+foreach(var cookie in chromeCookies)
+{
+    try
+    {
+        await context.AddCookiesAsync([cookie]);
+        injected++;
+    }
+    catch(Exception ex)
+    {
+        logger.Debug("Skipped cookie '{Name}' ({Domain}): {Message}", cookie.Name, cookie.Domain, ex.Message);
+    }
+}
+logger.Information("Injected {Injected}/{Total} cookies", injected, chromeCookies.Count);
+
+IPage page = await context.NewPageAsync();
+page.SetDefaultTimeout(60_000);
+
+var configSaver             = new ConfigurationSaver(scrapeConfiguration, logging, logger);
+var tagsToIgnoreCompletely  = TagsFactory.LoadTagsToIgnoreCompletely();
+var tagsTextToIgnore        = TagsFactory.LoadTagsTextToIgnore();
+
+var loginPage = new LoginPage(page, scrapeConfiguration.SearchConfiguration);
+var imagePage = new ImagePage(
+    page,
+    scrapeConfiguration.SearchConfiguration,
+    scrapeConfiguration.ScrapeDirectories,
+    scrapeConfiguration.ConnectionStrings,
+    tagsToIgnoreCompletely,
+    tagsTextToIgnore,
+    logger);
+var imagePageService = new ImagePageService(imagePage, logger);
+
+// If cookies gave us a valid session, wallhaven redirects /login → home; skip re-login
+await loginPage.GoToLoginPageAsync();
+if(page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
+{
+    logger.Information("Cookie session invalid or expired — logging in");
+    await loginPage.LoginAsync(scrapeConfiguration.UserConfiguration.Username, scrapeConfiguration.UserConfiguration.Password);
+    await loginPage.ConfirmLoggedInAsync($"{scrapeConfiguration.SearchConfiguration.BaseUrl}/user/{scrapeConfiguration.UserConfiguration.Username}");
+}
+else
+{
+    logger.Information("Cookie session valid — skipping login");
+}
+
+var runAll           = args.Length == 0;
+var runSearch        = runAll || args.Contains("search",        StringComparer.OrdinalIgnoreCase);
+var runSubscriptions = runAll || args.Contains("subscriptions", StringComparer.OrdinalIgnoreCase);
+var runTopWallpapers = runAll || args.Contains("topwallpapers", StringComparer.OrdinalIgnoreCase);
+
+if(runSearch)
+{
+    var searchResultsPage = new SearchResultsPage(page, logger);
+    var workflow          = new SearchWorkflow(searchResultsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
+    await workflow.RunAsync();
+}
+
+if(runSubscriptions)
+{
+    var subscriptionsPage = new SubscriptionsImagesListPage(page, scrapeConfiguration.SearchConfiguration);
+    var workflow          = new SubscriptionsWorkflow(subscriptionsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
+    await workflow.RunAsync();
+}
+
+if(runTopWallpapers)
+{
+    var topWallpapersPage = new TopWallpapersPage(page, scrapeConfiguration.SearchConfiguration);
+    var workflow          = new TopWallpapersWorkflow(topWallpapersPage, imagePageService, scrapeConfiguration.SearchConfiguration, configSaver, logger);
+    await workflow.RunAsync();
+}
+
+configSaver.SaveUpdatedConfiguration();
+logger.Information("Shutting down...");
