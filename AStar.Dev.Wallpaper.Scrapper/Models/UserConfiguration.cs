@@ -7,4 +7,6 @@ public sealed class UserConfiguration
     public string Username { get; set; } = string.Empty;
 
     public string Password { get; set; } = string.Empty;
+    
+    public string SessionCookie { get; internal set; } = string.Empty;
 }

@@ -13,6 +13,8 @@ public sealed class ScrapeConfigurationEntityConfiguration : IEntityTypeConfigur
     {
         _ = builder.ToTable("ScrapeConfiguration");
 
+        _ = builder.HasKey(config => config.Id);
+
         _ = builder.ComplexProperty(config => config.ConnectionStrings)
                    .Configure(new ConnectionStringsConfiguration());
 

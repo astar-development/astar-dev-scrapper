@@ -27,6 +27,45 @@ Logger logger = new LoggerConfiguration()
 var logging = new Logging();
 configuration.GetSection("Logging").Bind(logging);
 
+var configSaver             = new ConfigurationSaver(scrapeConfiguration, logging, logger);
+var tagsToIgnoreCompletely  = TagsFactory.LoadTagsToIgnoreCompletely();
+var tagsTextToIgnore        = TagsFactory.LoadTagsTextToIgnore();
+
+await using var dbContext = new FilesContext(new DbContextOptions<FilesContext>());
+dbContext.Database.Migrate();
+dbContext.TagsToIgnore.AddRange(tagsTextToIgnore.Tags.Select(tag => new TagToIgnore { Value = tag }));
+dbContext.ModelsToIgnore.AddRange(tagsToIgnoreCompletely.Tags.Select(tag => new ModelToIgnore { Value = tag }));
+dbContext.ScrapeConfiguration.Add(new ScrapeConfigurationEntity
+{
+    ConnectionStrings = new AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings(){
+        Sqlite = scrapeConfiguration.ConnectionStrings.ToString()!
+    },
+    UserConfiguration = new AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration
+    {
+        Username = scrapeConfiguration.UserConfiguration.Username,
+        Password = scrapeConfiguration.UserConfiguration.Password,
+        LoginEmailAddress = scrapeConfiguration.UserConfiguration.LoginEmailAddress,
+        SessionCookie = scrapeConfiguration.UserConfiguration.SessionCookie,
+    },
+    SearchConfiguration = new AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration
+    {
+        BaseUrl          = scrapeConfiguration.SearchConfiguration.BaseUrl,
+        ApiKey           = scrapeConfiguration.SearchConfiguration.ApiKey,
+        SearchCategories = [.. scrapeConfiguration.SearchConfiguration.SearchCategories.Select(category => new AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories
+        {
+            Id    = category.Id,
+            Name = category.Name,
+            LastKnownImageCount = category.LastKnownImageCount,
+            LastPageVisited = category.LastPageVisited,
+            TotalPages = category.TotalPages,
+        })],
+        SearchString     = scrapeConfiguration.SearchConfiguration.SearchString,
+        TopWallpapers  = scrapeConfiguration.SearchConfiguration.TopWallpapers,
+    },
+    ScrapeDirectories = scrapeConfiguration.ScrapeDirectories.ToEntity(),
+});
+await dbContext.SaveChangesAsync();
+
 using IPlaywright playwright = await Playwright.CreateAsync();
 
 IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
@@ -65,10 +104,6 @@ logger.Information("Injected {Injected}/{Total} cookies", injected, chromeCookie
 IPage page = await context.NewPageAsync();
 page.SetDefaultTimeout(60_000);
 
-var configSaver             = new ConfigurationSaver(scrapeConfiguration, logging, logger);
-var tagsToIgnoreCompletely  = TagsFactory.LoadTagsToIgnoreCompletely();
-var tagsTextToIgnore        = TagsFactory.LoadTagsTextToIgnore();
-
 var loginPage = new LoginPage(page, scrapeConfiguration.SearchConfiguration);
 var imagePage = new ImagePage(
     page,
@@ -95,19 +130,6 @@ var runAll           = args.Length == 0;
 var runSearch        = runAll || args.Contains("search",        StringComparer.OrdinalIgnoreCase);
 var runSubscriptions = runAll || args.Contains("subscriptions", StringComparer.OrdinalIgnoreCase);
 var runTopWallpapers = runAll || args.Contains("topwallpapers", StringComparer.OrdinalIgnoreCase);
-
-await using var dbContext = new FilesContext(new DbContextOptions<FilesContext>());
-dbContext.Database.Migrate();
-dbContext.TagsToIgnore.AddRange(tagsTextToIgnore.Tags.Select(tag => new TagToIgnore { Value = tag }));
-dbContext.ModelsToIgnore.AddRange(tagsToIgnoreCompletely.Tags.Select(tag => new ModelToIgnore { Value = tag }));
-dbContext.ScrapeConfiguration.Add(new ScrapeConfigurationEntity
-{
-    ConnectionStrings = JsonSerializer.Deserialize<AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings>(JsonSerializer.Serialize(scrapeConfiguration.ConnectionStrings))!,
-    UserConfiguration = JsonSerializer.Deserialize<AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration>(JsonSerializer.Serialize(scrapeConfiguration.UserConfiguration))!,
-    SearchConfiguration = JsonSerializer.Deserialize<AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration>(JsonSerializer.Serialize(scrapeConfiguration.SearchConfiguration))!,
-    ScrapeDirectories = JsonSerializer.Deserialize<AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories>(JsonSerializer.Serialize(scrapeConfiguration.ScrapeDirectories))!,
-});
-await dbContext.SaveChangesAsync();
 
 if(runSearch)
 {

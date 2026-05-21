@@ -3,6 +3,7 @@
 public sealed class SearchConfiguration
 {
     public string BaseUrl { get; set; } = string.Empty;
+    public string ApiKey { get; set; } = string.Empty;
 
     public string LoginUrl { get; set; } = string.Empty;
 

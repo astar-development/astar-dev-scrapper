@@ -69,6 +69,13 @@
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Configurations.ModelToIgnoreConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{AStar.Dev.Infrastructure.FilesDb.Models.ModelToIgnore})">
             <inheritdoc />
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Configurations.ScrapeConfigurationEntityConfiguration">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Configurations.ScrapeConfigurationEntityConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity})">
+            <inheritdoc />
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Configurations.TagToIgnoreConfiguration">
             <summary>
             </summary>
@@ -243,6 +250,54 @@
             <inheritdoc />
         </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddStrongIds.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfiguration">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfiguration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfiguration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfiguration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationNoMax">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationNoMax.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationNoMax.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationNoMax.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationNoMaxAgain">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationNoMaxAgain.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationNoMaxAgain.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationNoMaxAgain.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.UpdateScrapeConfigurations">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.UpdateScrapeConfigurations.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.UpdateScrapeConfigurations.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.UpdateScrapeConfigurations.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity">
@@ -918,6 +973,11 @@
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity">
             <summary>
             Represents the configuration details required for the scraping process, including connection strings, user configuration, search configuration, and scrape directories. This class serves as a central point for managing all the necessary settings and parameters that the scraper needs to operate effectively. The ConnectionStrings property contains the information required to connect to various databases or services, while the UserConfiguration property holds the authentication details for accessing user-specific content on the target website. The SearchConfiguration property defines the parameters for performing searches on the target website, such as search queries and filters. Finally, the ScrapeDirectories property specifies the directories where scraped data should be stored. Proper management of these configurations is crucial for ensuring that the scraper can operate efficiently and securely, allowing it to access necessary resources and perform its tasks without issues.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity.Id">
+            <summary>
+            The unique identifier for the scrape configuration entity. This property serves as the primary key for the entity in the database, allowing for efficient retrieval and management of different scrape configurations. The Id is typically an auto-incrementing integer that uniquely distinguishes each configuration entry, enabling users to store and manage multiple configurations for different scraping scenarios or target websites. Proper management of the Id property is essential for maintaining the integrity of the database and ensuring that each configuration can be accessed and modified as needed without conflicts or ambiguity.
             </summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity.ConnectionStrings">
