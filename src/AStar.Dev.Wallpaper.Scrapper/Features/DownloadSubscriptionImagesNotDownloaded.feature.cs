@@ -17,21 +17,21 @@ namespace AStar.Dev.Wallpaper.Scrapper.Features
     
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Reqnroll", "3.0.0.0")]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public partial class DownloadImagesFromSearchResultsFeature : object, global::Xunit.IClassFixture<DownloadImagesFromSearchResultsFeature.FixtureData>, global::Xunit.IAsyncLifetime
+    public partial class DownloadSubscriptionImagesNotDownloadedFeature : object, global::Xunit.IClassFixture<DownloadSubscriptionImagesNotDownloadedFeature.FixtureData>, global::Xunit.IAsyncLifetime
     {
         
         private global::Reqnroll.ITestRunner testRunner;
         
         private static string[] featureTags = ((string[])(null));
         
-        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new global::System.Globalization.CultureInfo("en-US"), "Features", "DownloadImagesFromSearchResults", "A short summary of the feature", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags, InitializeCucumberMessages());
+        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new global::System.Globalization.CultureInfo("en-US"), "Features", "DownloadSubscriptionImagesNotDownloaded", "A short summary of the feature", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags, InitializeCucumberMessages());
         
         private global::Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         
-#line 1 "DownloadImagesFromSearchResults.feature"
+#line 1 "DownloadSubscriptionImagesNotDownloaded.feature"
 #line hidden
         
-        public DownloadImagesFromSearchResultsFeature(DownloadImagesFromSearchResultsFeature.FixtureData fixtureData, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper)
+        public DownloadSubscriptionImagesNotDownloadedFeature(DownloadSubscriptionImagesNotDownloadedFeature.FixtureData fixtureData, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper)
         {
             this._testOutputHelper = testOutputHelper;
         }
@@ -105,7 +105,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Features
         
         private static global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages InitializeCucumberMessages()
         {
-            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("Features/DownloadImagesFromSearchResults.feature.ndjson", 3);
+            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("Features/DownloadSubscriptionImagesNotDownloaded.feature.ndjson", 3);
         }
         
         async global::System.Threading.Tasks.Task global::Xunit.IAsyncLifetime.InitializeAsync()
@@ -133,17 +133,17 @@ namespace AStar.Dev.Wallpaper.Scrapper.Features
             await this.TestTearDownAsync();
         }
         
-        [global::Xunit.SkippableFactAttribute(DisplayName="I can download the images I don\'t have already")]
-        [global::Xunit.TraitAttribute("FeatureTitle", "DownloadImagesFromSearchResults")]
-        [global::Xunit.TraitAttribute("Description", "I can download the images I don\'t have already")]
+        [global::Xunit.SkippableFactAttribute(DisplayName="I can download all of the new Subscription files")]
+        [global::Xunit.TraitAttribute("FeatureTitle", "DownloadSubscriptionImagesNotDownloaded")]
+        [global::Xunit.TraitAttribute("Description", "I can download all of the new Subscription files")]
         [global::Xunit.TraitAttribute("Category", "tag1")]
-        public async global::System.Threading.Tasks.Task ICanDownloadTheImagesIDontHaveAlready()
+        public async global::System.Threading.Tasks.Task ICanDownloadAllOfTheNewSubscriptionFiles()
         {
             string[] tagsOfScenario = new string[] {
                     "tag1"};
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             string pickleIndex = "0";
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("I can download the images I don\'t have already", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("I can download all of the new Subscription files", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
             string[] tagsOfRule = ((string[])(null));
             global::Reqnroll.RuleInfo ruleInfo = null;
 #line 6
@@ -166,7 +166,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Features
         await testRunner.ThenAsync("I can see that I have logged in successfully", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
 #line hidden
 #line 10
-        await testRunner.AndAsync("I can download the pictures I don\'t currently have", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+        await testRunner.AndAsync("I can download the new Subscription files", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
@@ -174,17 +174,17 @@ namespace AStar.Dev.Wallpaper.Scrapper.Features
         
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Reqnroll", "3.0.0.0")]
         [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-        public sealed class FixtureData : object, global::Xunit.IAsyncLifetime
+        public class FixtureData : object, global::Xunit.IAsyncLifetime
         {
             
             async global::System.Threading.Tasks.Task global::Xunit.IAsyncLifetime.InitializeAsync()
             {
-                await DownloadImagesFromSearchResultsFeature.FeatureSetupAsync();
+                await DownloadSubscriptionImagesNotDownloadedFeature.FeatureSetupAsync();
             }
             
             async global::System.Threading.Tasks.Task global::Xunit.IAsyncLifetime.DisposeAsync()
             {
-                await DownloadImagesFromSearchResultsFeature.FeatureTearDownAsync();
+                await DownloadSubscriptionImagesNotDownloadedFeature.FeatureTearDownAsync();
             }
         }
     }
