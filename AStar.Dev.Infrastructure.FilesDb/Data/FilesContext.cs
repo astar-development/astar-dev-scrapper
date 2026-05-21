@@ -55,6 +55,31 @@ public sealed class FilesContext : DbContext
     /// </summary>
     public DbSet<ScrapeConfigurationEntity> ScrapeConfiguration { get; set; } = null!;
 
+    /// <summary>
+    ///    Gets or sets the connection string configuration table.
+    /// </summary>
+    public DbSet<ConnectionStrings> ConnectionStrings { get; set; } = null!;
+
+    /// <summary>
+    ///    Gets or sets the user configuration table.
+    /// </summary>
+    public DbSet<UserConfiguration> UserConfigurations { get; set; } = null!;
+
+    /// <summary>
+    ///    Gets or sets the search configuration table.
+    /// </summary>
+    public DbSet<SearchConfiguration> SearchConfigurations { get; set; } = null!;
+
+    /// <summary>
+    ///    Gets or sets the scrape directories table.
+    /// </summary>
+    public DbSet<ScrapeDirectories> ScrapeDirectories { get; set; } = null!;
+
+    /// <summary>
+    ///    Gets or sets the search categories table.
+    /// </summary>
+    public DbSet<SearchCategories> SearchCategories { get; set; } = null!;
+
     /// <inheritdoc />
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

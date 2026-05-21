@@ -1,79 +1,83 @@
-using System.Text.Json;
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AStar.Dev.Infrastructure.FilesDb.Configurations;
 
-internal class SearchConfigurationConfiguration : IComplexPropertyConfiguration<SearchConfiguration>
+internal sealed class SearchConfigurationConfiguration : IEntityTypeConfiguration<SearchConfiguration>
 {
-    public void Configure(ComplexPropertyBuilder<SearchConfiguration> builder)
+    public void Configure(EntityTypeBuilder<SearchConfiguration> builder)
     {
-        builder.Property(searchConfig => searchConfig.BaseUrl)
+        builder.ToTable("SearchConfiguration");
+
+        builder.HasKey(searchConfiguration => searchConfiguration.Id);
+
+        builder.HasIndex(searchConfiguration => searchConfiguration.ScrapeConfigurationEntityId)
+               .IsUnique();
+
+        builder.Property(searchConfiguration => searchConfiguration.ScrapeConfigurationEntityId)
+               .IsRequired();
+
+        builder.Property(searchConfiguration => searchConfiguration.BaseUrl)
                .HasColumnType("nvarchar(256)")
-               .HasConversion(baseUrl => baseUrl, baseUrl => baseUrl);
+               .IsRequired();
 
-        builder.Property(searchConfig => searchConfig.SearchCategories)
-                .HasColumnType("nvarchar(256)")
-                .HasConversion(
-                     searchCategories => JsonSerializer.Serialize(searchCategories, (JsonSerializerOptions?)null),
-                     searchCategoriesJson => (JsonSerializer.Deserialize<List<SearchCategories>>(searchCategoriesJson, (JsonSerializerOptions?)null) ?? new List<SearchCategories>()).ToArray());
+        builder.Property(searchConfiguration => searchConfiguration.ApiKey)
+               .HasColumnType("nvarchar(256)")
+               .IsRequired();
 
-        builder.Property(searchConfig => searchConfig.ImagePauseInSeconds)    
+        builder.Property(searchConfiguration => searchConfiguration.SearchString)
+               .HasColumnType("nvarchar(256)")
+               .IsRequired();
+
+        builder.Property(searchConfiguration => searchConfiguration.TopWallpapers)
+               .HasColumnType("nvarchar(256)")
+               .IsRequired();
+
+        builder.Property(searchConfiguration => searchConfiguration.SearchStringPrefix)
+               .HasColumnType("nvarchar(256)")
+               .IsRequired();
+
+        builder.Property(searchConfiguration => searchConfiguration.SearchStringSuffix)
+               .HasColumnType("nvarchar(256)")
+               .IsRequired();
+
+        builder.Property(searchConfiguration => searchConfiguration.Subscriptions)
+               .HasColumnType("nvarchar(256)")
+               .IsRequired();
+
+        builder.Property(searchConfiguration => searchConfiguration.ImagePauseInSeconds)
                .HasColumnType("int")
-               .HasConversion(requestDelay => requestDelay, requestDelay => requestDelay);
+               .IsRequired();
 
-               builder.Property(searchConfig => searchConfig.StartingPageNumber)
-                      .HasColumnType("int");
+        builder.Property(searchConfiguration => searchConfiguration.StartingPageNumber)
+               .HasColumnType("int")
+               .IsRequired();
 
-                      builder.Property(searchConfig => searchConfig.TotalPages)
-                      .HasColumnType("int");
+        builder.Property(searchConfiguration => searchConfiguration.TotalPages)
+               .HasColumnType("int")
+               .IsRequired();
 
-                      builder.Property(searchConfig => searchConfig.SubscriptionsStartingPageNumber)
-                      .HasColumnType("int");
+        builder.Property(searchConfiguration => searchConfiguration.SubscriptionsStartingPageNumber)
+               .HasColumnType("int")
+               .IsRequired();
 
-                      builder.Property(searchConfig => searchConfig.SubscriptionsTotalPages)
-                      .HasColumnType("int");
+        builder.Property(searchConfiguration => searchConfiguration.SubscriptionsTotalPages)
+               .HasColumnType("int")
+               .IsRequired();
 
-                      builder.Property(searchConfig => searchConfig.TopWallpapersStartingPageNumber)
-                      .HasColumnType("int");
+        builder.Property(searchConfiguration => searchConfiguration.TopWallpapersStartingPageNumber)
+               .HasColumnType("int")
+               .IsRequired();
 
-                        builder.Property(searchConfig => searchConfig.TopWallpapersTotalPages)
-                        .HasColumnType("int");
+        builder.Property(searchConfiguration => searchConfiguration.TopWallpapersTotalPages)
+               .HasColumnType("int")
+               .IsRequired();
 
-                        builder.Property(searchConfig => searchConfig.TopWallpapersStartingPageNumber)
-                        .HasColumnType("int");
-
-               builder.Property(searchConfig => searchConfig.BaseUrl).HasColumnType("nvarchar(256)").HasConversion(baseUrl => baseUrl, baseUrl => baseUrl);
-
-        builder.Property(searchConfig => searchConfig.SearchCategories)
-               .HasColumnType("nvarchar(256)")
-               .HasConversion(
-                    searchCategories => JsonSerializer.Serialize(searchCategories, (JsonSerializerOptions?)null),
-                    searchCategoriesJson => (JsonSerializer.Deserialize<List<SearchCategories>>(searchCategoriesJson, (JsonSerializerOptions?)null) ?? new List<SearchCategories>()).ToArray());
-
-        builder.Property(searchConfig => searchConfig.ApiKey)
-               .HasColumnType("nvarchar(256)")
-               .HasConversion(apiKey => apiKey, apiKey => apiKey);
-
-        builder.Property(searchConfig => searchConfig.SearchString)
-               .HasColumnType("nvarchar(256)")                                                                                          
-               .HasConversion(searchString => searchString, searchString => searchString);
-
-        builder.Property(searchConfig => searchConfig.TopWallpapers)
-               .HasColumnType("nvarchar(256)")
-               .HasConversion(topWallpapers => topWallpapers, topWallpapers => topWallpapers);
-
-        builder.Property(searchConfig => searchConfig.SearchStringPrefix)
-               .HasColumnType("nvarchar(256)")
-               .HasConversion(searchStringPrefix => searchStringPrefix, searchStringPrefix => searchStringPrefix);
-
-        builder.Property(searchConfig => searchConfig.SearchStringSuffix)
-               .HasColumnType("nvarchar(256)")
-               .HasConversion(searchStringSuffix => searchStringSuffix, searchStringSuffix => searchStringSuffix);
-
-               builder.Property(searchConfig => searchConfig.Subscriptions)
-                .HasColumnType("nvarchar(256)");
-
+        builder.HasMany(searchConfiguration => searchConfiguration.SearchCategories)
+               .WithOne(searchCategory => searchCategory.SearchConfiguration)
+               .HasForeignKey(searchCategory => searchCategory.SearchConfigurationId)
+               .IsRequired()
+               .OnDelete(DeleteBehavior.Cascade);
     }
 }

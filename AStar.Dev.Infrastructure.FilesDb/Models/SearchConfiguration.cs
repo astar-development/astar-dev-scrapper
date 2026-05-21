@@ -6,6 +6,21 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 public class SearchConfiguration
 {
     /// <summary>
+    /// The internal primary key for the SearchConfiguration table.
+    /// </summary>
+    public int Id { get; set; }
+
+    /// <summary>
+    /// The foreign key back to the parent scrape configuration.
+    /// </summary>
+    public int ScrapeConfigurationEntityId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the parent scrape configuration.
+    /// </summary>
+    public ScrapeConfigurationEntity? ScrapeConfigurationEntity { get; set; }
+
+    /// <summary>
     /// The base URL of the target website to be scraped. This is the starting point for the scraper and is essential for constructing the full URLs for search queries, image pages, and other relevant endpoints. The base URL should be set to the main domain of the website being scraped, such as "https://example.com". It serves as the foundation for all subsequent navigation and scraping activities, allowing the scraper to access the necessary pages and resources to collect the desired data effectively.
     /// </summary>
     public string BaseUrl { get; set; } = string.Empty;
@@ -18,7 +33,7 @@ public class SearchConfiguration
     /// <summary>
     /// The search categories represent the different categories or topics that the scraper will target during the scraping process. Each category includes its unique identifier, name, last known image count, last page visited, and total pages available. This information is crucial for managing and tracking the scraping progress for each category, allowing the scraper to efficiently navigate through search results and resume from the last visited page in case of interruptions. The search categories help organize the scraping process and ensure that the scraper can focus on specific areas of interest while collecting relevant data effectively.
     /// </summary>
-    public SearchCategories[] SearchCategories { get; set; } = [];
+    public List<SearchCategories> SearchCategories { get; set; } = new();
 
     /// <summary>
     /// The search string is a specific query or keyword that the scraper will use to perform searches on the target website. This string can be customized to target specific types of content or to refine the search results based on user preferences. The search string is essential for guiding the scraper in finding relevant images and data that match the specified criteria, allowing for a more focused and efficient scraping process. By using a well-defined search string, users can ensure that the scraper collects data that is most relevant to their interests and needs.

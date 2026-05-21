@@ -137,6 +137,31 @@
                Gets or sets the Scrape Configuration details for the scraper, including connection strings, user configuration, search configuration, and scrape directories. This property serves as a central point for managing all the necessary settings and parameters that the scraper needs to operate effectively. The ScrapeConfiguration property allows for flexible configuration of different aspects of the scraping process, enabling the scraper to adapt to various environments and requirements without hardcoding sensitive information directly into the codebase. Proper management of scrape configuration is crucial for ensuring that the scraper can operate efficiently and securely, allowing it to access necessary resources and perform its tasks without issues.
             </summary>
         </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.ConnectionStrings">
+            <summary>
+               Gets or sets the connection string configuration table.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.UserConfigurations">
+            <summary>
+               Gets or sets the user configuration table.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.SearchConfigurations">
+            <summary>
+               Gets or sets the search configuration table.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.ScrapeDirectories">
+            <summary>
+               Gets or sets the scrape directories table.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.SearchCategories">
+            <summary>
+               Gets or sets the search categories table.
+            </summary>
+        </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
             <inheritdoc />
         </member>
@@ -300,6 +325,18 @@
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.UpdateScrapeConfigurations.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationMappings">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationMappings.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationMappings.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationMappings.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity">
             <summary>
                The <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity"></see> class provides common properties for tracking the creation and modification of entities.
@@ -320,6 +357,21 @@
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings">
             <summary>
             Represents the connection strings required for the scraper to connect to various databases or services. This class is essential for configuring the scraper's access to necessary resources, such as a SQLite database for storing scraped data or a logging service for recording the scraping process. The ConnectionStrings property allows for flexible configuration of different connection strings, enabling the scraper to adapt to various environments and requirements without hardcoding sensitive information directly into the codebase. Proper management of connection strings is crucial for ensuring secure and efficient operation of the scraper, as it may need to connect to multiple services or databases during its execution.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings.Id">
+            <summary>
+            The internal primary key for the ConnectionStrings table.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings.ScrapeConfigurationEntityId">
+            <summary>
+            The foreign key back to the parent scrape configuration.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings.ScrapeConfigurationEntity">
+            <summary>
+            Navigation property to the parent scrape configuration.
             </summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings.Sqlite">
@@ -1005,6 +1057,21 @@
             Directories used for scraping, including root directory, base save directory, and any subdirectories. This allows for flexible organization of scraped data and easy configuration of save paths.
             </summary>
         </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories.Id">
+            <summary>
+            The internal primary key for the ScrapeDirectories table.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories.ScrapeConfigurationEntityId">
+            <summary>
+            The foreign key back to the parent scrape configuration.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories.ScrapeConfigurationEntity">
+            <summary>
+            Navigation property to the parent scrape configuration.
+            </summary>
+        </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories.RootDirectory">
             <summary>
             The root directory for all scraping activities. This is the base path under which all scraped data will be organized. It can be set to a specific location on the file system where the user wants to store the scraped images and related data. The base save directory and any subdirectories will be created under this root directory.
@@ -1035,6 +1102,16 @@
             Represents a search category with its associated metadata, including the category's unique identifier, name, last known image count, last page visited, and total pages available. This information is crucial for managing and tracking the scraping process for each category, allowing for efficient navigation through search results and ensuring that the scraper can resume from the last visited page in case of interruptions. The LastKnownImageCount helps in determining if there are new images to scrape since the last run, while LastPageVisited and TotalPages assist in navigating through paginated search results effectively.
             </summary>
         </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.SearchConfigurationId">
+            <summary>
+            The foreign key back to the parent search configuration.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.SearchConfiguration">
+            <summary>
+            Navigation property to the parent search configuration.
+            </summary>
+        </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.Id">
             <summary>
             The unique identifier for the search category. This ID is used to distinguish between different categories and is essential for tracking the scraping progress for each specific category. It allows the scraper to identify which category it is currently processing and to store relevant data accordingly.
@@ -1063,6 +1140,21 @@
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration">
             <summary>
             Represents the search configuration for the scraping process, including the base URL, API key, search categories, search string, top wallpapers, search string prefix and suffix, subscriptions, image pause duration, starting page numbers, and total pages for search results, subscriptions, and top wallpapers. This configuration is essential for guiding the scraper on how to navigate the target website, what criteria to use for searching and categorizing images, and how to manage pagination effectively. The properties in this class allow for flexible and dynamic configuration of the scraping process, enabling users to customize their scraping sessions according to their specific needs and preferences.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.Id">
+            <summary>
+            The internal primary key for the SearchConfiguration table.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.ScrapeConfigurationEntityId">
+            <summary>
+            The foreign key back to the parent scrape configuration.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.ScrapeConfigurationEntity">
+            <summary>
+            Navigation property to the parent scrape configuration.
             </summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.BaseUrl">
@@ -1244,6 +1336,21 @@
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration">
             <summary>
             Represents user configuration details, including login email address, username, password, and session cookie. This information is essential for authenticating the scraper with the target website, allowing it to access user-specific content and perform actions that require authentication. The LoginEmailAddress and Username are used for identifying the user account, while the Password is necessary for logging in. The SessionCookie can be used to maintain an authenticated session without needing to log in repeatedly, improving the efficiency of the scraping process and reducing the likelihood of triggering anti-bot measures on the target website.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration.Id">
+            <summary>
+            The internal primary key for the UserConfiguration table.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration.ScrapeConfigurationEntityId">
+            <summary>
+            The foreign key back to the parent scrape configuration.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration.ScrapeConfigurationEntity">
+            <summary>
+            Navigation property to the parent scrape configuration.
             </summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration.LoginEmailAddress">

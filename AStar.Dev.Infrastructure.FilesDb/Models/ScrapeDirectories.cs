@@ -6,6 +6,21 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 public class ScrapeDirectories
 {
     /// <summary>
+    /// The internal primary key for the ScrapeDirectories table.
+    /// </summary>
+    public int Id { get; set; }
+
+    /// <summary>
+    /// The foreign key back to the parent scrape configuration.
+    /// </summary>
+    public int ScrapeConfigurationEntityId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the parent scrape configuration.
+    /// </summary>
+    public ScrapeConfigurationEntity? ScrapeConfigurationEntity { get; set; }
+
+    /// <summary>
     /// The root directory for all scraping activities. This is the base path under which all scraped data will be organized. It can be set to a specific location on the file system where the user wants to store the scraped images and related data. The base save directory and any subdirectories will be created under this root directory.
     /// </summary>
     public string RootDirectory { get; set; } = string.Empty;

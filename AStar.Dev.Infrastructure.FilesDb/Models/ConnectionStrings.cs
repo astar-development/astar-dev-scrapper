@@ -6,6 +6,21 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 public class ConnectionStrings
 {
     /// <summary>
+    /// The internal primary key for the ConnectionStrings table.
+    /// </summary>
+    public int Id { get; set; }
+
+    /// <summary>
+    /// The foreign key back to the parent scrape configuration.
+    /// </summary>
+    public int ScrapeConfigurationEntityId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the parent scrape configuration.
+    /// </summary>
+    public ScrapeConfigurationEntity? ScrapeConfigurationEntity { get; set; }
+
+    /// <summary>
     /// The connection string for the SQLite database. This string contains the necessary information for the scraper to establish a connection to the SQLite database, such as the file path, credentials, and any additional parameters required for authentication and communication. The Sqlite connection string is crucial for enabling the scraper to store and retrieve data efficiently, allowing it to manage the scraped data effectively and maintain a persistent record of its operations. Proper configuration of the SQLite connection string ensures that the scraper can access the database securely and perform necessary read/write operations without issues.
     /// </summary>
     public string Sqlite { get; set; } = string.Empty;

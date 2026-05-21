@@ -6,6 +6,21 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 public class UserConfiguration
 {
     /// <summary>
+    /// The internal primary key for the UserConfiguration table.
+    /// </summary>
+    public int Id { get; set; }
+
+    /// <summary>
+    /// The foreign key back to the parent scrape configuration.
+    /// </summary>
+    public int ScrapeConfigurationEntityId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the parent scrape configuration.
+    /// </summary>
+    public ScrapeConfigurationEntity? ScrapeConfigurationEntity { get; set; }
+
+    /// <summary>
     /// The login email address is the email associated with the user's account on the target website. It is used as part of the authentication process when logging in to the website. The scraper will use this email address, along with the password, to authenticate and gain access to user-specific content and features on the website. Providing a valid login email address is crucial for successful authentication and ensuring that the scraper can access the necessary data for scraping.
     /// </summary>
     public string LoginEmailAddress { get; set; } = string.Empty;

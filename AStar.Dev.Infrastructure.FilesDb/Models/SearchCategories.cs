@@ -6,6 +6,16 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 public class SearchCategories
 {
     /// <summary>
+    /// The foreign key back to the parent search configuration.
+    /// </summary>
+    public int SearchConfigurationId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the parent search configuration.
+    /// </summary>
+    public SearchConfiguration? SearchConfiguration { get; set; }
+
+    /// <summary>
     /// The unique identifier for the search category. This ID is used to distinguish between different categories and is essential for tracking the scraping progress for each specific category. It allows the scraper to identify which category it is currently processing and to store relevant data accordingly.
     /// </summary>
     public string Id { get; set; } = string.Empty;

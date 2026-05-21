@@ -4,23 +4,33 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AStar.Dev.Infrastructure.FilesDb.Configurations;
 
-internal class ScrapeDirectoriesConfiguration : IComplexPropertyConfiguration<ScrapeDirectories>
+internal sealed class ScrapeDirectoriesConfiguration : IEntityTypeConfiguration<ScrapeDirectories>
 {
-    public void Configure(ComplexPropertyBuilder<ScrapeDirectories> builder)
+    public void Configure(EntityTypeBuilder<ScrapeDirectories> builder)
     {
-        builder.Property(scrapeDirs => scrapeDirs.RootDirectory)
+        builder.ToTable("ScrapeDirectories");
+
+        builder.HasKey(scrapeDirectories => scrapeDirectories.Id);
+
+        builder.HasIndex(scrapeDirectories => scrapeDirectories.ScrapeConfigurationEntityId)
+               .IsUnique();
+
+        builder.Property(scrapeDirectories => scrapeDirectories.ScrapeConfigurationEntityId)
+               .IsRequired();
+
+        builder.Property(scrapeDirectories => scrapeDirectories.RootDirectory)
                .HasColumnType("nvarchar(256)");
 
-        builder.Property(scrapeDirs => scrapeDirs.BaseSaveDirectory)
+        builder.Property(scrapeDirectories => scrapeDirectories.BaseSaveDirectory)
                .HasColumnType("nvarchar(256)");
 
-        builder.Property(scrapeDirs => scrapeDirs.BaseDirectory)
+        builder.Property(scrapeDirectories => scrapeDirectories.BaseDirectory)
                .HasColumnType("nvarchar(256)");
 
-        builder.Property(scrapeDirs => scrapeDirs.BaseDirectoryFamous)
+        builder.Property(scrapeDirectories => scrapeDirectories.BaseDirectoryFamous)
                .HasColumnType("nvarchar(256)");
 
-        builder.Property(scrapeDirs => scrapeDirs.SubDirectoryName)
+        builder.Property(scrapeDirectories => scrapeDirectories.SubDirectoryName)
                .HasColumnType("nvarchar(256)");
     }
 }
