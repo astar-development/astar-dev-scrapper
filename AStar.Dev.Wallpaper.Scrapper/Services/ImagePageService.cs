@@ -30,7 +30,7 @@ public sealed class ImagePageService(ImagePage imagePage, FileDetailRepository f
             }
             catch
             {
-                Thread.Sleep(TimeSpan.FromSeconds(10));
+                await Task.Delay(TimeSpan.FromSeconds(10));
                 await ProcessImagePageAsync(pageLink);
             }
         }
@@ -39,7 +39,7 @@ public sealed class ImagePageService(ImagePage imagePage, FileDetailRepository f
     private async Task ProcessImagePageAsync(string pageLink)
     {
         var delay = Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4);
-        Thread.Sleep(TimeSpan.FromSeconds(delay));
+        await Task.Delay(TimeSpan.FromSeconds(delay));
 
         var result = await imagePage.GetImageFromPage(pageLink);
         if(result.Skip || result.ImageUrl is null) return;

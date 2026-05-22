@@ -52,7 +52,7 @@ public sealed class SubscriptionsWorkflow(
             currentPageNumber++)
         {
             var delay = Random.Shared.Next(_searchConfiguration.ImagePauseInSeconds, _searchConfiguration.ImagePauseInSeconds + 4);
-            Thread.Sleep(TimeSpan.FromSeconds(delay));
+            await Task.Delay(TimeSpan.FromSeconds(delay));
             _searchConfiguration = _searchConfiguration with { SubscriptionsStartingPageNumber = currentPageNumber };
             configurationSaver.SaveUpdatedConfiguration();
             logger.Information("Getting page {subscriptionPage} (of {totalPagesForSubscriptions}) now.", currentPageNumber, _searchConfiguration.SubscriptionsTotalPages);
