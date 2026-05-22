@@ -2,5 +2,5 @@
 
 public sealed class TagsToIgnoreCompletely
 {
-    public string[] Tags { get; set; } = [];
+    public HashSet<string> Tags { get; set; } = [];
 }

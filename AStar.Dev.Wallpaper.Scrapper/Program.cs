@@ -161,5 +161,5 @@ configSaver.SaveUpdatedConfiguration();
 logger.Information("Shutting down...");
 
 static bool CheckDatabaseForMissingData(AStar.Dev.Wallpaper.Scrapper.DTOs.TagsToIgnoreCompletely tagsToIgnoreCompletely, AStar.Dev.Wallpaper.Scrapper.DTOs.TagsTextToIgnore tagsTextToIgnore, FilesContext dbContext, ScrapeConfiguration scrapeConfiguration)
-    => (tagsTextToIgnore.Tags.Length > 0 || tagsToIgnoreCompletely.Tags.Length > 0 || scrapeConfiguration.SearchConfiguration.SearchCategories.Length>0)
+    => (tagsTextToIgnore.Tags.Count > 0 || tagsToIgnoreCompletely.Tags.Count > 0 || scrapeConfiguration.SearchConfiguration.SearchCategories.Length>0)
        && (!dbContext.TagsToIgnore.Any() || !dbContext.ModelsToIgnore.Any() || !dbContext.SearchCategories.Any());
