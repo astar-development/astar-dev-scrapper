@@ -2,6 +2,7 @@ using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
+using AStar.Dev.Wallpaper.Scrapper.Repositories;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
@@ -114,9 +115,9 @@ var imagePage = new ImagePage(
     page,
     scrapeConfiguration,
     tagsToIgnoreCompletely,
-    tagsTextToIgnore,
-    logger);
-var imagePageService = new ImagePageService(imagePage, scrapeConfiguration, logger);
+    tagsTextToIgnore);
+var fileDetailRepository = new FileDetailRepository(scrapeConfiguration.ConnectionStrings.Sqlite);
+var imagePageService = new ImagePageService(imagePage, fileDetailRepository, scrapeConfiguration, logger);
 
 await loginPage.GoToLoginPageAsync();
 if (page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
