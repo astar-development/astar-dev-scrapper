@@ -11,6 +11,7 @@ using Microsoft.Playwright;
 using Serilog;
 using Serilog.Core;
 using Serilog.Exceptions;
+using System.Text.Json;
 
 (ScrapeConfiguration scrapeConfiguration, IConfigurationRoot configuration) = ConfigurationFactory.Configuration();
 
