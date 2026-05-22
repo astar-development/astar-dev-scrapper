@@ -2,5 +2,5 @@
 
 public sealed class ConnectionStrings
 {
-    public string SqlServer { get; set; } = string.Empty;
+    public string Sqlite { get; set; } = string.Empty;
 }

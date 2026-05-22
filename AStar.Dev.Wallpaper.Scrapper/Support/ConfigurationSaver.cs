@@ -29,7 +29,7 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
     {
         var actualPassword     = scrapeConfiguration.UserConfiguration.Password;
         var actualSubDirectory = scrapeConfiguration.ScrapeDirectories.SubDirectoryName;
-        var actualSqlServer    = scrapeConfiguration.ConnectionStrings.SqlServer;
+        var actualSqlServer    = scrapeConfiguration.ConnectionStrings.Sqlite;
         scrapeConfiguration.SearchConfiguration.SearchCategories = DeduplicateTheCategories();
         UpdateCategoryNames();
         var configurationWrapper = new Configuration { ScrapeConfiguration = scrapeConfiguration, Logging = logging, };
@@ -38,7 +38,7 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
         const string redacted = "REDACTED!";
         scrapeConfiguration.UserConfiguration.Password         = redacted;
         scrapeConfiguration.ScrapeDirectories.SubDirectoryName = redacted;
-        scrapeConfiguration.ConnectionStrings.SqlServer        = redacted;
+        scrapeConfiguration.ConnectionStrings.Sqlite        = redacted;
         Category[] categories = scrapeConfiguration.SearchConfiguration.SearchCategories;
         scrapeConfiguration.SearchConfiguration.SearchCategories = [new Category(),];
 
@@ -48,7 +48,7 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
         scrapeConfiguration.SearchConfiguration.SearchCategories = categories;
         scrapeConfiguration.UserConfiguration.Password           = actualPassword;
         scrapeConfiguration.ScrapeDirectories.SubDirectoryName   = actualSubDirectory;
-        scrapeConfiguration.ConnectionStrings.SqlServer          = actualSqlServer;
+        scrapeConfiguration.ConnectionStrings.Sqlite          = actualSqlServer;
     }
 
     private void SaveSecretsFile(Configuration configurationWrapper)
@@ -66,7 +66,7 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
             : "MacOS-TBC";
 
     private static void SaveRedactedAppSettings(string content)
-        => File.WriteAllText(Path.Combine(ApplicationMetadata.ApplicationFolder, "appSettings.json"), content);
+        => File.WriteAllText(Path.Combine(ApplicationMetadata.ApplicationFolder, "appsettings.json"), content);
 
     private void UpdateCategoryNames()
         => scrapeConfiguration.SearchConfiguration.SearchCategories

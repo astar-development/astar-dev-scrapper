@@ -116,7 +116,7 @@ var imagePage = new ImagePage(
     tagsToIgnoreCompletely,
     tagsTextToIgnore,
     logger);
-var imagePageService = new ImagePageService(imagePage, logger);
+var imagePageService = new ImagePageService(imagePage, scrapeConfiguration, logger);
 
 await loginPage.GoToLoginPageAsync();
 if (page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
