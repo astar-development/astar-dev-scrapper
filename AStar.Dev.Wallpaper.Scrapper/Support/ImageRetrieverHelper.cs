@@ -2,11 +2,11 @@
 
 internal static class ImageRetrieverHelper
 {
+    private static readonly HttpClient _client = new() { Timeout = TimeSpan.FromMinutes(2) };
+    
     public static async Task<byte[]> GetTheImageAsync(string src)
     {
-        HttpClient client = new() { Timeout = TimeSpan.FromMinutes(2), };
-
-        HttpResponseMessage response = await client.GetAsync(src);
+        HttpResponseMessage response = await _client.GetAsync(src);
 
         return response is { IsSuccessStatusCode: true, } ? await response.Content.ReadAsByteArrayAsync() : [];
     }
