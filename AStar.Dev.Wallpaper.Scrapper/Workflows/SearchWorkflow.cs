@@ -75,7 +75,7 @@ public sealed class SearchWorkflow(
 
         for(var currentPageNumber = _searchConfiguration.StartingPageNumber; currentPageNumber <= _searchConfiguration.TotalPages; currentPageNumber++)
         {
-            Thread.Sleep(2_000);
+            await Task.Delay(TimeSpan.FromSeconds(2));
             logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, _searchConfiguration.TotalPages, searchCategory.Name);
             _searchConfiguration = _searchConfiguration with { StartingPageNumber = currentPageNumber };
             searchCategory.LastPageVisited          = currentPageNumber;

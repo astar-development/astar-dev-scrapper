@@ -46,7 +46,7 @@ public sealed class TopWallpapersWorkflow(
             currentPageNumber++)
         {
             var delay = Random.Shared.Next(_searchConfiguration.ImagePauseInSeconds, _searchConfiguration.ImagePauseInSeconds + 4);
-            Thread.Sleep(TimeSpan.FromSeconds(delay));
+            await Task.Delay(TimeSpan.FromSeconds(delay));
             _searchConfiguration = _searchConfiguration with { TopWallpapersStartingPageNumber = currentPageNumber };
             configurationSaver.SaveUpdatedConfiguration();
             _ = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber);
