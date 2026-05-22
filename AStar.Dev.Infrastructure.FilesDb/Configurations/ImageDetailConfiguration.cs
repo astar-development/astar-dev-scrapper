@@ -13,5 +13,8 @@ internal sealed class ImageDetailConfiguration : IEntityTypeConfiguration<ImageD
            .HasKey(imageDetail => imageDetail.Id);
         _ = builder.Property(image => image.Width).HasColumnName("ImageWidth");
         _ = builder.Property(image => image.Height).HasColumnName("ImageHeight");
+
+        _ = builder.Property(imageDetail => imageDetail.Id)
+                   .HasConversion(imageDetail => imageDetail.Value, imageDetail => new ImageId(imageDetail));
     }
 }

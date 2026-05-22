@@ -23,13 +23,19 @@ public sealed class LoginPage(IPage page, SearchConfiguration searchConfiguratio
 
     public async Task LoginAsync(string username, string password)
     {
-        await Username.ClickAsync();
-        await TypeHumanAsync(username);
-        await Task.Delay(Rng.Next(300, 700));
-        await Password.ClickAsync();
-        await TypeHumanAsync(password);
-        await Task.Delay(Rng.Next(400, 900));
-        await Login.ClickAsync();
+        var x = await page.TitleAsync();
+        if(!x.Contains("moment"))
+        {
+            await Username.ClickAsync();
+            await TypeHumanAsync(username);
+            await Task.Delay(Rng.Next(300, 700));
+            await Password.ClickAsync();
+            await TypeHumanAsync(password);
+            await Task.Delay(Rng.Next(400, 900));
+            await Login.ClickAsync();
+        }
+        else
+            await Task.Delay(2_500);
     }
 
     public Task ConfirmLoggedInAsync(string loggedInUrl) // await page.Keyboard.PressAsync("F11"); // should work but doesn't seem to (DownAsync too)

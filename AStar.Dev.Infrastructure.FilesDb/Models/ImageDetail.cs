@@ -6,7 +6,7 @@ public sealed class ImageDetail
 {
     /// <summary>
     /// </summary>
-    public int Id { get; set; }
+    public ImageId Id { get; set; } = ImageId.CreateNew;
 
     /// <summary>
     /// </summary>

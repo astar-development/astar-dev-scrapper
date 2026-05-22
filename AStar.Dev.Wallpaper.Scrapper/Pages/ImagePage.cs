@@ -1,6 +1,8 @@
-﻿using AStar.Dev.Infrastructure.FilesDb.Data;
+﻿using System.ComponentModel.DataAnnotations;
+using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Technical.Debt.Reporting;
+using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Support;
@@ -144,15 +146,13 @@ public sealed class ImagePage(
 
                 if(!alreadyContainsModelName)
                 {
-                    directoryName            += $@"\..\named\{tagText}\{scrapeConfiguration.ScrapeDirectories.SubDirectoryName}";
+                    directoryName            += Path.Combine("..", "named", tagText, scrapeConfiguration.ScrapeDirectories.SubDirectoryName);
                     alreadyContainsModelName =  true;
                 }
             }
         }
 
-        var directoryNameUpdated = directoryName.Replace("/", "aka");
-
-        return (filePrefixUpdated, alreadyContainsModelName, directoryNameUpdated);
+        return (filePrefixUpdated, alreadyContainsModelName, directoryName);
     }
 
     [Refactor(2, 5, "Too long!")]
@@ -164,16 +164,17 @@ public sealed class ImagePage(
             Thread.Sleep(TimeSpan.FromSeconds(delay));
             directoryName = DirectoryHelper.CreateDirectoryIfRequired(directoryName);
 
-            if(filePrefix.StartsWith("-")) filePrefix = filePrefix[1..];
-
-            if(filePrefix.Contains('/')) filePrefix = filePrefix.Replace("/", "aka");
+            if(filePrefix.StartsWith('-')) filePrefix = filePrefix[1..];
 
             ILocator imageTag   = page.Locator("#wallpaper");
             var sourcePath = await imageTag.GetAttributeAsync("src");
 
+            var x  = Path.GetFullPath(sourcePath);
+            logger.Information(x);
+
             if(sourcePath != null)
             {
-                var index            = sourcePath.LastIndexOf("/", StringComparison.Ordinal) + 1;
+                var index            = sourcePath.LastIndexOf('/') + 1;
                 var filename         = sourcePath[index..];
                 var fileNameCombined = string.Empty;
 
@@ -182,13 +183,13 @@ public sealed class ImagePage(
                 else
                     fileNameCombined = filename;
 
-                var imageNameWithPath = directoryName + "\\" + fileNameCombined;
+                var imageNameWithPath =  directoryName.CombinePath(fileNameCombined);
                 var image             = await ImageRetrieverHelper.GetTheImageAsync(sourcePath);
                 logger.Information("About to save {filename} as {imageNameWithPath} as we do not appear to have it.", filename, imageNameWithPath);
                 await ImageSaveHelper.SaveImage(image, imageNameWithPath);
                 var fileInfo = new FileInfo(imageNameWithPath);
 
-                var fileDetail = new FileDetail { DirectoryName = new DirectoryName(directoryName), FileName = new FileName(filename), FileSize = fileInfo.Length, };
+                var fileDetail = new FileDetail { DirectoryName = new DirectoryName(directoryName), FileName = new FileName(filename), FileSize = fileInfo.Length, IsImage = filename.IsImage()};
 
                 if(fileDetail.IsImage)
                 {
@@ -200,10 +201,18 @@ public sealed class ImagePage(
                     {
                         fileDetail.Height = imageDetail.Height;
                         fileDetail.Width  = imageDetail.Width;
+                        fileDetail.ImageDetail = new ImageDetail(){Width = imageDetail.Width, Height = imageDetail.Height};
                     }
                 }
 
                 await using var context = new FilesContext(new DbContextOptions<FilesContext>());
+
+                var handle = FileHandle.Create(filename);
+                var existingCount = await context.Files.AsAsyncEnumerable().CountAsync(f => f.FileHandle.Value == handle.Value);
+                if(existingCount>0)
+                    handle = FileHandle.Create($"{handle}-{++existingCount}");
+                fileDetail.FileHandle = handle;
+
                 _ = await context.Files.AddAsync(fileDetail);
                 _ = await context.SaveChangesAsync();
             }

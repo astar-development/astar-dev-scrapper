@@ -337,6 +337,18 @@
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapeConfigurationMappings.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.StrongIdUpdtes">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.StrongIdUpdtes.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.StrongIdUpdtes.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.StrongIdUpdtes.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity">
             <summary>
                The <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity"></see> class provides common properties for tracking the creation and modification of entities.
@@ -553,6 +565,28 @@
             <summary>
                 Gets or sets the Updated By property to track who made the change
             </summary>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.EventId">
+            <summary>
+                Defines the EventId
+            </summary>
+            <param name="Value">The value of the Event Id</param>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.EventId.#ctor(System.Guid)">
+            <summary>
+                Defines the EventId
+            </summary>
+            <param name="Value">The value of the Event Id</param>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.EventId.Value">
+            <summary>The value of the Event Id</summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.EventId.CreateNew">
+             <summary>
+                Creates a new instance of the EventId struct with a new Guid value
+            
+             </summary>
+             <returns>A new FileId instance</returns>
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.EventType">
             <summary>
@@ -974,6 +1008,25 @@
             </summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ImageDetail.Height">
+            <summary>
+            </summary>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ImageId">
+            <summary>
+            
+            </summary>
+            <param name="Value"></param>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.ImageId.#ctor(System.Guid)">
+            <summary>
+            
+            </summary>
+            <param name="Value"></param>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ImageId.Value">
+            <summary></summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ImageId.CreateNew">
             <summary>
             </summary>
         </member>

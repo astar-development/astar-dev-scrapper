@@ -43,8 +43,7 @@ public sealed class FileSize
     /// <returns>
     ///     A populated instance of <see cref="FileSize" />.
     /// </returns>
-    public static FileSize Create(long fileLength, long? height, long? width)
-        => new(fileLength, height, width);
+    public static FileSize Create(long fileLength, long? height, long? width) => new(fileLength, height, width);
 
     /// <summary>
     ///     Returns this object in JSON format
@@ -52,6 +51,5 @@ public sealed class FileSize
     /// <returns>
     ///     This object serialized as a JSON object
     /// </returns>
-    public override string ToString()
-        => this.ToJson();
+    public override string ToString() => this.ToJson();
 }

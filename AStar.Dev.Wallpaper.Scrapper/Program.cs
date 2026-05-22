@@ -124,7 +124,7 @@ if (page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
 {
     logger.Information("Cookie session invalid or expired — logging in");
     await loginPage.LoginAsync(scrapeConfiguration.UserConfiguration.Username, scrapeConfiguration.UserConfiguration.Password);
-    await loginPage.ConfirmLoggedInAsync($"{scrapeConfiguration.SearchConfiguration.BaseUrl}/user/{scrapeConfiguration.UserConfiguration.Username}");
+    await loginPage.ConfirmLoggedInAsync($"{scrapeConfiguration.SearchConfiguration.BaseUrl}/");
 }
 else
 {
