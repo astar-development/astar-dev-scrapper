@@ -14,6 +14,8 @@ public sealed class TopWallpapersWorkflow(
     ConfigurationSaver  configurationSaver,
     Logger              logger)
 {
+    private SearchConfiguration _searchConfiguration = searchConfiguration;
+
     public async Task RunAsync()
     {
         try
@@ -29,25 +31,25 @@ public sealed class TopWallpapersWorkflow(
 
     private async Task GetTheNewTopWallpapersAsync()
     {
-        IResponse? pageDetails = await topWallpapersPage.LoadTopWallpapersPageAsync(searchConfiguration.TopWallpapersStartingPageNumber);
+        IResponse? pageDetails = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber);
 
         if(pageDetails is { Ok: false, }) _ = await topWallpapersPage.LoadTopWallpapersPageAsync(1);
 
         var pageCount = await topWallpapersPage.PageInfoAsync();
         logger.Information("There are a total of {TopWallpapersPageCount} pages for the Top Wallpapers.", pageCount);
-        searchConfiguration.TopWallpapersTotalPages = pageCount;
+        _searchConfiguration = _searchConfiguration with { TopWallpapersTotalPages = pageCount };
 
         configurationSaver.SaveUpdatedConfiguration();
 
-        for(var currentPageNumber = searchConfiguration.TopWallpapersStartingPageNumber;
-            currentPageNumber <= searchConfiguration.TopWallpapersTotalPages;
+        for(var currentPageNumber = _searchConfiguration.TopWallpapersStartingPageNumber;
+            currentPageNumber <= _searchConfiguration.TopWallpapersTotalPages;
             currentPageNumber++)
         {
-            var delay = Random.Shared.Next(searchConfiguration.ImagePauseInSeconds, searchConfiguration.ImagePauseInSeconds + 4);
+            var delay = Random.Shared.Next(_searchConfiguration.ImagePauseInSeconds, _searchConfiguration.ImagePauseInSeconds + 4);
             Thread.Sleep(TimeSpan.FromSeconds(delay));
-            searchConfiguration.TopWallpapersStartingPageNumber = currentPageNumber;
+            _searchConfiguration = _searchConfiguration with { TopWallpapersStartingPageNumber = currentPageNumber };
             configurationSaver.SaveUpdatedConfiguration();
-            _ = await topWallpapersPage.LoadTopWallpapersPageAsync(searchConfiguration.TopWallpapersStartingPageNumber);
+            _ = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber);
             IReadOnlyCollection<string> imagePageLinks = await topWallpapersPage.GetImagePageLinks();
 
             await imagePageService.GetTheImagePagesAsync(imagePageLinks);
