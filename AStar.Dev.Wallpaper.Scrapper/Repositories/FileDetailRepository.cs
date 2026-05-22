@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Repositories;
 
-public sealed class FileDetailRepository(string connectionString)
+public sealed class FileDetailRepository(string connectionString) : IFileDetailRepository
 {
     public async Task<bool> ExistsAsync(string fileName)
     {

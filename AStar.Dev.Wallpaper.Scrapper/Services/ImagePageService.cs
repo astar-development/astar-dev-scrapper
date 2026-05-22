@@ -9,7 +9,7 @@ using SkiaSharp;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public sealed class ImagePageService(ImagePage imagePage, FileDetailRepository fileDetailRepository, ScrapeConfiguration scrapeConfiguration, Logger logger)
+public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, ScrapeConfiguration scrapeConfiguration, Logger logger)
 {
     public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks)
     {
