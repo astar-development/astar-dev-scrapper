@@ -10,8 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using Serilog.Core;
 using SkiaSharp;
-using ScrapeDirectories = AStar.Dev.Wallpaper.Scrapper.Models.ScrapeDirectories;
-using SearchConfiguration = AStar.Dev.Wallpaper.Scrapper.Models.SearchConfiguration;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 

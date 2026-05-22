@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace AStar.Dev.Utilities;
 
 /// <summary>
@@ -27,5 +29,20 @@ public static class PathOperationExtensions
         }
 
         return combined;
+    }
+
+    /// <summary>
+    ///  
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    public static string CleanPath(this string path)
+    {
+        var invalidFileChars = Path.GetInvalidFileNameChars();
+        path = Regex.Replace(path, """[^\u0000-\u007F]+""", string.Empty);
+
+        foreach(var invalidFileChar in invalidFileChars) path = path.Replace(invalidFileChar, ' ');
+
+        return (path.Replace("\"", "'").Replace("|", string.Empty).Replace("@", string.Empty).Replace("煙", string.Empty)).Trim();
     }
 }
