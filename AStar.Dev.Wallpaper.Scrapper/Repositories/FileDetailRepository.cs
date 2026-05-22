@@ -6,24 +6,21 @@ namespace AStar.Dev.Wallpaper.Scrapper.Repositories;
 
 public sealed class FileDetailRepository(string connectionString) : IFileDetailRepository
 {
+    private DbContextOptions<FilesContext> CreateOptions() =>
+        new DbContextOptionsBuilder<FilesContext>().UseSqlite(connectionString).Options;
+
     public async Task<bool> ExistsAsync(string fileName)
     {
-        var options = new DbContextOptionsBuilder<FilesContext>()
-            .UseSqlite(connectionString)
-            .Options;
-        await using var context = new FilesContext(options);
+        await using var context = new FilesContext(CreateOptions());
         return await context.Files.FirstOrDefaultAsync(f => f.FileName.Value.Contains(fileName)) != null;
     }
 
     public async Task AddAsync(FileDetail fileDetail)
     {
-        var options = new DbContextOptionsBuilder<FilesContext>()
-            .UseSqlite(connectionString)
-            .Options;
-        await using var context = new FilesContext(options);
+        await using var context = new FilesContext(CreateOptions());
 
         var handle = FileHandle.Create(fileDetail.FileName.Value ?? fileDetail.FileHandle.Value);
-        var existingCount = await context.Files.AsAsyncEnumerable().CountAsync(f => f.FileHandle.Value == handle.Value);
+        var existingCount = await context.Files.CountAsync(f => f.FileHandle.Value == handle.Value);
         if(existingCount > 0)
             handle = FileHandle.Create($"{handle}-{++existingCount}");
         fileDetail.FileHandle = handle;

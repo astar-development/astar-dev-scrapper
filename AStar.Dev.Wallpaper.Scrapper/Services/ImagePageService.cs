@@ -17,8 +17,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
         {
             try
             {
-                var indexOfFinalSlash = pageLink.LastIndexOf('/') + 1;
-                var fileName          = pageLink[indexOfFinalSlash..];
+                var fileName = Path.GetFileName(pageLink);
 
                 if(await fileDetailRepository.ExistsAsync(fileName))
                 {
@@ -28,8 +27,9 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
 
                 await ProcessImagePageAsync(pageLink);
             }
-            catch
+            catch(Exception ex)
             {
+                logger.Warning(ex, "Failed to process {pageLink}, retrying after delay.", pageLink);
                 await Task.Delay(TimeSpan.FromSeconds(10));
                 await ProcessImagePageAsync(pageLink);
             }
@@ -47,8 +47,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
         var directoryName = DirectoryHelper.CreateDirectoryIfRequired(result.DirectoryName);
         var filePrefix    = result.FilePrefix;
 
-        var index            = result.ImageUrl.LastIndexOf('/') + 1;
-        var filename         = result.ImageUrl[index..];
+        var filename         = Path.GetFileName(result.ImageUrl);
         var fileNameCombined = !string.IsNullOrEmpty(filePrefix) ? filePrefix + " " + filename : filename;
 
         var imageNameWithPath = directoryName.CombinePath(fileNameCombined);
@@ -68,7 +67,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
         if(fileDetail.IsImage)
         {
             var imageDetail = SKImage.FromEncodedData(imageNameWithPath);
-            if(image is null)
+            if(imageDetail is null)
                 File.Delete(imageNameWithPath);
             else
             {

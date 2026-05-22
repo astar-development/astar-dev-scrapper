@@ -1,3 +1,4 @@
+using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using Microsoft.Playwright;
@@ -11,12 +12,12 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
         _ = await page.GotoAsync(link);
 
         IReadOnlyList<ILocator> tags          = await page.Locator(".tagname").AllAsync();
-        var                     directoryName = Path.Combine(scrapeConfiguration.ScrapeDirectories.RootDirectory, scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory, scrapeConfiguration.ScrapeDirectories.SubDirectoryName);
+        var                     directoryName = scrapeConfiguration.ScrapeDirectories.RootDirectory.CombinePath(scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory, scrapeConfiguration.ScrapeDirectories.SubDirectoryName);
         var (directoryNameUpdated, filePrefix, skip) = await ProcessTheImageTags(tags, directoryName);
 
         if(skip) return new ImagePageResult(null, directoryNameUpdated, filePrefix, Skip: true);
 
-        ILocator imageTag  = page.Locator("#wallpaper");
+        ILocator imageTag   = page.Locator("#wallpaper");
         var      sourcePath = await imageTag.GetAttributeAsync("src");
         return new ImagePageResult(sourcePath, directoryNameUpdated, filePrefix, Skip: false);
     }
@@ -24,32 +25,28 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
     private async Task<(string directoryName, string filePrefix, bool skip)> ProcessTheImageTags(IEnumerable<ILocator> tags, string directoryName)
     {
         var skip                     = false;
-        var skip2                    = false;
         var filePrefix               = string.Empty;
         var alreadyContainsModelName = false;
-        var tagsToAddToDatabase      = new List<string>();
 
-        foreach(ILocator tag in tags)
+        var tagData = await Task.WhenAll(tags.Select(GetTags));
+
+        foreach(var (tagText, tagToUse) in tagData)
         {
-            var (tagText, tagToUse) = await GetTags(tag);
-
             if(tagToUse == null) continue;
 
-            tagToUse = tagToUse.Trim();
-            skip     = IsOneOfTheImageTagsToExcludeCompletely(tagToUse);
-            skip2    = IsOneOfTheImageTagsToExcludeCompletely(tagText);
+            var trimmedTagToUse = tagToUse.Trim();
+            skip = IsOneOfTheImageTagsToExcludeCompletely(trimmedTagToUse) || IsOneOfTheImageTagsToExcludeCompletely(tagText);
 
-            if(skip || skip2) break;
+            if(skip) break;
 
-            var (filePrefixUpdated, alreadyContainsModelNameUpdated, directoryNameUpdated) = UpdateFilePrefixForModels(tagToUse, tagText, filePrefix, alreadyContainsModelName, directoryName);
+            var (filePrefixUpdated, alreadyContainsModelNameUpdated, directoryNameUpdated) = UpdateFilePrefixForModels(trimmedTagToUse, tagText, filePrefix, alreadyContainsModelName, directoryName);
 
             alreadyContainsModelName = alreadyContainsModelNameUpdated;
             directoryName            = directoryNameUpdated;
 
-            filePrefix = UpdateFilePrefixForVehicles(tagToUse, filePrefixUpdated);
-            tagsToAddToDatabase.Add(tagText);
+            filePrefix = UpdateFilePrefixForVehicles(trimmedTagToUse, filePrefixUpdated);
 
-            if(UpdateToTagIsNotRequired(tagToUse, tagText, filePrefix)) continue;
+            if(UpdateToTagIsNotRequired(trimmedTagToUse, tagText, filePrefix)) continue;
 
             filePrefix    = string.Join("-", filePrefix, tagText);
             directoryName = scrapeConfiguration.ScrapeDirectories.BaseDirectoryFamous + tagText;
@@ -57,7 +54,7 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
 
         filePrefix = UpdateFilePrefixIfRequired(filePrefix);
 
-        return (directoryName, filePrefix, skip || skip2);
+        return (directoryName, filePrefix, skip);
     }
 
     private static string UpdateFilePrefixIfRequired(string filePrefix)
@@ -72,10 +69,9 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
 
     private static async Task<(string tagText, string? tagToUse)> GetTags(ILocator tag)
     {
-        var tagText  = await tag.InnerTextAsync();
-        var tagToUse = await tag.GetAttributeAsync("original-title");
-
-        return (tagText, tagToUse);
+        var textTask = tag.InnerTextAsync();
+        var attrTask = tag.GetAttributeAsync("original-title");
+        return (await textTask, await attrTask);
     }
 
     private bool FilePrefixDoesNotNeedUpdating(string tagText, string filePrefix)
@@ -109,7 +105,7 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
                                                                                                                bool   alreadyContainsModelName,
                                                                                                                string directoryName)
     {
-        var filePrefixUpdated = string.Empty;
+        var filePrefixUpdated = filePrefix;
 
         if(TagContains(tagToUse, "people > model") || TagContains(tagToUse, "people > porn"))
         {
@@ -119,8 +115,8 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
 
                 if(!alreadyContainsModelName)
                 {
-                    directoryName            += Path.Combine("..", "named", tagText, scrapeConfiguration.ScrapeDirectories.SubDirectoryName);
-                    alreadyContainsModelName =  true;
+                    directoryName            = directoryName.CombinePath("..", "named", tagText, scrapeConfiguration.ScrapeDirectories.SubDirectoryName);
+                    alreadyContainsModelName = true;
                 }
             }
         }
