@@ -1,28 +1,24 @@
-﻿using AStar.Dev.Infrastructure.FilesDb.Data;
-using AStar.Dev.Infrastructure.FilesDb.Models;
-using AStar.Dev.Technical.Debt.Reporting;
-using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
-using AStar.Dev.Wallpaper.Scrapper.Support;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
-using Serilog.Core;
-using SkiaSharp;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguration, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, Logger logger)
+public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguration, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore)
 {
-    public async Task GetImageFromPage(string link)
+    public async Task<ImagePageResult> GetImageFromPage(string link)
     {
         _ = await page.GotoAsync(link);
 
         IReadOnlyList<ILocator> tags          = await page.Locator(".tagname").AllAsync();
-        var             directoryName = Path.Combine(scrapeConfiguration.ScrapeDirectories.RootDirectory, scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory, scrapeConfiguration.ScrapeDirectories.SubDirectoryName);
+        var                     directoryName = Path.Combine(scrapeConfiguration.ScrapeDirectories.RootDirectory, scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory, scrapeConfiguration.ScrapeDirectories.SubDirectoryName);
         var (directoryNameUpdated, filePrefix, skip) = await ProcessTheImageTags(tags, directoryName);
 
-        await GetTheImage(skip, directoryNameUpdated, filePrefix);
+        if(skip) return new ImagePageResult(null, directoryNameUpdated, filePrefix, Skip: true);
+
+        ILocator imageTag  = page.Locator("#wallpaper");
+        var      sourcePath = await imageTag.GetAttributeAsync("src");
+        return new ImagePageResult(sourcePath, directoryNameUpdated, filePrefix, Skip: false);
     }
 
     private async Task<(string directoryName, string filePrefix, bool skip)> ProcessTheImageTags(IEnumerable<ILocator> tags, string directoryName)
@@ -107,21 +103,6 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
            !tagToUse.Equals("car", StringComparison.CurrentCultureIgnoreCase) &&
            !TagContains(tagToUse, "cars");
 
-    /// <summary>
-    ///     This method suffers the same flaw as the earlier version: the previous "moreThan" and this "alreadyContains" don't actually work the way intended
-    /// </summary>
-    /// <param name="tagToUse">
-    /// </param>
-    /// <param name="tagText">
-    /// </param>
-    /// <param name="filePrefix">
-    /// </param>
-    /// <param name="alreadyContainsModelName">
-    /// </param>
-    /// <param name="directoryName">
-    /// </param>
-    /// <returns>
-    /// </returns>
     private (string filePrefix, bool alreadyContainsModelName, string directoryName) UpdateFilePrefixForModels(string tagToUse,
                                                                                                                string tagText,
                                                                                                                string filePrefix,
@@ -145,70 +126,6 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
         }
 
         return (filePrefixUpdated, alreadyContainsModelName, directoryName);
-    }
-
-    [Refactor(2, 5, "Too long!")]
-    private async Task GetTheImage(bool skip, string directoryName, string filePrefix)
-    {
-        if(!skip)
-        {
-            var delay = Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4);
-            Thread.Sleep(TimeSpan.FromSeconds(delay));
-            directoryName = DirectoryHelper.CreateDirectoryIfRequired(directoryName);
-
-            if(filePrefix.StartsWith('-')) filePrefix = filePrefix[1..];
-
-            ILocator imageTag   = page.Locator("#wallpaper");
-            var sourcePath = await imageTag.GetAttributeAsync("src");
-
-            if(sourcePath != null)
-            {
-                var index            = sourcePath.LastIndexOf('/') + 1;
-                var filename         = sourcePath[index..];
-                var fileNameCombined = string.Empty;
-
-                if(!string.IsNullOrEmpty(filePrefix))
-                    fileNameCombined += filePrefix + " " + filename;
-                else
-                    fileNameCombined = filename;
-
-                var imageNameWithPath =  directoryName.CombinePath(fileNameCombined);
-                var image             = await ImageRetrieverHelper.GetTheImageAsync(sourcePath);
-                logger.Information("About to save {filename} as {imageNameWithPath} as we do not appear to have it.", filename, imageNameWithPath);
-                await ImageSaveHelper.SaveImage(image, imageNameWithPath);
-                var fileInfo = new FileInfo(imageNameWithPath);
-
-                var fileDetail = new FileDetail { DirectoryName = new DirectoryName(directoryName), FileName = new FileName(filename), FileSize = fileInfo.Length, IsImage = filename.IsImage()};
-
-                if(fileDetail.IsImage)
-                {
-                    var imageDetail = SKImage.FromEncodedData(imageNameWithPath);
-
-                    if(image is null)
-                        File.Delete(imageNameWithPath);
-                    else
-                    {
-                        fileDetail.Height = imageDetail.Height;
-                        fileDetail.Width  = imageDetail.Width;
-                        fileDetail.ImageDetail = new ImageDetail(){Width = imageDetail.Width, Height = imageDetail.Height};
-                    }
-                }
-
-                var options = new DbContextOptionsBuilder<FilesContext>()
-                    .UseSqlite(scrapeConfiguration.ConnectionStrings.Sqlite)
-                    .Options;
-                await using var context = new FilesContext(options);
-
-                var handle = FileHandle.Create(filename);
-                var existingCount = await context.Files.AsAsyncEnumerable().CountAsync(f => f.FileHandle.Value == handle.Value);
-                if(existingCount>0)
-                    handle = FileHandle.Create($"{handle}-{++existingCount}");
-                fileDetail.FileHandle = handle;
-
-                _ = await context.Files.AddAsync(fileDetail);
-                _ = await context.SaveChangesAsync();
-            }
-        }
     }
 
     private bool IsOneOfTheImageTagsToExcludeCompletely(string tagText)

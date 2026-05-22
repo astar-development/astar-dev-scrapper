@@ -8,7 +8,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
 public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logging logging, Logger logger)
 {
-    private const  string SecretIdFromProjectFile = "c35e09dc-dc30-416a-95a6-ec1a5ba1b4";
+    private const  string SecretIdFromProjectFile = "c35e09dc-dc30-416a-95a6-ec1a5ba1b43f";
     private readonly JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase, };
 
     public void SaveUpdatedConfiguration()
@@ -51,7 +51,7 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
     private static string GetSecretsPath(string homeDirectory)
         => OperatingSystem.IsWindows()
             ? Path.Combine(homeDirectory, "AppData", "Roaming", "Microsoft", "UserSecrets", SecretIdFromProjectFile, "secrets.json")
-            : OperatingSystem.IsLinux() ? Path.Combine(homeDirectory, ".microsoft", "usersecrets")
+            : OperatingSystem.IsLinux() ? Path.Combine(homeDirectory, ".microsoft", "usersecrets", SecretIdFromProjectFile, "secrets.json")
             : "MacOS-TBC";
 
     private static void SaveRedactedAppSettings(string content)
