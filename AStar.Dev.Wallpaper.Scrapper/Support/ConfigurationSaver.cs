@@ -27,28 +27,17 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
 
     private void UpdateAndSaveTheConfiguration()
     {
-        var actualPassword     = scrapeConfiguration.UserConfiguration.Password;
-        var actualSubDirectory = scrapeConfiguration.ScrapeDirectories.SubDirectoryName;
-        var actualSqlServer    = scrapeConfiguration.ConnectionStrings.Sqlite;
-        scrapeConfiguration.SearchConfiguration.SearchCategories = DeduplicateTheCategories();
+        scrapeConfiguration = scrapeConfiguration with {SearchConfiguration= scrapeConfiguration.SearchConfiguration with {SearchCategories = DeduplicateTheCategories()}};
         UpdateCategoryNames();
         var configurationWrapper = new Configuration { ScrapeConfiguration = scrapeConfiguration, Logging = logging, };
         SaveSecretsFile(configurationWrapper);
 
         const string redacted = "REDACTED!";
-        scrapeConfiguration.UserConfiguration.Password         = redacted;
-        scrapeConfiguration.ScrapeDirectories.SubDirectoryName = redacted;
-        scrapeConfiguration.ConnectionStrings.Sqlite        = redacted;
-        Category[] categories = scrapeConfiguration.SearchConfiguration.SearchCategories;
-        scrapeConfiguration.SearchConfiguration.SearchCategories = [new Category(),];
 
-        var content = JsonSerializer.Serialize(configurationWrapper, jsonSerializerOptions);
-
+        var copy = scrapeConfiguration with { UserConfiguration = scrapeConfiguration.UserConfiguration with { Password = redacted}, ConnectionStrings = scrapeConfiguration.ConnectionStrings with { Sqlite = redacted }, ScrapeDirectories = scrapeConfiguration.ScrapeDirectories with { SubDirectoryName = redacted}, SearchConfiguration = scrapeConfiguration.SearchConfiguration with { SearchCategories = []} };
+        var content = JsonSerializer.Serialize(new Configuration { ScrapeConfiguration = copy });
         SaveRedactedAppSettings(content);
-        scrapeConfiguration.SearchConfiguration.SearchCategories = categories;
-        scrapeConfiguration.UserConfiguration.Password           = actualPassword;
-        scrapeConfiguration.ScrapeDirectories.SubDirectoryName   = actualSubDirectory;
-        scrapeConfiguration.ConnectionStrings.Sqlite          = actualSqlServer;
+
     }
 
     private void SaveSecretsFile(Configuration configurationWrapper)

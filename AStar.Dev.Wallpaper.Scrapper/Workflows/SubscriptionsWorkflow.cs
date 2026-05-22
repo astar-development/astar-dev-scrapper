@@ -15,6 +15,9 @@ public sealed class SubscriptionsWorkflow(
     ConfigurationSaver          configurationSaver,
     Logger                      logger)
 {
+    private SearchConfiguration _searchConfiguration = searchConfiguration;
+    private ScrapeDirectories   _scrapeDirectories   = scrapeDirectories;
+
     public async Task RunAsync()
     {
         try
@@ -30,29 +33,29 @@ public sealed class SubscriptionsWorkflow(
 
     private async Task GetTheNewSubscriptionImagesAsync()
     {
-        searchConfiguration.SubscriptionsStartingPageNumber = 1;
-        IResponse? pageDetails = await subscriptionsImagesListPage.LoadSubscriptionResultsPageAsync(searchConfiguration.SubscriptionsStartingPageNumber);
+        _searchConfiguration = _searchConfiguration with { SubscriptionsStartingPageNumber = 1 };
+        IResponse? pageDetails = await subscriptionsImagesListPage.LoadSubscriptionResultsPageAsync(_searchConfiguration.SubscriptionsStartingPageNumber);
 
         if(pageDetails is { Ok: false, }) _ = await subscriptionsImagesListPage.LoadSubscriptionResultsPageAsync(1);
 
         var (pageCount, subDirectoryName) = await subscriptionsImagesListPage.PageInfoAsync();
 
-        if(subDirectoryName.Length > 0) scrapeDirectories.SubDirectoryName = subDirectoryName;
+        if(subDirectoryName.Length > 0) _scrapeDirectories = _scrapeDirectories with { SubDirectoryName = subDirectoryName };
 
-        _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(scrapeDirectories.RootDirectory, scrapeDirectories.BaseDirectory, subDirectoryName));
+        _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
         UpdateSearchTotalPagesIfRequired(pageCount);
 
         configurationSaver.SaveUpdatedConfiguration();
 
-        for(var currentPageNumber = searchConfiguration.SubscriptionsStartingPageNumber;
-            currentPageNumber <= searchConfiguration.SubscriptionsTotalPages;
+        for(var currentPageNumber = _searchConfiguration.SubscriptionsStartingPageNumber;
+            currentPageNumber <= _searchConfiguration.SubscriptionsTotalPages;
             currentPageNumber++)
         {
-            var delay = Random.Shared.Next(searchConfiguration.ImagePauseInSeconds, searchConfiguration.ImagePauseInSeconds + 4);
+            var delay = Random.Shared.Next(_searchConfiguration.ImagePauseInSeconds, _searchConfiguration.ImagePauseInSeconds + 4);
             Thread.Sleep(TimeSpan.FromSeconds(delay));
-            searchConfiguration.SubscriptionsStartingPageNumber = currentPageNumber;
+            _searchConfiguration = _searchConfiguration with { SubscriptionsStartingPageNumber = currentPageNumber };
             configurationSaver.SaveUpdatedConfiguration();
-            logger.Information("Getting page {subscriptionPage} (of {totalPagesForSubscriptions}) now.", currentPageNumber, searchConfiguration.SubscriptionsTotalPages);
+            logger.Information("Getting page {subscriptionPage} (of {totalPagesForSubscriptions}) now.", currentPageNumber, _searchConfiguration.SubscriptionsTotalPages);
             _ = await subscriptionsImagesListPage.LoadSubscriptionResultsPageAsync(currentPageNumber);
             IReadOnlyCollection<string> imagePageLinks = await subscriptionsImagesListPage.GetImagePageLinks();
 
@@ -68,6 +71,6 @@ public sealed class SubscriptionsWorkflow(
 
     private void UpdateSearchTotalPagesIfRequired(int pageCount)
     {
-        if(searchConfiguration.SubscriptionsTotalPages != pageCount) searchConfiguration.SubscriptionsTotalPages = pageCount;
+        if(_searchConfiguration.SubscriptionsTotalPages != pageCount) _searchConfiguration = _searchConfiguration with { SubscriptionsTotalPages = pageCount };
     }
 }

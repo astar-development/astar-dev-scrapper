@@ -56,7 +56,7 @@ public sealed class SearchWorkflow(
 
             searchCategory.LastKnownImageCount       = imageCount;
             searchCategory.LastPageVisited           = 1;
-            _searchConfiguration.StartingPageNumber  = 1;
+            _searchConfiguration = _searchConfiguration with { StartingPageNumber = 1 };
 
             logger.Debug("Visiting {Category} now...", searchCategory.Name);
             _scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
@@ -77,7 +77,7 @@ public sealed class SearchWorkflow(
         {
             Thread.Sleep(2_000);
             logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, _searchConfiguration.TotalPages, searchCategory.Name);
-            _searchConfiguration.StartingPageNumber = currentPageNumber;
+            _searchConfiguration = _searchConfiguration with { StartingPageNumber = currentPageNumber };
             searchCategory.LastPageVisited          = currentPageNumber;
             configurationSaver.SaveUpdatedConfiguration();
             _ = await searchResultsPage.LoadSearchPageAsync(combinedSearchString, currentPageNumber);
@@ -92,15 +92,14 @@ public sealed class SearchWorkflow(
 
     private ScrapeDirectories UpdateSubDirectoryIfRequired(string subDirectoryName)
     {
-        if(subDirectoryName.Length > 0) _scrapeDirectories.SubDirectoryName = subDirectoryName;
+        if(subDirectoryName.Length > 0) _scrapeDirectories = _scrapeDirectories with { SubDirectoryName = subDirectoryName };
         return _scrapeDirectories;
     }
 
     private SearchConfiguration UpdateSearchDetailsIfRequired(string combinedSearchString)
     {
         if(_searchConfiguration.SearchString == combinedSearchString) return _searchConfiguration;
-        _searchConfiguration.StartingPageNumber = 1;
-        _searchConfiguration.SearchString       = combinedSearchString;
+        _searchConfiguration = _searchConfiguration with { StartingPageNumber = 1, SearchString = combinedSearchString };
         return _searchConfiguration;
     }
 
@@ -124,6 +123,6 @@ public sealed class SearchWorkflow(
 
     private void UpdateSearchTotalPagesIfRequired(int pageCount)
     {
-        if(_searchConfiguration.TotalPages != pageCount) _searchConfiguration.TotalPages = pageCount;
+        if(_searchConfiguration.TotalPages != pageCount) _searchConfiguration = _searchConfiguration with { TotalPages = pageCount };
     }
 }

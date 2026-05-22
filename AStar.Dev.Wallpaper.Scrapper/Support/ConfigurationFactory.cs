@@ -15,21 +15,21 @@ public class ConfigurationFactory
 
         ScrapeConfiguration scrapeConfiguration = config.GetSection(nameof(ScrapeConfiguration)).Get<ScrapeConfiguration>()!;
 
-        if(StartingPageIsOutsideValidRange(scrapeConfiguration)) scrapeConfiguration.SearchConfiguration.StartingPageNumber = 1;
+        if(StartingPageIsOutsideValidRange(scrapeConfiguration)) scrapeConfiguration = scrapeConfiguration with {SearchConfiguration = scrapeConfiguration.SearchConfiguration with {StartingPageNumber = 1}};
 
-        if(SubscriptionsStartingPageIsOutsideValidRange(scrapeConfiguration)) scrapeConfiguration.SearchConfiguration.SubscriptionsStartingPageNumber = 1;
+        if(SubscriptionsStartingPageIsOutsideValidRange(scrapeConfiguration)) scrapeConfiguration = scrapeConfiguration with {SearchConfiguration = scrapeConfiguration.SearchConfiguration with {SubscriptionsStartingPageNumber = 1}};
 
-        scrapeConfiguration.SearchConfiguration.SearchString = scrapeConfiguration.SearchConfiguration.SearchString.Replace(scrapeConfiguration.SearchConfiguration.BaseUrl, string.Empty);
+        var searchConfig = scrapeConfiguration.SearchConfiguration;
+        var newSearchString = searchConfig.SearchString.Replace(searchConfig.BaseUrl, string.Empty);
+        var newSubscriptions = searchConfig.Subscriptions.Replace(searchConfig.BaseUrl, string.Empty);
 
-        scrapeConfiguration.SearchConfiguration.Subscriptions = scrapeConfiguration.SearchConfiguration.Subscriptions.Replace(scrapeConfiguration.SearchConfiguration.BaseUrl, string.Empty);
+        var lastIndexOfEqualsInSearchString = newSearchString.LastIndexOf("=", StringComparison.OrdinalIgnoreCase) + 1;
+        if(lastIndexOfEqualsInSearchString < newSearchString.Length) newSearchString = newSearchString[..lastIndexOfEqualsInSearchString];
 
-        var lastIndexOfEqualsInSearchString = scrapeConfiguration.SearchConfiguration.SearchString.LastIndexOf("=", StringComparison.OrdinalIgnoreCase) + 1;
+        var lastIndexOfEqualsInSubscriptions = newSubscriptions.LastIndexOf("=", StringComparison.OrdinalIgnoreCase) + 1;
+        if(lastIndexOfEqualsInSubscriptions < newSubscriptions.Length) newSubscriptions = newSubscriptions[..lastIndexOfEqualsInSubscriptions];
 
-        if(lastIndexOfEqualsInSearchString < scrapeConfiguration.SearchConfiguration.SearchString.Length) scrapeConfiguration.SearchConfiguration.SearchString = scrapeConfiguration.SearchConfiguration.SearchString[..lastIndexOfEqualsInSearchString];
-
-        var lastIndexOfEqualsInSubscriptions = scrapeConfiguration.SearchConfiguration.Subscriptions.LastIndexOf("=", StringComparison.OrdinalIgnoreCase) + 1;
-
-        if(lastIndexOfEqualsInSubscriptions < scrapeConfiguration.SearchConfiguration.Subscriptions.Length) scrapeConfiguration.SearchConfiguration.Subscriptions = scrapeConfiguration.SearchConfiguration.Subscriptions[..lastIndexOfEqualsInSubscriptions];
+        scrapeConfiguration = scrapeConfiguration with { SearchConfiguration = searchConfig with { SearchString = newSearchString, Subscriptions = newSubscriptions } };
 
         return (scrapeConfiguration, config);
     }

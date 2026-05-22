@@ -1,12 +1,3 @@
 ﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
-public sealed class UserConfiguration
-{
-    public string LoginEmailAddress { get; set; } = string.Empty;
-
-    public string Username { get; set; } = string.Empty;
-
-    public string Password { get; set; } = string.Empty;
-    
-    public string SessionCookie { get; internal set; } = string.Empty;
-}
+public record UserConfiguration(string LoginEmailAddress, string Username, string Password, string SessionCookie);
