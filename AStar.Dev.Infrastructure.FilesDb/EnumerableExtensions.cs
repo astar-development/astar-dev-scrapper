@@ -55,10 +55,9 @@ public static class EnumerableExtensions
     {
         if(cancellationToken.IsCancellationRequested) return 0;
 
-        IGrouping<FileSize, FileDetail>[] duplicatesBySize = files.AsEnumerable()
+        IGrouping<FileSize, FileDetail>[] duplicatesBySize = [.. files.AsEnumerable()
                                                                   .GroupBy(file => FileSize.Create(file.FileSize, file?.ImageDetail?.Height, file?.ImageDetail?.Width),
-                                                                           new FileSizeEqualityComparer()).Where(fileGroups => fileGroups.Count() > 1)
-                                                                  .ToArray();
+                                                                           new FileSizeEqualityComparer()).Where(fileGroups => fileGroups.Count() > 1)];
 
         return duplicatesBySize.Length;
     }
