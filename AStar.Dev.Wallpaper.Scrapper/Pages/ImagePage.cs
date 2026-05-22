@@ -12,12 +12,7 @@ using SkiaSharp;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public sealed class ImagePage(
-    IPage                  page,
-    ScrapeConfiguration    scrapeConfiguration,
-    TagsToIgnoreCompletely tagsToIgnoreCompletely,
-    TagsTextToIgnore       tagsTextToIgnore,
-    Logger                 logger)
+public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguration, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, Logger logger)
 {
     public async Task GetImageFromPage(string link)
     {
@@ -166,9 +161,6 @@ public sealed class ImagePage(
             ILocator imageTag   = page.Locator("#wallpaper");
             var sourcePath = await imageTag.GetAttributeAsync("src");
 
-            var x  = Path.GetFullPath(sourcePath);
-            logger.Information(x);
-
             if(sourcePath != null)
             {
                 var index            = sourcePath.LastIndexOf('/') + 1;
@@ -202,7 +194,10 @@ public sealed class ImagePage(
                     }
                 }
 
-                await using var context = new FilesContext(new DbContextOptions<FilesContext>());
+                var options = new DbContextOptionsBuilder<FilesContext>()
+                    .UseSqlite(scrapeConfiguration.ConnectionStrings.Sqlite)
+                    .Options;
+                await using var context = new FilesContext(options);
 
                 var handle = FileHandle.Create(filename);
                 var existingCount = await context.Files.AsAsyncEnumerable().CountAsync(f => f.FileHandle.Value == handle.Value);

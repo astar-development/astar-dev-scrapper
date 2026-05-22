@@ -18,7 +18,7 @@ public sealed class TopWallpapersPage(IPage page, SearchConfiguration searchConf
 
         if(text is null) return 0;
 
-        var firstSlashIndex = text.IndexOf("/", StringComparison.Ordinal) + 1;
+        var firstSlashIndex = text.IndexOf('/') + 1;
         var pages           = text[firstSlashIndex..].Trim();
 
         return Convert.ToInt32(pages);

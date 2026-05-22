@@ -1,11 +1,12 @@
 ﻿using AStar.Dev.Infrastructure.FilesDb.Data;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using Microsoft.EntityFrameworkCore;
 using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public sealed class ImagePageService(ImagePage imagePage, Logger logger)
+public sealed class ImagePageService(ImagePage imagePage, ScrapeConfiguration scrapeConfiguration, Logger logger)
 {
     public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks)
     {
@@ -13,10 +14,13 @@ public sealed class ImagePageService(ImagePage imagePage, Logger logger)
         {
             try
             {
-                var indexOfFinalSlash = pageLink.LastIndexOf("/", StringComparison.Ordinal) + 1;
-                var fileName          = pageLink[indexOfFinalSlash..];
+                var indexOfFinalSlash = pageLink.LastIndexOf('/') + 1;
+                var fileName          = pageLink[indexOfFinalSlash..];                
 
-                using var context = new FilesContext(new DbContextOptions<FilesContext>());
+                var options = new DbContextOptionsBuilder<FilesContext>()
+                    .UseSqlite(scrapeConfiguration.ConnectionStrings.Sqlite)
+                    .Options;
+                await using var context = new FilesContext(options);
 
                 if(await context.Files.FirstOrDefaultAsync(fileInfoJb => fileInfoJb.FileName.Value.Contains(fileName)) != null)
                 {
