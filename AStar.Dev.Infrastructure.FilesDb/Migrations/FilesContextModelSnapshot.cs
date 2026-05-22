@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using AStar.Dev.Infrastructure.FilesDb.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -20,18 +19,34 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
             modelBuilder
                 .HasDefaultSchema("files")
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasAnnotation("ProductVersion", "9.0.9")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("ProductVersion", "10.0.8");
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ScrapeConfigurationEntityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Sqlite")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScrapeConfigurationEntityId")
+                        .IsUnique();
+
+                    b.ToTable("ConnectionStrings", "files");
+                });
 
             modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.DeletionStatus", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset?>("HardDeletePending")
                         .HasColumnType("datetimeoffset")
@@ -53,55 +68,55 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
             modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.DuplicatesDetails", b =>
                 {
                     b.Property<DateTime>("DetailsLastUpdated")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DirectoryName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("FileAccessDetailId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("FileHandle")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<long>("FileSize")
-                        .HasColumnType("bigint");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("HardDeletePending")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Height")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Id")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Instances")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsImage")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("LastViewed")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("MoveRequired")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("SoftDeletePending")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("SoftDeleted")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Width")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.ToTable((string)null);
 
@@ -110,61 +125,58 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
 
             modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.Event", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DirectoryName")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("EventOccurredAt")
-                        .HasColumnType("datetimeoffset");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("FileCreated")
-                        .HasColumnType("datetimeoffset");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("FileLastModified")
-                        .HasColumnType("datetimeoffset");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<long>("FileSize")
-                        .HasColumnType("bigint");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Handle")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("Height")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("UpdatedBy")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("Width")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
-                    b.ComplexProperty<Dictionary<string, object>>("Type", "AStar.Dev.Infrastructure.FilesDb.Models.Event.Type#EventType", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Type", "AStar.Dev.Infrastructure.FilesDb.Models.Event.Type#EventType", b1 =>
                         {
                             b1.IsRequired();
 
                             b1.Property<string>("Name")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(max)")
+                                .HasColumnType("TEXT")
                                 .HasColumnName("EventName");
 
                             b1.Property<int>("Value")
-                                .HasColumnType("int")
+                                .HasColumnType("INTEGER")
                                 .HasColumnName("EventType");
                         });
 
@@ -177,18 +189,16 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("DetailsLastUpdated")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("LastViewed")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("MoveRequired")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -199,27 +209,24 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("Celebrity")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IncludeInSearch")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -231,37 +238,45 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
 
             modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.FileDetail", b =>
                 {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("DeletionStatusId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("FileAccessDetailId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("FileHandle")
                         .IsRequired()
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<long>("FileSize")
-                        .HasColumnType("bigint");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("ImageDetailId")
-                        .HasColumnType("int");
+                    b.Property<int>("Height")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ImageDetailId")
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IsImage")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
-                    b.ComplexProperty<Dictionary<string, object>>("DirectoryName", "AStar.Dev.Infrastructure.FilesDb.Models.FileDetail.DirectoryName#DirectoryName", b1 =>
+                    b.Property<int>("Width")
+                        .HasColumnType("INTEGER");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "DirectoryName", "AStar.Dev.Infrastructure.FilesDb.Models.FileDetail.DirectoryName#DirectoryName", b1 =>
                         {
+                            b1.IsRequired();
+
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasColumnType("nvarchar(256)")
                                 .HasColumnName("DirectoryName");
                         });
 
-                    b.ComplexProperty<Dictionary<string, object>>("FileName", "AStar.Dev.Infrastructure.FilesDb.Models.FileDetail.FileName#FileName", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "FileName", "AStar.Dev.Infrastructure.FilesDb.Models.FileDetail.FileName#FileName", b1 =>
                         {
                             b1.IsRequired();
 
@@ -294,27 +309,24 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("FileClassificationId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IncludeInSearch")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -325,18 +337,15 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
 
             modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.ImageDetail", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("Height")
-                        .HasColumnType("int")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ImageHeight");
 
                     b.Property<int?>("Width")
-                        .HasColumnType("int")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ImageWidth");
 
                     b.HasKey("Id");
@@ -346,56 +355,234 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
 
             modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.ModelToIgnore", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.ToTable("ModelToIgnore", "files");
                 });
 
-            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.TagToIgnore", b =>
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScrapeConfiguration", "files");
+                });
+
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BaseDirectory")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("BaseDirectoryFamous")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("BaseSaveDirectory")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("RootDirectory")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("ScrapeConfigurationEntityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SubDirectoryName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScrapeConfigurationEntityId")
+                        .IsUnique();
+
+                    b.ToTable("ScrapeDirectories", "files");
+                });
+
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories", b =>
+                {
+                    b.Property<int>("SearchConfigurationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<int>("LastKnownImageCount")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<int>("LastPageVisited")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("TotalPages")
+                        .HasColumnType("int");
+
+                    b.HasKey("SearchConfigurationId", "Id");
+
+                    b.ToTable("SearchCategories", "files");
+                });
+
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ApiKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("BaseUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("ImagePauseInSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScrapeConfigurationEntityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SearchString")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("SearchStringPrefix")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("SearchStringSuffix")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("StartingPageNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subscriptions")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("SubscriptionsStartingPageNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubscriptionsTotalPages")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TopWallpapers")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("TopWallpapersStartingPageNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TopWallpapersTotalPages")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalPages")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScrapeConfigurationEntityId")
+                        .IsUnique();
+
+                    b.ToTable("SearchConfiguration", "files");
+                });
+
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.TagToIgnore", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IgnoreImage")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.ToTable("TagToIgnore", "files");
                 });
 
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LoginEmailAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("ScrapeConfigurationEntityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SessionCookie")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScrapeConfigurationEntityId")
+                        .IsUnique();
+
+                    b.ToTable("UserConfiguration", "files");
+                });
+
             modelBuilder.Entity("FileClassificationFileDetail", b =>
                 {
                     b.Property<int>("FileClassificationsId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("FileDetailsId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("FileDetailsId")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("FileClassificationsId", "FileDetailsId");
 
                     b.HasIndex("FileDetailsId");
 
                     b.ToTable("FileClassificationFileDetail", "files");
+                });
+
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings", b =>
+                {
+                    b.HasOne("AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity", "ScrapeConfigurationEntity")
+                        .WithOne("ConnectionStrings")
+                        .HasForeignKey("AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings", "ScrapeConfigurationEntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ScrapeConfigurationEntity");
                 });
 
             modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.FileDetail", b =>
@@ -432,6 +619,50 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                         .HasForeignKey("FileClassificationId");
                 });
 
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories", b =>
+                {
+                    b.HasOne("AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity", "ScrapeConfigurationEntity")
+                        .WithOne("ScrapeDirectories")
+                        .HasForeignKey("AStar.Dev.Infrastructure.FilesDb.Models.ScrapeDirectories", "ScrapeConfigurationEntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ScrapeConfigurationEntity");
+                });
+
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories", b =>
+                {
+                    b.HasOne("AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration", "SearchConfiguration")
+                        .WithMany("SearchCategories")
+                        .HasForeignKey("SearchConfigurationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SearchConfiguration");
+                });
+
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration", b =>
+                {
+                    b.HasOne("AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity", "ScrapeConfigurationEntity")
+                        .WithOne("SearchConfiguration")
+                        .HasForeignKey("AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration", "ScrapeConfigurationEntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ScrapeConfigurationEntity");
+                });
+
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration", b =>
+                {
+                    b.HasOne("AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity", "ScrapeConfigurationEntity")
+                        .WithOne("UserConfiguration")
+                        .HasForeignKey("AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration", "ScrapeConfigurationEntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ScrapeConfigurationEntity");
+                });
+
             modelBuilder.Entity("FileClassificationFileDetail", b =>
                 {
                     b.HasOne("AStar.Dev.Infrastructure.FilesDb.Models.FileClassification", null)
@@ -450,6 +681,26 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
             modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.FileClassification", b =>
                 {
                     b.Navigation("FileNameParts");
+                });
+
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity", b =>
+                {
+                    b.Navigation("ConnectionStrings")
+                        .IsRequired();
+
+                    b.Navigation("ScrapeDirectories")
+                        .IsRequired();
+
+                    b.Navigation("SearchConfiguration")
+                        .IsRequired();
+
+                    b.Navigation("UserConfiguration")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration", b =>
+                {
+                    b.Navigation("SearchCategories");
                 });
 #pragma warning restore 612, 618
         }

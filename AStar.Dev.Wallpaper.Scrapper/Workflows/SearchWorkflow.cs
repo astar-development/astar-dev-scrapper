@@ -23,7 +23,7 @@ public sealed class SearchWorkflow(
     {
         try
         {
-            List<Category> searchCategories = FilterSearchCategories(_searchConfiguration.SearchCategories.ToList());
+            List<Category> searchCategories = FilterSearchCategories([.. _searchConfiguration.SearchCategories]);
             await ProcessSearchCategories(searchCategories);
         }
         catch(Exception exception)
@@ -115,7 +115,7 @@ public sealed class SearchWorkflow(
 
             if(combinedSearchString != _searchConfiguration.SearchString) continue;
 
-            searchCategories = searchCategories.Skip(i).ToList();
+            searchCategories = [.. searchCategories.Skip(i)];
             break;
         }
 

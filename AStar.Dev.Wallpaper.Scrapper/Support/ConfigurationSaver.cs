@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
-using System.Reflection;
 using System.Text.Json;
+using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using Serilog.Core;
 
@@ -8,9 +8,8 @@ namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
 public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logging logging, Logger logger)
 {
+    private const  string SecretIdFromProjectFile = "c35e09dc-dc30-416a-95a6-ec1a5ba1b4";
     private readonly JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase, };
-    private readonly Logging               logging               = logging             ?? throw new ArgumentNullException();
-    private readonly ScrapeConfiguration   scrapeConfiguration   = scrapeConfiguration ?? throw new ArgumentNullException();
 
     public void SaveUpdatedConfiguration()
     {
@@ -54,28 +53,25 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
 
     private void SaveSecretsFile(Configuration configurationWrapper)
     {
-        var homeDirectory           = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var secretsPath             = Path.Combine(homeDirectory, """AppData\Roaming\Microsoft\UserSecrets\c35e09dc-dc30-416a-95a6-ec1a5ba1b43f\secrets.json""");
+        var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        string? secretsPath = GetSecretsPath(homeDirectory);
         var contentWithRealPassword = JsonSerializer.Serialize(configurationWrapper, jsonSerializerOptions);
-
         File.WriteAllText(secretsPath, contentWithRealPassword);
     }
 
-    private static void SaveRedactedAppSettings(string content)
-    {
-        const string navigateUp   = """..\..\..\..\""";
-        var          assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + navigateUp;
+    private static string GetSecretsPath(string homeDirectory)
+        => OperatingSystem.IsWindows()
+            ? Path.Combine(homeDirectory, "AppData", "Roaming", "Microsoft", "UserSecrets", SecretIdFromProjectFile, "secrets.json")
+            : OperatingSystem.IsLinux() ? Path.Combine(homeDirectory, ".microsoft", "usersecrets")
+            : "MacOS-TBC";
 
-        File.WriteAllText(Path.Combine(assemblyPath, "appSettings.json"), content);
-    }
+    private static void SaveRedactedAppSettings(string content)
+        => File.WriteAllText(Path.Combine(ApplicationMetadata.ApplicationFolder, "appSettings.json"), content);
 
     private void UpdateCategoryNames()
-    {
-        TextInfo textInfo = CultureInfo.CurrentCulture.TextInfo;
-
-        foreach(Category searchConfigurationSearchCategory in scrapeConfiguration.SearchConfiguration.SearchCategories) searchConfigurationSearchCategory.Name = textInfo.ToTitleCase(searchConfigurationSearchCategory.Name);
-    }
+        => scrapeConfiguration.SearchConfiguration.SearchCategories
+            .ForEach(searchConfigurationSearchCategory => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(searchConfigurationSearchCategory.Name));
 
     private Category[] DeduplicateTheCategories()
-        => scrapeConfiguration.SearchConfiguration.SearchCategories.DistinctBy(x => x.Id).ToArray();
+        => [.. scrapeConfiguration.SearchConfiguration.SearchCategories.DistinctBy(x => x.Id)];
 }

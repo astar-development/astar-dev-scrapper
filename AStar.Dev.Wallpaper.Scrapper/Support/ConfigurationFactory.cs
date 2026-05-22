@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using AStar.Dev.Utilities;
-using AStar.Dev.Wallpaper.Scrapper.Models;
+﻿using AStar.Dev.Wallpaper.Scrapper.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Support;
@@ -9,10 +7,8 @@ public class ConfigurationFactory
 {
     public static (ScrapeConfiguration ScrapeConfiguration, IConfigurationRoot Configuration) Configuration()
     {
-        var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).CombinePath("..", "..", "..");
-
         IConfigurationRoot config = new ConfigurationBuilder()
-                               .SetBasePath(assemblyPath)
+                               .SetBasePath(ApplicationMetadata.ApplicationFolder)
                                .AddJsonFile("appsettings.json", false, true)
                                .AddUserSecrets<ConfigurationFactory>(true, true)
                                .Build();
@@ -23,11 +19,9 @@ public class ConfigurationFactory
 
         if(SubscriptionsStartingPageIsOutsideValidRange(scrapeConfiguration)) scrapeConfiguration.SearchConfiguration.SubscriptionsStartingPageNumber = 1;
 
-        scrapeConfiguration.SearchConfiguration.SearchString = scrapeConfiguration.SearchConfiguration.SearchString.Replace(scrapeConfiguration.SearchConfiguration.BaseUrl,
-                                                                                                                            string.Empty);
+        scrapeConfiguration.SearchConfiguration.SearchString = scrapeConfiguration.SearchConfiguration.SearchString.Replace(scrapeConfiguration.SearchConfiguration.BaseUrl, string.Empty);
 
-        scrapeConfiguration.SearchConfiguration.Subscriptions = scrapeConfiguration.SearchConfiguration.Subscriptions.Replace(scrapeConfiguration.SearchConfiguration.BaseUrl,
-                                                                                                                              string.Empty);
+        scrapeConfiguration.SearchConfiguration.Subscriptions = scrapeConfiguration.SearchConfiguration.Subscriptions.Replace(scrapeConfiguration.SearchConfiguration.BaseUrl, string.Empty);
 
         var lastIndexOfEqualsInSearchString = scrapeConfiguration.SearchConfiguration.SearchString.LastIndexOf("=", StringComparison.OrdinalIgnoreCase) + 1;
 

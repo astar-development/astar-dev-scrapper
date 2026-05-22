@@ -13,8 +13,11 @@ public sealed class TagToIgnoreConfiguration : IEntityTypeConfiguration<TagToIgn
     {
         _ = builder
            .ToTable(nameof(TagToIgnore), Constants.SchemaName)
-           .HasKey(fileDetail => fileDetail.Id);
+           .HasKey(tag => tag.Id);
 
-        builder.Property(fileDetail => fileDetail.Value).HasMaxLength(300);
+        _ = builder.Property(tag => tag.Id)
+                   .HasConversion(tagId => tagId.Value, tagId => new TagId(tagId));
+
+        builder.Property(tag => tag.Value).HasMaxLength(300);
     }
 }

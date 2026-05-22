@@ -11,7 +11,7 @@ public sealed class TagToIgnore
     /// <summary>
     ///     Gets or sets The ID of the <see href="TagToIgnore"></see>. I know, shocking...
     /// </summary>
-    public int Id { get; set; }
+    public TagId Id { get; set; } = TagId.CreateNew();
 
     /// <summary>
     ///     Gets or sets the value of the tag to ignore. I know, shocking...

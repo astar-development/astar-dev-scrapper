@@ -21,5 +21,8 @@ public sealed class EventConfiguration : IEntityTypeConfiguration<Event>
         _ = builder.Property(fileDetail => fileDetail.UpdatedBy).HasMaxLength(30);
 
         _ = builder.ComplexProperty(fileDetail => fileDetail.Type).Configure(new EventTypeConfiguration());
+
+        _ = builder.Property(@event => @event.Id)
+                   .HasConversion(eventId => eventId.Value, eventId => new EventId(eventId));
     }
 }

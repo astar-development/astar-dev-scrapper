@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace AStar.Dev.Utilities;
@@ -30,7 +31,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The string to check for being null, empty or whitespace</param>
     /// <returns>True if the string is null, empty or whitespace, False otherwise</returns>
-    public static bool IsNullOrWhiteSpace(this string? value) =>
+    public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? value) =>
         string.IsNullOrWhiteSpace(value);
 
     /// <summary>
@@ -70,12 +71,15 @@ public static class StringExtensions
     public static bool IsImage(this string fileName)
     {
         if (string.IsNullOrEmpty(fileName)) return false;
+        var extension = Path.GetExtension(fileName)?.TrimStart('.');
+        if(extension.IsNullOrWhiteSpace()) return false;
 
-        return fileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
-        || fileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
-        || fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
-        || fileName.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase)
-        || fileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+        var hashSet = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase)
+        {
+            "jpg", "jpeg", "png", "bmp", "gif"
+        };
+
+        return hashSet.Contains(extension);
     }
 
     /// <summary>

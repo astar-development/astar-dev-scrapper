@@ -10,7 +10,7 @@ public sealed class ModelToIgnore
     /// <summary>
     ///     Gets or sets The ID of the <see href="ModelToIgnore"></see>. I know, shocking...
     /// </summary>
-    public int Id { get; set; }
+    public ModelId Id { get; set; } = ModelId.CreateNew();
 
     /// <summary>
     ///     Gets or sets the value of the Model to ignore completely. I know, shocking...

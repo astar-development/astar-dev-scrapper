@@ -1,14 +1,17 @@
-using AStar.Dev.Utilities;
+using AStar.Dev.Infrastructure.FilesDb.Data;
+using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Playwright;
 using Serilog;
 using Serilog.Core;
 using Serilog.Exceptions;
+using System.Text.Json;
 
 (ScrapeConfiguration scrapeConfiguration, IConfigurationRoot configuration) = ConfigurationFactory.Configuration();
 
@@ -24,35 +27,80 @@ Logger logger = new LoggerConfiguration()
 var logging = new Logging();
 configuration.GetSection("Logging").Bind(logging);
 
+var configSaver = new ConfigurationSaver(scrapeConfiguration, logging, logger);
+var tagsToIgnoreCompletely = TagsFactory.LoadTagsToIgnoreCompletely();
+var tagsTextToIgnore = TagsFactory.LoadTagsTextToIgnore();
+
+await using var dbContext = new FilesContext(new DbContextOptions<FilesContext>());
+dbContext.Database.Migrate();
+
+if (CheckDatabaseForMissingData(tagsToIgnoreCompletely, tagsTextToIgnore, dbContext, scrapeConfiguration))
+{
+    logger.Information("Updating database...");
+    dbContext.TagsToIgnore.AddRange(tagsTextToIgnore.Tags.Select(tag => new TagToIgnore { Value = tag }));
+    dbContext.ModelsToIgnore.AddRange(tagsToIgnoreCompletely.Tags.Select(tag => new ModelToIgnore { Value = tag }));
+    dbContext.ScrapeConfiguration.Add(new ScrapeConfigurationEntity
+    {
+        ConnectionStrings = new AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings()
+        {
+            Sqlite = scrapeConfiguration.ConnectionStrings.ToString()!
+        },
+        UserConfiguration = new AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration
+        {
+            Username = scrapeConfiguration.UserConfiguration.Username,
+            Password = scrapeConfiguration.UserConfiguration.Password,
+            LoginEmailAddress = scrapeConfiguration.UserConfiguration.LoginEmailAddress,
+            SessionCookie = scrapeConfiguration.UserConfiguration.SessionCookie,
+        },
+        SearchConfiguration = new AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration
+        {
+            BaseUrl = scrapeConfiguration.SearchConfiguration.BaseUrl,
+            ApiKey = scrapeConfiguration.SearchConfiguration.ApiKey,
+            SearchCategories = [.. scrapeConfiguration.SearchConfiguration.SearchCategories.Select(category => new AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories
+            {
+                Id    = category.Id,
+                Name = category.Name,
+                LastKnownImageCount = category.LastKnownImageCount,
+                LastPageVisited = category.LastPageVisited,
+                TotalPages = category.TotalPages,
+            })],
+            SearchString = scrapeConfiguration.SearchConfiguration.SearchString,
+            TopWallpapers = scrapeConfiguration.SearchConfiguration.TopWallpapers,
+        },
+        ScrapeDirectories = scrapeConfiguration.ScrapeDirectories.ToEntity(),
+    });
+    await dbContext.SaveChangesAsync();
+}
+
 using IPlaywright playwright = await Playwright.CreateAsync();
 
 IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
 {
     Headless = false,
-    SlowMo   = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
-    Channel  = "chrome",
-    Args     = ["--disable-blink-features=AutomationControlled"],
+    SlowMo = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
+    Channel = "chrome",
+    Args = ["--disable-blink-features=AutomationControlled"],
 });
 
 IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
 {
-    BaseURL      = scrapeConfiguration.SearchConfiguration.BaseUrl,
+    BaseURL = scrapeConfiguration.SearchConfiguration.BaseUrl,
     ViewportSize = new ViewportSize { Width = 1920, Height = 1080 },
-    Locale       = "en-US",
-    TimezoneId   = "America/New_York",
+    Locale = "en-US",
+    TimezoneId = "America/New_York",
 });
 
 var chromeCookies = await ChromeCookieExtractor.ExtractAsync("wallhaven.cc", logger);
 logger.Information("Extracted {Count} cookies from Chrome profile", chromeCookies.Count);
 var injected = 0;
-foreach(var cookie in chromeCookies)
+foreach (var cookie in chromeCookies)
 {
     try
     {
         await context.AddCookiesAsync([cookie]);
         injected++;
     }
-    catch(Exception ex)
+    catch (Exception ex)
     {
         logger.Debug("Skipped cookie '{Name}' ({Domain}): {Message}", cookie.Name, cookie.Domain, ex.Message);
     }
@@ -62,59 +110,56 @@ logger.Information("Injected {Injected}/{Total} cookies", injected, chromeCookie
 IPage page = await context.NewPageAsync();
 page.SetDefaultTimeout(60_000);
 
-var configSaver             = new ConfigurationSaver(scrapeConfiguration, logging, logger);
-var tagsToIgnoreCompletely  = TagsFactory.LoadTagsToIgnoreCompletely();
-var tagsTextToIgnore        = TagsFactory.LoadTagsTextToIgnore();
-
 var loginPage = new LoginPage(page, scrapeConfiguration.SearchConfiguration);
 var imagePage = new ImagePage(
     page,
-    scrapeConfiguration.SearchConfiguration,
-    scrapeConfiguration.ScrapeDirectories,
-    scrapeConfiguration.ConnectionStrings,
+    scrapeConfiguration,
     tagsToIgnoreCompletely,
     tagsTextToIgnore,
     logger);
 var imagePageService = new ImagePageService(imagePage, logger);
 
-// If cookies gave us a valid session, wallhaven redirects /login → home; skip re-login
 await loginPage.GoToLoginPageAsync();
-if(page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
+if (page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
 {
     logger.Information("Cookie session invalid or expired — logging in");
     await loginPage.LoginAsync(scrapeConfiguration.UserConfiguration.Username, scrapeConfiguration.UserConfiguration.Password);
-    await loginPage.ConfirmLoggedInAsync($"{scrapeConfiguration.SearchConfiguration.BaseUrl}/user/{scrapeConfiguration.UserConfiguration.Username}");
+    await loginPage.ConfirmLoggedInAsync($"{scrapeConfiguration.SearchConfiguration.BaseUrl}/");
 }
 else
 {
     logger.Information("Cookie session valid — skipping login");
 }
 
-var runAll           = args.Length == 0;
-var runSearch        = runAll || args.Contains("search",        StringComparer.OrdinalIgnoreCase);
+var runAll = args.Length == 0;
+var runSearch = runAll || args.Contains("search", StringComparer.OrdinalIgnoreCase);
 var runSubscriptions = runAll || args.Contains("subscriptions", StringComparer.OrdinalIgnoreCase);
 var runTopWallpapers = runAll || args.Contains("topwallpapers", StringComparer.OrdinalIgnoreCase);
 
-if(runSearch)
+if (runSearch)
 {
     var searchResultsPage = new SearchResultsPage(page, logger);
-    var workflow          = new SearchWorkflow(searchResultsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
+    var workflow = new SearchWorkflow(searchResultsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
     await workflow.RunAsync();
 }
 
-if(runSubscriptions)
+if (runSubscriptions)
 {
     var subscriptionsPage = new SubscriptionsImagesListPage(page, scrapeConfiguration.SearchConfiguration);
-    var workflow          = new SubscriptionsWorkflow(subscriptionsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
+    var workflow = new SubscriptionsWorkflow(subscriptionsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
     await workflow.RunAsync();
 }
 
-if(runTopWallpapers)
+if (runTopWallpapers)
 {
     var topWallpapersPage = new TopWallpapersPage(page, scrapeConfiguration.SearchConfiguration);
-    var workflow          = new TopWallpapersWorkflow(topWallpapersPage, imagePageService, scrapeConfiguration.SearchConfiguration, configSaver, logger);
+    var workflow = new TopWallpapersWorkflow(topWallpapersPage, imagePageService, scrapeConfiguration.SearchConfiguration, configSaver, logger);
     await workflow.RunAsync();
 }
 
 configSaver.SaveUpdatedConfiguration();
 logger.Information("Shutting down...");
+
+static bool CheckDatabaseForMissingData(AStar.Dev.Wallpaper.Scrapper.DTOs.TagsToIgnoreCompletely tagsToIgnoreCompletely, AStar.Dev.Wallpaper.Scrapper.DTOs.TagsTextToIgnore tagsTextToIgnore, FilesContext dbContext, ScrapeConfiguration scrapeConfiguration)
+    => (tagsTextToIgnore.Tags.Length > 0 || tagsToIgnoreCompletely.Tags.Length > 0 || scrapeConfiguration.SearchConfiguration.SearchCategories.Length>0)
+       && (!dbContext.TagsToIgnore.Any() || !dbContext.ModelsToIgnore.Any() || !dbContext.SearchCategories.Any());

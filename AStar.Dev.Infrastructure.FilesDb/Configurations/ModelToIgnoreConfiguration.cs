@@ -13,8 +13,11 @@ public sealed class ModelToIgnoreConfiguration : IEntityTypeConfiguration<ModelT
     {
         _ = builder
            .ToTable(nameof(ModelToIgnore), Constants.SchemaName)
-           .HasKey(fileDetail => fileDetail.Id);
+           .HasKey(model => model.Id);
 
-        builder.Property(fileDetail => fileDetail.Value).HasMaxLength(300);
+        _ = builder.Property(model => model.Id)
+                   .HasConversion(modelId => modelId.Value, modelId => new ModelId(modelId));
+
+        builder.Property(model => model.Value).HasMaxLength(300);
     }
 }

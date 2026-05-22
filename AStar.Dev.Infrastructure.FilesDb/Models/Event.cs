@@ -8,7 +8,7 @@ public sealed class Event
 {
     /// <summary>
     /// </summary>
-    public int Id { get; set; }
+    public EventId Id { get; set; }
 
     /// <summary>
     /// </summary>

@@ -8,7 +8,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
 public static class ChromeCookieExtractor
 {
-    private static readonly byte[] Iv = Enumerable.Repeat((byte)0x20, 16).ToArray();
+    private static readonly byte[] Iv = [.. Enumerable.Repeat((byte)0x20, 16)];
 
     // Chrome stores expiry as microseconds since 1601-01-01; Unix epoch is 1970-01-01
     private const long ChromeEpochOffsetSeconds = 11_644_473_600L;
