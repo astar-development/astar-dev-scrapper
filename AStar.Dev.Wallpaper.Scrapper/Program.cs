@@ -1,5 +1,4 @@
 using AStar.Dev.Infrastructure.FilesDb.Data;
-using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Repositories;
@@ -30,47 +29,12 @@ configuration.GetSection("Logging").Bind(logging);
 var configSaver = new ConfigurationSaver(scrapeConfiguration, logging, logger);
 var tagsToIgnoreCompletely = TagsFactory.LoadTagsToIgnoreCompletely();
 var tagsTextToIgnore = TagsFactory.LoadTagsTextToIgnore();
+var modelsToIgnore = ModelFactory.LoadModelsIgnore();
 
 await using var dbContext = new FilesContext(new DbContextOptions<FilesContext>());
 dbContext.Database.Migrate();
 
-if (CheckDatabaseForMissingData(tagsToIgnoreCompletely, tagsTextToIgnore, dbContext, scrapeConfiguration))
-{
-    logger.Information("Updating database...");
-    dbContext.TagsToIgnore.AddRange(tagsTextToIgnore.Tags.Select(tag => new TagToIgnore { Value = tag }));
-    dbContext.ModelsToIgnore.AddRange(tagsToIgnoreCompletely.Tags.Select(tag => new ModelToIgnore { Value = tag }));
-    dbContext.ScrapeConfiguration.Add(new ScrapeConfigurationEntity
-    {
-        ConnectionStrings = new AStar.Dev.Infrastructure.FilesDb.Models.ConnectionStrings()
-        {
-            Sqlite = scrapeConfiguration.ConnectionStrings.ToString()!
-        },
-        UserConfiguration = new AStar.Dev.Infrastructure.FilesDb.Models.UserConfiguration
-        {
-            Username = scrapeConfiguration.UserConfiguration.Username,
-            Password = scrapeConfiguration.UserConfiguration.Password,
-            LoginEmailAddress = scrapeConfiguration.UserConfiguration.LoginEmailAddress,
-            SessionCookie = scrapeConfiguration.UserConfiguration.SessionCookie,
-        },
-        SearchConfiguration = new AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration
-        {
-            BaseUrl = scrapeConfiguration.SearchConfiguration.BaseUrl,
-            ApiKey = scrapeConfiguration.SearchConfiguration.ApiKey,
-            SearchCategories = [.. scrapeConfiguration.SearchConfiguration.SearchCategories.Select(category => new AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories
-            {
-                Id    = category.Id,
-                Name = category.Name,
-                LastKnownImageCount = category.LastKnownImageCount,
-                LastPageVisited = category.LastPageVisited,
-                TotalPages = category.TotalPages,
-            })],
-            SearchString = scrapeConfiguration.SearchConfiguration.SearchString,
-            TopWallpapers = scrapeConfiguration.SearchConfiguration.TopWallpapers,
-        },
-        ScrapeDirectories = scrapeConfiguration.ScrapeDirectories.ToEntity(),
-    });
-    await dbContext.SaveChangesAsync();
-}
+await DataSeed.Seed(scrapeConfiguration, logger, tagsToIgnoreCompletely, tagsTextToIgnore, modelsToIgnore, dbContext);
 
 using IPlaywright playwright = await Playwright.CreateAsync();
 
@@ -119,17 +83,17 @@ var imagePage = new ImagePage(
 var fileDetailRepository = new FileDetailRepository(scrapeConfiguration.ConnectionStrings.Sqlite);
 var imagePageService = new ImagePageService(imagePage, fileDetailRepository, scrapeConfiguration, logger);
 
-await loginPage.GoToLoginPageAsync();
-if (page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
-{
-    logger.Information("Cookie session invalid or expired — logging in");
-    await loginPage.LoginAsync(scrapeConfiguration.UserConfiguration.Username, scrapeConfiguration.UserConfiguration.Password);
-    await loginPage.ConfirmLoggedInAsync($"{scrapeConfiguration.SearchConfiguration.BaseUrl}/");
-}
-else
-{
-    logger.Information("Cookie session valid — skipping login");
-}
+// await loginPage.GoToLoginPageAsync();
+// if (page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
+// {
+//     logger.Information("Cookie session invalid or expired — logging in");
+//     await loginPage.LoginAsync(scrapeConfiguration.UserConfiguration.Username, scrapeConfiguration.UserConfiguration.Password);
+//     await loginPage.ConfirmLoggedInAsync($"{scrapeConfiguration.SearchConfiguration.BaseUrl}/");
+// }
+// else
+// {
+//     logger.Information("Cookie session valid — skipping login");
+// }
 
 var runAll = args.Length == 0;
 var runSearch = runAll || args.Contains("search", StringComparer.OrdinalIgnoreCase);
@@ -159,7 +123,3 @@ if (runTopWallpapers)
 
 configSaver.SaveUpdatedConfiguration();
 logger.Information("Shutting down...");
-
-static bool CheckDatabaseForMissingData(AStar.Dev.Wallpaper.Scrapper.DTOs.TagsToIgnoreCompletely tagsToIgnoreCompletely, AStar.Dev.Wallpaper.Scrapper.DTOs.TagsTextToIgnore tagsTextToIgnore, FilesContext dbContext, ScrapeConfiguration scrapeConfiguration)
-    => (tagsTextToIgnore.Tags.Count > 0 || tagsToIgnoreCompletely.Tags.Count > 0 || scrapeConfiguration.SearchConfiguration.SearchCategories.Length>0)
-       && (!dbContext.TagsToIgnore.Any() || !dbContext.ModelsToIgnore.Any() || !dbContext.SearchCategories.Any());
