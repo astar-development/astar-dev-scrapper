@@ -79,7 +79,7 @@ public sealed class SearchWorkflow(
             logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, _searchConfiguration.TotalPages, searchCategory.Name);
             _searchConfiguration = _searchConfiguration with { StartingPageNumber = currentPageNumber };
             searchCategory.LastPageVisited          = currentPageNumber;
-            configurationSaver.SaveUpdatedConfiguration();
+            await configurationSaver.SaveUpdatedConfigurationAsync();
             _ = await searchResultsPage.LoadSearchPageAsync(combinedSearchString, currentPageNumber);
 
             IReadOnlyCollection<string> imagePageLinks = await searchResultsPage.ImagePageLinksAsync();

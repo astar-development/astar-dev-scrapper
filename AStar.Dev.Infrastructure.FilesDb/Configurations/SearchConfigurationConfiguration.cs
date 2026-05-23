@@ -74,6 +74,17 @@ internal sealed class SearchConfigurationConfiguration : IEntityTypeConfiguratio
                .HasColumnType("int")
                .IsRequired();
 
+        builder.Property(searchConfiguration => searchConfiguration.LoginUrl)
+               .HasColumnType("nvarchar(256)")
+               .IsRequired();
+
+        builder.Property(searchConfiguration => searchConfiguration.UseHeadless)
+               .HasColumnType("bit")
+               .IsRequired();
+
+        builder.Property(searchConfiguration => searchConfiguration.SlowMotionDelay)
+               .HasColumnType("real");
+
         builder.HasMany(searchConfiguration => searchConfiguration.SearchCategories)
                .WithOne(searchCategory => searchCategory.SearchConfiguration)
                .HasForeignKey(searchCategory => searchCategory.SearchConfigurationId)

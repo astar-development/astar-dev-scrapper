@@ -39,7 +39,7 @@ public sealed class TopWallpapersWorkflow(
         logger.Information("There are a total of {TopWallpapersPageCount} pages for the Top Wallpapers.", pageCount);
         _searchConfiguration = _searchConfiguration with { TopWallpapersTotalPages = pageCount };
 
-        configurationSaver.SaveUpdatedConfiguration();
+        await configurationSaver.SaveUpdatedConfigurationAsync();
 
         for(var currentPageNumber = _searchConfiguration.TopWallpapersStartingPageNumber;
             currentPageNumber <= _searchConfiguration.TopWallpapersTotalPages;
@@ -48,7 +48,7 @@ public sealed class TopWallpapersWorkflow(
             var delay = Random.Shared.Next(_searchConfiguration.ImagePauseInSeconds, _searchConfiguration.ImagePauseInSeconds + 4);
             await Task.Delay(TimeSpan.FromSeconds(delay));
             _searchConfiguration = _searchConfiguration with { TopWallpapersStartingPageNumber = currentPageNumber };
-            configurationSaver.SaveUpdatedConfiguration();
+            await configurationSaver.SaveUpdatedConfigurationAsync();
             _ = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber);
             IReadOnlyCollection<string> imagePageLinks = await topWallpapersPage.GetImagePageLinks();
 

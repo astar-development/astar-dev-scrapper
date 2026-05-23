@@ -45,7 +45,7 @@ public sealed class SubscriptionsWorkflow(
         _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
         UpdateSearchTotalPagesIfRequired(pageCount);
 
-        configurationSaver.SaveUpdatedConfiguration();
+        await configurationSaver.SaveUpdatedConfigurationAsync();
 
         for(var currentPageNumber = _searchConfiguration.SubscriptionsStartingPageNumber;
             currentPageNumber <= _searchConfiguration.SubscriptionsTotalPages;
@@ -54,7 +54,7 @@ public sealed class SubscriptionsWorkflow(
             var delay = Random.Shared.Next(_searchConfiguration.ImagePauseInSeconds, _searchConfiguration.ImagePauseInSeconds + 4);
             await Task.Delay(TimeSpan.FromSeconds(delay));
             _searchConfiguration = _searchConfiguration with { SubscriptionsStartingPageNumber = currentPageNumber };
-            configurationSaver.SaveUpdatedConfiguration();
+            await configurationSaver.SaveUpdatedConfigurationAsync();
             logger.Information("Getting page {subscriptionPage} (of {totalPagesForSubscriptions}) now.", currentPageNumber, _searchConfiguration.SubscriptionsTotalPages);
             _ = await subscriptionsImagesListPage.LoadSubscriptionResultsPageAsync(currentPageNumber);
             IReadOnlyCollection<string> imagePageLinks = await subscriptionsImagesListPage.GetImagePageLinks();

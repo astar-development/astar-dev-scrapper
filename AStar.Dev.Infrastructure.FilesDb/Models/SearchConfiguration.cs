@@ -94,5 +94,20 @@ public class SearchConfiguration
     /// The starting page number for top wallpapers is a crucial parameter for managing the pagination of the scraping process specifically for the top wallpapers category. This property allows the scraper to keep track of where it left off in previous runs for top wallpapers, enabling it to resume from the last visited page in case of interruptions. This ensures that the scraper does not miss any images or re-scrape already processed pages within the top wallpapers category, allowing for a more efficient and organized scraping process. Additionally, knowing the starting page number for top wallpapers helps in estimating the time required for scraping and in managing expectations regarding the volume of data that will be collected for this category, ensuring that the scraper can navigate through the search results effectively and handle pagination gracefully.
     /// </summary>
     public int TopWallpapersStartingPageNumber { get; set; }
+
+    /// <summary>
+    /// The URL of the login page on the target website.
+    /// </summary>
+    public string LoginUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether the browser runs in headless mode.
+    /// </summary>
+    public bool UseHeadless { get; set; }
+
+    /// <summary>
+    /// Slow motion delay in milliseconds applied to Playwright operations.
+    /// </summary>
+    public float? SlowMotionDelay { get; set; }
 }
 
