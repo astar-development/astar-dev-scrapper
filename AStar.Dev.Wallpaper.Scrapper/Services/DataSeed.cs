@@ -1,6 +1,7 @@
 using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Wallpaper.Scrapper.Models;
+using Microsoft.EntityFrameworkCore;
 using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
@@ -42,37 +43,66 @@ public static class DataSeed
                     LoginEmailAddress = scrapeConfiguration.UserConfiguration.LoginEmailAddress,
                     SessionCookie     = scrapeConfiguration.UserConfiguration.SessionCookie,
                 },
-                SearchConfiguration = new Infrastructure.FilesDb.Models.SearchConfiguration
-                {
-                    BaseUrl          = scrapeConfiguration.SearchConfiguration.BaseUrl,
-                    ApiKey           = scrapeConfiguration.SearchConfiguration.ApiKey,
-                    LoginUrl         = scrapeConfiguration.SearchConfiguration.LoginUrl,
-                    UseHeadless      = scrapeConfiguration.SearchConfiguration.UseHeadless,
-                    SlowMotionDelay  = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
-                    SearchString     = scrapeConfiguration.SearchConfiguration.SearchString,
-                    TopWallpapers    = scrapeConfiguration.SearchConfiguration.TopWallpapers,
-                    SearchStringPrefix             = scrapeConfiguration.SearchConfiguration.SearchStringPrefix,
-                    SearchStringSuffix             = scrapeConfiguration.SearchConfiguration.SearchStringSuffix,
-                    Subscriptions                  = scrapeConfiguration.SearchConfiguration.Subscriptions,
-                    ImagePauseInSeconds            = scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds,
-                    StartingPageNumber             = scrapeConfiguration.SearchConfiguration.StartingPageNumber,
-                    TotalPages                     = scrapeConfiguration.SearchConfiguration.TotalPages,
-                    SubscriptionsStartingPageNumber = scrapeConfiguration.SearchConfiguration.SubscriptionsStartingPageNumber,
-                    SubscriptionsTotalPages        = scrapeConfiguration.SearchConfiguration.SubscriptionsTotalPages,
-                    TopWallpapersTotalPages        = scrapeConfiguration.SearchConfiguration.TopWallpapersTotalPages,
-                    TopWallpapersStartingPageNumber = scrapeConfiguration.SearchConfiguration.TopWallpapersStartingPageNumber,
-                    SearchCategories               = [.. scrapeConfiguration.SearchConfiguration.SearchCategories.Select(c => new SearchCategories
-                    {
-                        Id                  = c.Id,
-                        Name                = c.Name,
-                        LastKnownImageCount = c.LastKnownImageCount,
-                        LastPageVisited     = c.LastPageVisited,
-                        TotalPages          = c.TotalPages,
-                    })],
-                },
-                ScrapeDirectories = scrapeConfiguration.ScrapeDirectories.ToEntity(),
+                SearchConfiguration = BuildSearchConfigurationEntity(scrapeConfiguration),
+                ScrapeDirectories   = scrapeConfiguration.ScrapeDirectories.ToEntity(),
             });
             await dbContext.SaveChangesAsync();
         }
+        else
+        {
+            await UpdateIncompleteSearchConfigurationAsync(scrapeConfiguration, logger, dbContext);
+        }
     }
+
+    private static async Task UpdateIncompleteSearchConfigurationAsync(ScrapeConfiguration scrapeConfiguration, Logger logger, FilesContext dbContext)
+    {
+        var existing = await dbContext.SearchConfigurations.SingleAsync();
+        if(!string.IsNullOrEmpty(existing.SearchStringPrefix)) return;
+
+        logger.Information("Updating incomplete SearchConfiguration with missing fields...");
+        existing.LoginUrl                       = scrapeConfiguration.SearchConfiguration.LoginUrl;
+        existing.UseHeadless                    = scrapeConfiguration.SearchConfiguration.UseHeadless;
+        existing.SlowMotionDelay                = scrapeConfiguration.SearchConfiguration.SlowMotionDelay;
+        existing.SearchStringPrefix             = scrapeConfiguration.SearchConfiguration.SearchStringPrefix;
+        existing.SearchStringSuffix             = scrapeConfiguration.SearchConfiguration.SearchStringSuffix;
+        existing.Subscriptions                  = scrapeConfiguration.SearchConfiguration.Subscriptions;
+        existing.ImagePauseInSeconds            = scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds;
+        existing.StartingPageNumber             = scrapeConfiguration.SearchConfiguration.StartingPageNumber;
+        existing.TotalPages                     = scrapeConfiguration.SearchConfiguration.TotalPages;
+        existing.SubscriptionsStartingPageNumber = scrapeConfiguration.SearchConfiguration.SubscriptionsStartingPageNumber;
+        existing.SubscriptionsTotalPages        = scrapeConfiguration.SearchConfiguration.SubscriptionsTotalPages;
+        existing.TopWallpapersTotalPages        = scrapeConfiguration.SearchConfiguration.TopWallpapersTotalPages;
+        existing.TopWallpapersStartingPageNumber = scrapeConfiguration.SearchConfiguration.TopWallpapersStartingPageNumber;
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static Infrastructure.FilesDb.Models.SearchConfiguration BuildSearchConfigurationEntity(ScrapeConfiguration scrapeConfiguration)
+        => new()
+        {
+            BaseUrl                         = scrapeConfiguration.SearchConfiguration.BaseUrl,
+            ApiKey                          = scrapeConfiguration.SearchConfiguration.ApiKey,
+            LoginUrl                        = scrapeConfiguration.SearchConfiguration.LoginUrl,
+            UseHeadless                     = scrapeConfiguration.SearchConfiguration.UseHeadless,
+            SlowMotionDelay                 = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
+            SearchString                    = scrapeConfiguration.SearchConfiguration.SearchString,
+            TopWallpapers                   = scrapeConfiguration.SearchConfiguration.TopWallpapers,
+            SearchStringPrefix              = scrapeConfiguration.SearchConfiguration.SearchStringPrefix,
+            SearchStringSuffix              = scrapeConfiguration.SearchConfiguration.SearchStringSuffix,
+            Subscriptions                   = scrapeConfiguration.SearchConfiguration.Subscriptions,
+            ImagePauseInSeconds             = scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds,
+            StartingPageNumber              = scrapeConfiguration.SearchConfiguration.StartingPageNumber,
+            TotalPages                      = scrapeConfiguration.SearchConfiguration.TotalPages,
+            SubscriptionsStartingPageNumber = scrapeConfiguration.SearchConfiguration.SubscriptionsStartingPageNumber,
+            SubscriptionsTotalPages         = scrapeConfiguration.SearchConfiguration.SubscriptionsTotalPages,
+            TopWallpapersTotalPages         = scrapeConfiguration.SearchConfiguration.TopWallpapersTotalPages,
+            TopWallpapersStartingPageNumber = scrapeConfiguration.SearchConfiguration.TopWallpapersStartingPageNumber,
+            SearchCategories                = [.. scrapeConfiguration.SearchConfiguration.SearchCategories.Select(c => new SearchCategories
+            {
+                Id                  = c.Id,
+                Name                = c.Name,
+                LastKnownImageCount = c.LastKnownImageCount,
+                LastPageVisited     = c.LastPageVisited,
+                TotalPages          = c.TotalPages,
+            })],
+        };
 }
