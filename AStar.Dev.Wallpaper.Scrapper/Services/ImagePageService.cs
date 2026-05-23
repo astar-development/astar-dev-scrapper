@@ -66,15 +66,17 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
 
         if(fileDetail.IsImage)
         {
+            logger.Information("Image name and path is: {FileName}", imageNameWithPath);
             var imageDetail = SKImage.FromEncodedData(imageNameWithPath);
-            if(imageDetail is null)
-                File.Delete(imageNameWithPath);
-            else
+            if(imageDetail is not null)
             {
+                logger.Information("Image: {FileName} was found", imageNameWithPath);
                 fileDetail.Height      = imageDetail.Height;
                 fileDetail.Width       = imageDetail.Width;
                 fileDetail.ImageDetail = new ImageDetail { Width = imageDetail.Width, Height = imageDetail.Height };
             }
+            else
+                logger.Information("Image: {FileName} was NOT found", imageNameWithPath);
         }
 
         await fileDetailRepository.AddAsync(fileDetail);

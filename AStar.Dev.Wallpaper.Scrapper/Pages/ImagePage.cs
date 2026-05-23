@@ -12,7 +12,7 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
         _ = await page.GotoAsync(link);
 
         IReadOnlyList<ILocator> tags          = await page.Locator(".tagname").AllAsync();
-        var                     directoryName = scrapeConfiguration.ScrapeDirectories.RootDirectory.CombinePath(scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory, scrapeConfiguration.ScrapeDirectories.SubDirectoryName);
+        var                     directoryName = scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory.CombinePath(scrapeConfiguration.ScrapeDirectories.SubDirectoryName);
         var (directoryNameUpdated, filePrefix, skip) = await ProcessTheImageTags(tags, directoryName);
 
         if(skip) return new ImagePageResult(null, directoryNameUpdated, filePrefix, Skip: true);
