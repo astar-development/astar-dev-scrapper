@@ -1,66 +1,61 @@
-﻿using System.Globalization;
-using System.Text.Json;
-using AStar.Dev.Utilities;
+using AStar.Dev.Infrastructure.FilesDb.Data;
+using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Wallpaper.Scrapper.Models;
+using Microsoft.EntityFrameworkCore;
 using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
-public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logging logging, Logger logger)
+public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logger logger, FilesContext dbContext)
 {
-    private const  string SecretIdFromProjectFile = "c35e09dc-dc30-416a-95a6-ec1a5ba1b43f";
-    private readonly JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase, };
-
-    public void SaveUpdatedConfiguration()
+    public async Task SaveUpdatedConfigurationAsync()
     {
         try
         {
-            UpdateAndSaveTheConfiguration();
+            await UpdateAndSaveTheConfigurationAsync();
         }
         catch(Exception exception)
         {
             logger.Error(exception.GetBaseException().Message);
-
             throw;
         }
     }
 
-    private void UpdateAndSaveTheConfiguration()
+    private async Task UpdateAndSaveTheConfigurationAsync()
     {
-        scrapeConfiguration = scrapeConfiguration with {SearchConfiguration= scrapeConfiguration.SearchConfiguration with {SearchCategories = DeduplicateTheCategories()}};
-        UpdateCategoryNames();
-        var configurationWrapper = new Configuration { ScrapeConfiguration = scrapeConfiguration, Logging = logging, };
-        SaveSecretsFile(configurationWrapper);
+        var entity = await dbContext.ScrapeConfiguration
+                                    .Include(e => e.SearchConfiguration)
+                                    .ThenInclude(sc => sc.SearchCategories)
+                                    .SingleAsync();
 
-        const string redacted = "REDACTED!";
+        var dedupedCategories = scrapeConfiguration.SearchConfiguration.SearchCategories
+                                                   .DistinctBy(c => c.Id)
+                                                   .ToList();
 
-        var copy = scrapeConfiguration with { UserConfiguration = scrapeConfiguration.UserConfiguration with { Password = redacted}, ConnectionStrings = scrapeConfiguration.ConnectionStrings with { Sqlite = redacted }, ScrapeDirectories = scrapeConfiguration.ScrapeDirectories with { SubDirectoryName = redacted}, SearchConfiguration = scrapeConfiguration.SearchConfiguration with { SearchCategories = []} };
-        var content = JsonSerializer.Serialize(new Configuration { ScrapeConfiguration = copy });
-        SaveRedactedAppSettings(content);
+        foreach(var cat in dedupedCategories)
+        {
+            var existing = entity.SearchConfiguration.SearchCategories
+                                 .FirstOrDefault(ec => ec.Id == cat.Id);
+            if(existing != null)
+            {
+                existing.LastKnownImageCount = cat.LastKnownImageCount;
+                existing.LastPageVisited     = cat.LastPageVisited;
+                existing.TotalPages          = cat.TotalPages;
+            }
+            else
+            {
+                entity.SearchConfiguration.SearchCategories.Add(new SearchCategories
+                {
+                    SearchConfigurationId = entity.SearchConfiguration.Id,
+                    Id                    = cat.Id,
+                    Name                  = cat.Name,
+                    LastKnownImageCount   = cat.LastKnownImageCount,
+                    LastPageVisited       = cat.LastPageVisited,
+                    TotalPages            = cat.TotalPages,
+                });
+            }
+        }
 
+        await dbContext.SaveChangesAsync();
     }
-
-    private void SaveSecretsFile(Configuration configurationWrapper)
-    {
-        var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        string? secretsPath = GetSecretsPath(homeDirectory);
-        var contentWithRealPassword = JsonSerializer.Serialize(configurationWrapper, jsonSerializerOptions);
-        File.WriteAllText(secretsPath, contentWithRealPassword);
-    }
-
-    private static string GetSecretsPath(string homeDirectory)
-        => OperatingSystem.IsWindows()
-            ? Path.Combine(homeDirectory, "AppData", "Roaming", "Microsoft", "UserSecrets", SecretIdFromProjectFile, "secrets.json")
-            : OperatingSystem.IsLinux() ? Path.Combine(homeDirectory, ".microsoft", "usersecrets", SecretIdFromProjectFile, "secrets.json")
-            : "MacOS-TBC";
-
-    private static void SaveRedactedAppSettings(string content)
-        => File.WriteAllText(Path.Combine(ApplicationMetadata.ApplicationFolder, "appsettings.json"), content);
-
-    private void UpdateCategoryNames()
-        => scrapeConfiguration.SearchConfiguration.SearchCategories
-            .ForEach(searchConfigurationSearchCategory => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(searchConfigurationSearchCategory.Name));
-
-    private Category[] DeduplicateTheCategories()
-        => [.. scrapeConfiguration.SearchConfiguration.SearchCategories.DistinctBy(x => x.Id)];
 }

@@ -12,7 +12,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Exceptions;
 
-(ScrapeConfiguration scrapeConfiguration, IConfigurationRoot configuration) = ConfigurationFactory.Configuration();
+(ScrapeConfiguration seedConfig, IConfigurationRoot configuration) = ConfigurationFactory.Configuration();
 
 Logger logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -23,48 +23,54 @@ Logger logger = new LoggerConfiguration()
     .ReadFrom.Configuration(configuration)
     .CreateLogger();
 
-var logging = new Logging();
-configuration.GetSection("Logging").Bind(logging);
-
-var configSaver = new ConfigurationSaver(scrapeConfiguration, logging, logger);
-var tagsToIgnoreCompletely = TagsFactory.LoadTagsToIgnoreCompletely();
-var tagsTextToIgnore = TagsFactory.LoadTagsTextToIgnore();
-var modelsToIgnore = ModelFactory.LoadModelsIgnore();
-
 await using var dbContext = new FilesContext(new DbContextOptions<FilesContext>());
 dbContext.Database.Migrate();
 
-await DataSeed.Seed(scrapeConfiguration, logger, tagsToIgnoreCompletely, tagsTextToIgnore, modelsToIgnore, dbContext);
+await DataSeed.Seed(seedConfig, logger, dbContext);
+
+var scrapeConfigEntity = await dbContext.ScrapeConfiguration
+                                        .Include(e => e.ConnectionStrings)
+                                        .Include(e => e.UserConfiguration)
+                                        .Include(e => e.SearchConfiguration).ThenInclude(sc => sc.SearchCategories)
+                                        .Include(e => e.ScrapeDirectories)
+                                        .SingleAsync();
+
+ScrapeConfiguration scrapeConfiguration = scrapeConfigEntity.ToAppModel();
+
+var tagsToIgnoreCompletely = TagsFactory.LoadTagsToIgnoreCompletely(dbContext);
+var tagsTextToIgnore       = TagsFactory.LoadTagsTextToIgnore(dbContext);
+
+var configSaver = new ConfigurationSaver(scrapeConfiguration, logger, dbContext);
 
 using IPlaywright playwright = await Playwright.CreateAsync();
 
 IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
 {
     Headless = false,
-    SlowMo = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
-    Channel = "chrome",
-    Args = ["--disable-blink-features=AutomationControlled"],
+    SlowMo   = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
+    Channel  = "chrome",
+    Args     = ["--disable-blink-features=AutomationControlled"],
 });
 
 IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
 {
-    BaseURL = scrapeConfiguration.SearchConfiguration.BaseUrl,
+    BaseURL    = scrapeConfiguration.SearchConfiguration.BaseUrl,
     ViewportSize = new ViewportSize { Width = 1920, Height = 1080 },
-    Locale = "en-US",
+    Locale     = "en-US",
     TimezoneId = "America/New_York",
 });
 
 var chromeCookies = await ChromeCookieExtractor.ExtractAsync("wallhaven.cc", logger);
 logger.Information("Extracted {Count} cookies from Chrome profile", chromeCookies.Count);
 var injected = 0;
-foreach (var cookie in chromeCookies)
+foreach(var cookie in chromeCookies)
 {
     try
     {
         await context.AddCookiesAsync([cookie]);
         injected++;
     }
-    catch (Exception ex)
+    catch(Exception ex)
     {
         logger.Debug("Skipped cookie '{Name}' ({Domain}): {Message}", cookie.Name, cookie.Domain, ex.Message);
     }
@@ -81,7 +87,7 @@ var imagePage = new ImagePage(
     tagsToIgnoreCompletely,
     tagsTextToIgnore);
 var fileDetailRepository = new FileDetailRepository(scrapeConfiguration.ConnectionStrings.Sqlite);
-var imagePageService = new ImagePageService(imagePage, fileDetailRepository, scrapeConfiguration, logger);
+var imagePageService     = new ImagePageService(imagePage, fileDetailRepository, scrapeConfiguration, logger);
 
 // await loginPage.GoToLoginPageAsync();
 // if (page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
@@ -95,31 +101,31 @@ var imagePageService = new ImagePageService(imagePage, fileDetailRepository, scr
 //     logger.Information("Cookie session valid — skipping login");
 // }
 
-var runAll = args.Length == 0;
-var runSearch = runAll || args.Contains("search", StringComparer.OrdinalIgnoreCase);
+var runAll           = args.Length == 0;
+var runSearch        = runAll || args.Contains("search",        StringComparer.OrdinalIgnoreCase);
 var runSubscriptions = runAll || args.Contains("subscriptions", StringComparer.OrdinalIgnoreCase);
 var runTopWallpapers = runAll || args.Contains("topwallpapers", StringComparer.OrdinalIgnoreCase);
 
-if (runSearch)
+if(runSearch)
 {
     var searchResultsPage = new SearchResultsPage(page, logger);
-    var workflow = new SearchWorkflow(searchResultsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
+    var workflow          = new SearchWorkflow(searchResultsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
     await workflow.RunAsync();
 }
 
-if (runSubscriptions)
+if(runSubscriptions)
 {
     var subscriptionsPage = new SubscriptionsImagesListPage(page, scrapeConfiguration.SearchConfiguration);
-    var workflow = new SubscriptionsWorkflow(subscriptionsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
+    var workflow          = new SubscriptionsWorkflow(subscriptionsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
     await workflow.RunAsync();
 }
 
-if (runTopWallpapers)
+if(runTopWallpapers)
 {
     var topWallpapersPage = new TopWallpapersPage(page, scrapeConfiguration.SearchConfiguration);
-    var workflow = new TopWallpapersWorkflow(topWallpapersPage, imagePageService, scrapeConfiguration.SearchConfiguration, configSaver, logger);
+    var workflow          = new TopWallpapersWorkflow(topWallpapersPage, imagePageService, scrapeConfiguration.SearchConfiguration, configSaver, logger);
     await workflow.RunAsync();
 }
 
-configSaver.SaveUpdatedConfiguration();
+await configSaver.SaveUpdatedConfigurationAsync();
 logger.Information("Shutting down...");

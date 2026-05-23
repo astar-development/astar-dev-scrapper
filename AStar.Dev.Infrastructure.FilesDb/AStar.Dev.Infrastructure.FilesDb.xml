@@ -349,6 +349,18 @@
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.StrongIdUpdtes.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddMissingSearchConfigFields">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddMissingSearchConfigFields.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddMissingSearchConfigFields.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddMissingSearchConfigFields.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity">
             <summary>
                The <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity"></see> class provides common properties for tracking the creation and modification of entities.
@@ -1283,6 +1295,21 @@
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.TopWallpapersStartingPageNumber">
             <summary>
             The starting page number for top wallpapers is a crucial parameter for managing the pagination of the scraping process specifically for the top wallpapers category. This property allows the scraper to keep track of where it left off in previous runs for top wallpapers, enabling it to resume from the last visited page in case of interruptions. This ensures that the scraper does not miss any images or re-scrape already processed pages within the top wallpapers category, allowing for a more efficient and organized scraping process. Additionally, knowing the starting page number for top wallpapers helps in estimating the time required for scraping and in managing expectations regarding the volume of data that will be collected for this category, ensuring that the scraper can navigate through the search results effectively and handle pagination gracefully.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.LoginUrl">
+            <summary>
+            The URL of the login page on the target website.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.UseHeadless">
+            <summary>
+            Whether the browser runs in headless mode.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration.SlowMotionDelay">
+            <summary>
+            Slow motion delay in milliseconds applied to Playwright operations.
             </summary>
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.SearchType">
