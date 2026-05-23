@@ -20,7 +20,7 @@ public sealed class FileDetailRepository(string connectionString) : IFileDetailR
         await using var context = new FilesContext(CreateOptions());
 
         var handle = FileHandle.Create(fileDetail.FileName.Value ?? fileDetail.FileHandle.Value);
-        var existingCount = await context.Files.CountAsync(f => f.FileHandle.Value == handle.Value);
+        var existingCount = await context.Files.AsAsyncEnumerable().CountAsync(f => f.FileHandle.Value == handle.Value);
         if(existingCount > 0)
             handle = FileHandle.Create($"{handle}-{++existingCount}");
         fileDetail.FileHandle = handle;
