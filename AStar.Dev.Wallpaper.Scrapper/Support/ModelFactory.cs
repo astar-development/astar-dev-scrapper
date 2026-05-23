@@ -7,9 +7,7 @@ public static class ModelFactory
 {
     public static ModelsToIgnore LoadModelsIgnore()
     {
-        var               tags         = File.ReadAllText(Path.Combine(ApplicationMetadata.ApplicationFolder, "modelsToIgnore.json"));
-        ModelsToIgnore? modelsToIgnore = JsonSerializer.Deserialize<ModelsToIgnore>(tags);
-
-        return modelsToIgnore!;
+        var json = File.ReadAllText(Path.Combine(ApplicationMetadata.ApplicationFolder, "modelsToIgnore.json"));
+        return new ModelsToIgnore { Models = [.. JsonSerializer.Deserialize<ModelToIgnore[]>(json)!] };
     }
 }
