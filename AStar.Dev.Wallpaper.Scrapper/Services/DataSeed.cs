@@ -13,7 +13,7 @@ public static class DataSeed
         {
             logger.Information("Updating database...");
             dbContext.TagsToIgnore.AddRange(tagsTextToIgnore.Tags.Select(tag => new TagToIgnore { Value = tag }));
-            dbContext.ModelsToIgnore.AddRange(modelsToIgnore.Models.Select(tag => new ModelToIgnore { Value = tag }));
+            dbContext.ModelsToIgnore.AddRange(modelsToIgnore.Models.Select(model => new ModelToIgnore { Value = model.Value }));
             dbContext.ScrapeConfiguration.Add(new ScrapeConfigurationEntity
             {
                 ConnectionStrings = new Infrastructure.FilesDb.Models.ConnectionStrings()
