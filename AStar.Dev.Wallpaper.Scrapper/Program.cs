@@ -27,6 +27,7 @@ await using var dbContext = new FilesContext(new DbContextOptions<FilesContext>(
 dbContext.Database.Migrate();
 
 await DataSeed.Seed(seedConfig, logger, dbContext);
+await DataSeed.SeedFileClassificationsAsync(Path.Combine(AppContext.BaseDirectory, "Mappings.csv"), logger, dbContext);
 
 var scrapeConfigEntity = await dbContext.ScrapeConfiguration
                                         .Include(e => e.ConnectionStrings)
@@ -86,8 +87,9 @@ var imagePage = new ImagePage(
     scrapeConfiguration,
     tagsToIgnoreCompletely,
     tagsTextToIgnore);
-var fileDetailRepository = new FileDetailRepository(scrapeConfiguration.ConnectionStrings.Sqlite);
-var imagePageService     = new ImagePageService(imagePage, fileDetailRepository, scrapeConfiguration, logger);
+var fileDetailRepository       = new FileDetailRepository(scrapeConfiguration.ConnectionStrings.Sqlite);
+var fileClassificationService  = new FileClassificationService(scrapeConfiguration.ConnectionStrings.Sqlite);
+var imagePageService           = new ImagePageService(imagePage, fileDetailRepository, fileClassificationService, scrapeConfiguration, logger);
 
 // await loginPage.GoToLoginPageAsync();
 // if (page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
