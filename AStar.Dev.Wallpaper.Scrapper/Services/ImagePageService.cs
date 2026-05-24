@@ -9,7 +9,7 @@ using SkiaSharp;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, ScrapeConfiguration scrapeConfiguration, Logger logger)
+public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ScrapeConfiguration scrapeConfiguration, Logger logger)
 {
     public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks)
     {
@@ -45,12 +45,11 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
         if(result.Skip || result.ImageUrl is null) return;
 
         var directoryName = DirectoryHelper.CreateDirectoryIfRequired(result.DirectoryName);
-        var filePrefix    = result.FilePrefix;
 
         var filename         = Path.GetFileName(result.ImageUrl);
-        var fileNameCombined = !string.IsNullOrEmpty(filePrefix) ? filePrefix + " " + filename : filename;
+        var fileNameCombined = !string.IsNullOrEmpty(result.FilePrefix) ? result.FilePrefix + " " + filename : filename;
 
-        var imageNameWithPath = directoryName.CombinePath(fileNameCombined);
+        var imageNameWithPath = directoryName.Value.CombinePath(fileNameCombined);
         var image             = await ImageRetrieverHelper.GetTheImageAsync(result.ImageUrl);
         logger.Information("About to save {filename} as {imageNameWithPath} as we do not appear to have it.", filename, imageNameWithPath);
         await ImageSaveHelper.SaveImage(image, imageNameWithPath);
@@ -58,7 +57,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
         var fileInfo   = new FileInfo(imageNameWithPath);
         var fileDetail = new FileDetail
         {
-            DirectoryName = new DirectoryName(directoryName),
+            DirectoryName = directoryName,
             FileName      = new FileName(filename),
             FileSize      = fileInfo.Length,
             IsImage       = filename.IsImage()
@@ -66,7 +65,6 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
 
         if(fileDetail.IsImage)
         {
-            logger.Information("Image name and path is: {FileName}", imageNameWithPath);
             var imageDetail = SKImage.FromEncodedData(imageNameWithPath);
             if(imageDetail is not null)
             {
@@ -75,10 +73,9 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
                 fileDetail.Width       = imageDetail.Width;
                 fileDetail.ImageDetail = new ImageDetail { Width = imageDetail.Width, Height = imageDetail.Height };
             }
-            else
-                logger.Information("Image: {FileName} was NOT found", imageNameWithPath);
         }
 
         await fileDetailRepository.AddAsync(fileDetail);
+        await fileClassificationService.ClassifyAsync(fileDetail);
     }
 }

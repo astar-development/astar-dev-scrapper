@@ -54,6 +54,42 @@ public static class DataSeed
         }
     }
 
+    public static async Task SeedFileClassificationsAsync(string csvPath, Logger logger, FilesContext dbContext)
+    {
+        if(dbContext.FileClassifications.Any()) return;
+
+        logger.Information("Seeding file classifications from {CsvPath}...", csvPath);
+
+        var lines = await File.ReadAllLinesAsync(csvPath);
+        var rows = lines.Skip(1)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .Select(line => line.Split(','))
+            .Where(parts => parts.Length >= 4)
+            .Select(parts => new
+            {
+                FileNameContains = parts[0],
+                DatabaseMapping  = parts[1].Trim(),
+                Celebrity        = parts[2].Trim().Equals("TRUE", StringComparison.OrdinalIgnoreCase),
+                Searchable       = parts[3].Trim().Equals("TRUE", StringComparison.OrdinalIgnoreCase)
+            })
+            .ToList();
+
+        foreach(var group in rows.GroupBy(r => r.DatabaseMapping))
+        {
+            var first          = group.First();
+            var classification = new FileClassification
+            {
+                Name            = group.Key,
+                Celebrity       = first.Celebrity,
+                IncludeInSearch = first.Searchable,
+                FileNameParts   = [.. group.Select(r => new FileNamePart { Text = r.FileNameContains, IncludeInSearch = r.Searchable })]
+            };
+            dbContext.FileClassifications.Add(classification);
+        }
+
+        await dbContext.SaveChangesAsync();
+    }
+
     private static async Task UpdateIncompleteSearchConfigurationAsync(ScrapeConfiguration scrapeConfiguration, Logger logger, FilesContext dbContext)
     {
         var existing = await dbContext.SearchConfigurations.SingleAsync();
