@@ -81,7 +81,6 @@ logger.Information("Injected {Injected}/{Total} cookies", injected, chromeCookie
 IPage page = await context.NewPageAsync();
 page.SetDefaultTimeout(60_000);
 
-var loginPage = new LoginPage(page, scrapeConfiguration.SearchConfiguration);
 var imagePage = new ImagePage(
     page,
     scrapeConfiguration,
@@ -90,18 +89,6 @@ var imagePage = new ImagePage(
 var fileDetailRepository       = new FileDetailRepository(scrapeConfiguration.ConnectionStrings.Sqlite);
 var fileClassificationService  = new FileClassificationService(scrapeConfiguration.ConnectionStrings.Sqlite);
 var imagePageService           = new ImagePageService(imagePage, fileDetailRepository, fileClassificationService, scrapeConfiguration, logger);
-
-// await loginPage.GoToLoginPageAsync();
-// if (page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
-// {
-//     logger.Information("Cookie session invalid or expired — logging in");
-//     await loginPage.LoginAsync(scrapeConfiguration.UserConfiguration.Username, scrapeConfiguration.UserConfiguration.Password);
-//     await loginPage.ConfirmLoggedInAsync($"{scrapeConfiguration.SearchConfiguration.BaseUrl}/");
-// }
-// else
-// {
-//     logger.Information("Cookie session valid — skipping login");
-// }
 
 var runAll           = args.Length == 0;
 var runSearch        = runAll || args.Contains("search",        StringComparer.OrdinalIgnoreCase);
