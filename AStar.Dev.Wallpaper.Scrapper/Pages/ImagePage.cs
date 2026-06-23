@@ -1,4 +1,3 @@
-using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Repositories;

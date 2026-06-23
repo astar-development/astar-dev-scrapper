@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
         <UserSecretsId>c35e09dc-dc30-416a-95a6-ec1a5ba1b43f</UserSecretsId>
+    <ApplicationIcon>Assets/astar.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
@@ -20,8 +21,13 @@
         <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
         <PackageReference Include="Serilog.Sinks.Seq" Version="9.1.0" />
-        <PackageReference Include="SkiaSharp" Version="3.119.2" />
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.2" />
+        <PackageReference Include="SkiaSharp" Version="3.119.3-preview.1.1" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.3-preview.1.1" />
+        <PackageReference Include="Avalonia" Version="12.0.0" />
+        <PackageReference Include="Avalonia.Desktop" Version="12.0.0" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.0" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.0" />
+        <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
     </ItemGroup>
 
     <ItemGroup>
