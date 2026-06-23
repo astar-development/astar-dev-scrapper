@@ -55,16 +55,19 @@ public sealed class SearchWorkflow(
                 continue;
             }
 
-            searchCategory.LastKnownImageCount       = imageCount;
-            searchCategory.LastPageVisited           = 1;
-            _searchConfiguration = _searchConfiguration with { StartingPageNumber = 1 };
+            var startingPage = searchCategory.LastPageVisited > 0 ? searchCategory.LastPageVisited : 1;
+            _searchConfiguration = _searchConfiguration with { StartingPageNumber = startingPage };
 
-            logger.Debug("Visiting {Category} now...", searchCategory.Name);
+            logger.Debug("Visiting {Category} from page {StartingPage} now...", searchCategory.Name, startingPage);
             _scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
 
             // _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
 
             await ProcessAllCategoryPages(searchCategory, combinedSearchString, ct);
+
+            searchCategory.LastKnownImageCount = imageCount;
+            searchCategory.LastPageVisited     = 0;
+            await configurationSaver.SaveUpdatedConfigurationAsync();
         }
     }
 
