@@ -56,29 +56,9 @@ public sealed class FilesContext : DbContext
     public DbSet<ScrapeConfigurationEntity> ScrapeConfiguration { get; set; } = null!;
 
     /// <summary>
-    ///    Gets or sets the connection string configuration table.
-    /// </summary>
-    public DbSet<ConnectionStrings> ConnectionStrings { get; set; } = null!;
-
-    /// <summary>
-    ///    Gets or sets the user configuration table.
-    /// </summary>
-    public DbSet<UserConfiguration> UserConfigurations { get; set; } = null!;
-
-    /// <summary>
     ///    Gets or sets the search configuration table.
     /// </summary>
     public DbSet<SearchConfiguration> SearchConfigurations { get; set; } = null!;
-
-    /// <summary>
-    ///    Gets or sets the scrape directories table.
-    /// </summary>
-    public DbSet<ScrapeDirectories> ScrapeDirectories { get; set; } = null!;
-
-    /// <summary>
-    ///    Gets or sets the search categories table.
-    /// </summary>
-    public DbSet<SearchCategories> SearchCategories { get; set; } = null!;
 
     /// <inheritdoc />
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -95,11 +75,6 @@ public sealed class FilesContext : DbContext
     ///     Gets or sets the File Classifications
     /// </summary>
     public DbSet<FileClassification> FileClassifications { get; set; } = null!;
-
-    /// <summary>
-    ///     Gets or sets the DuplicatesDetails loaded from the configured view in the database
-    /// </summary>
-    public DbSet<DuplicatesDetails> DuplicatesDetails { get; set; } = null!;
 
     /// <summary>
     ///     The overridden OnModelCreating method

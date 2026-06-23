@@ -144,29 +144,9 @@
                Gets or sets the Scrape Configuration details for the scraper, including connection strings, user configuration, search configuration, and scrape directories. This property serves as a central point for managing all the necessary settings and parameters that the scraper needs to operate effectively. The ScrapeConfiguration property allows for flexible configuration of different aspects of the scraping process, enabling the scraper to adapt to various environments and requirements without hardcoding sensitive information directly into the codebase. Proper management of scrape configuration is crucial for ensuring that the scraper can operate efficiently and securely, allowing it to access necessary resources and perform its tasks without issues.
             </summary>
         </member>
-        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.ConnectionStrings">
-            <summary>
-               Gets or sets the connection string configuration table.
-            </summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.UserConfigurations">
-            <summary>
-               Gets or sets the user configuration table.
-            </summary>
-        </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.SearchConfigurations">
             <summary>
                Gets or sets the search configuration table.
-            </summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.ScrapeDirectories">
-            <summary>
-               Gets or sets the scrape directories table.
-            </summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.SearchCategories">
-            <summary>
-               Gets or sets the search categories table.
             </summary>
         </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
@@ -180,11 +160,6 @@
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.FileClassifications">
             <summary>
                 Gets or sets the File Classifications
-            </summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.DuplicatesDetails">
-            <summary>
-                Gets or sets the DuplicatesDetails loaded from the configured view in the database
             </summary>
         </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
