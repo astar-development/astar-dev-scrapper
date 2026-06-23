@@ -87,6 +87,11 @@ public sealed class FilesContext : DbContext
     }
 
     /// <summary>
+    ///     Gets or sets all unique tags observed during scraping
+    /// </summary>
+    public DbSet<ScrapedTag> ScrapedTags { get; set; } = null!;
+
+    /// <summary>
     ///     Gets or sets the File Classifications
     /// </summary>
     public DbSet<FileClassification> FileClassifications { get; set; } = null!;

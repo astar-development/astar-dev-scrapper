@@ -112,7 +112,7 @@ public sealed class SearchWorkflow(
         {
             var combinedSearchString = $"{_searchConfiguration.SearchStringPrefix}{searchCategories[i].Id}{_searchConfiguration.SearchStringSuffix}";
 
-            if(combinedSearchString != _searchConfiguration.SearchString) continue;
+            // if(combinedSearchString != _searchConfiguration.SearchString) continue;
 
             searchCategories = [.. searchCategories.Skip(i)];
             break;

@@ -1,11 +1,12 @@
 using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
+using AStar.Dev.Wallpaper.Scrapper.Repositories;
 using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguration, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore)
+public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguration, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IScrapedTagRepository scrapedTagRepository)
 {
     public async Task<ImagePageResult> GetImageFromPage(string link)
     {
@@ -29,6 +30,8 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
         var alreadyContainsModelName = false;
 
         var tagData = await Task.WhenAll(tags.Select(GetTags));
+
+        await scrapedTagRepository.SaveAsync([.. tagData.Select(t => t).Where(t => !string.IsNullOrWhiteSpace(t.Category))]);
 
         foreach(var (tagText, tagToUse) in tagData)
         {
@@ -67,11 +70,11 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
     private bool UpdateToTagIsNotRequired(string tagToUse, string tagText, string filePrefix)
         => TagIsNotCelebEtc(tagToUse) || FilePrefixDoesNotNeedUpdating(tagText, filePrefix);
 
-    private static async Task<(string tagText, string? tagToUse)> GetTags(ILocator tag)
+    private static async Task<TagData> GetTags(ILocator tag)
     {
-        var textTask = tag.InnerTextAsync();
-        var attrTask = tag.GetAttributeAsync("original-title");
-        return (await textTask, await attrTask);
+        var textTask = await tag.InnerTextAsync();
+        var attrTask = await tag.GetAttributeAsync("original-title");
+        return new TagData(textTask, attrTask);
     }
 
     private bool FilePrefixDoesNotNeedUpdating(string tagText, string filePrefix)

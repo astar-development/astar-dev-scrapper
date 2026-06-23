@@ -76,6 +76,13 @@
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Configurations.ScrapeConfigurationEntityConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity})">
             <inheritdoc />
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Configurations.ScrapedTagConfiguration">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Configurations.ScrapedTagConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag})">
+            <inheritdoc />
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Configurations.TagToIgnoreConfiguration">
             <summary>
             </summary>
@@ -164,6 +171,11 @@
         </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
             <inheritdoc />
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.ScrapedTags">
+            <summary>
+                Gets or sets all unique tags observed during scraping
+            </summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.FileClassifications">
             <summary>
@@ -359,6 +371,42 @@
             <inheritdoc />
         </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddMissingSearchConfigFields.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity">
@@ -1161,6 +1209,55 @@
             <summary>
             The subdirectory name is an additional folder that can be created under the base save directory to further organize the scraped data. This allows users to create specific folders for different search criteria, categories, or sessions. For example, if the base save directory is "C:\ScrapedData\Wallpapers", a subdirectory could be created for a specific search term like "Nature", resulting in a full path like "C:\ScrapedData\Wallpapers\Nature". This structure helps keep the scraped data organized and easily accessible based on the user's preferences and the context of the scraping session.
             </summary>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag">
+            <summary>
+                Represents a unique tag observed during a scrape run
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag.Id">
+            <summary>
+                Gets or sets the Id of the <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag" />
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag.Value">
+            <summary>
+                Gets or sets the tag text value (unique)
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag.Category">
+            <summary>
+                Gets or sets the category for the tag.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag.IncludeInSearch">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId">
+            <summary>
+                Defines the ScrapedTagId
+            </summary>
+            <param name="Value">The value of the Scraped Tag Id</param>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId.#ctor(System.Guid)">
+            <summary>
+                Defines the ScrapedTagId
+            </summary>
+            <param name="Value">The value of the Scraped Tag Id</param>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId.Value">
+            <summary>The value of the Scraped Tag Id</summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId.CreateNew">
+            <summary>
+                Creates a new instance of <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId" /> with a new Guid value
+            </summary>
+            <returns>A new <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId" /> instance</returns>
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories">
             <summary>
