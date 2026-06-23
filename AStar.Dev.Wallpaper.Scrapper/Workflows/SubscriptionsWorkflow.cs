@@ -42,7 +42,7 @@ public sealed class SubscriptionsWorkflow(
 
         if(subDirectoryName.Length > 0) _scrapeDirectories = _scrapeDirectories with { SubDirectoryName = subDirectoryName };
 
-        _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
+        // _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
         UpdateSearchTotalPagesIfRequired(pageCount);
 
         await configurationSaver.SaveUpdatedConfigurationAsync();

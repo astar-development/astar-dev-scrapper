@@ -5,16 +5,17 @@ namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
 internal static class DirectoryHelper
 {
-    public static DirectoryName CreateDirectoryIfRequired(string fullDirectoryPath)
+    public static DirectoryName CreateDirectoryIfRequired(List<string> fullDirectoryPath)
     {
-        fullDirectoryPath = fullDirectoryPath.CleanPath();
+        var directory = Path.Combine([..fullDirectoryPath])!;
+        directory = directory.CleanPath();
 
-        if(fullDirectoryPath.LastIndexOf(':') > 2) fullDirectoryPath = fullDirectoryPath[..2] + fullDirectoryPath[2..].Replace(":", "_");
+        //if(directory.LastIndexOf(':') > 2) fullDirectoryPath = directory[..2] + directory[2..].Replace(":", "_");
 
-        if(Directory.Exists(fullDirectoryPath)) return new(fullDirectoryPath);
+        if(Directory.Exists(directory)) return new(directory);
 
-        _ = Directory.CreateDirectory(fullDirectoryPath);
+        _ = Directory.CreateDirectory(directory);
 
-        return new(fullDirectoryPath);
+        return new(directory);
     }
 }

@@ -61,7 +61,7 @@ public sealed class SearchWorkflow(
             logger.Debug("Visiting {Category} now...", searchCategory.Name);
             _scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
 
-            _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
+            // _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
 
             await ProcessAllCategoryPages(searchCategory, combinedSearchString);
         }
