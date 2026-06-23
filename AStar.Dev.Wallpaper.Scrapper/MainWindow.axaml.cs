@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
 using Microsoft.Playwright;
 using AStar.Dev.Wallpaper.Scrapper.Models;
@@ -9,7 +10,9 @@ using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using AStar.Dev.Infrastructure.FilesDb.Data;
+using Serilog;
 using Serilog.Core;
+using Serilog.Events;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 
@@ -19,6 +22,7 @@ public partial class MainWindow : Window
     private readonly ScrapeConfiguration scrapeConfiguration;
     private readonly Logger logger;
     private readonly FilesContext dbContext;
+    private CancellationTokenSource? _cts;
 
     public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, ScrapeConfiguration scrapeConfiguration, FilesContext dbContext, Logger logger)
     {
@@ -34,63 +38,100 @@ public partial class MainWindow : Window
 
     private async void OnScrapeSiteClicked(object? sender, RoutedEventArgs e)
     {
-        using IPlaywright playwright = await Playwright.CreateAsync();
+        _cts = new CancellationTokenSource();
+        var ct = _cts.Token;
 
-        IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        ScrapeSiteButton.IsEnabled = false;
+        CancelButton.IsEnabled = true;
+        StatusLabel.Text = string.Empty;
+
+        try
         {
-            Headless = false,
-            SlowMo = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
-            Channel = "chrome",
-            Args = ["--disable-blink-features=AutomationControlled"],
-        });
+            using var scrapeLogger = new LoggerConfiguration()
+                .WriteTo.Logger(logger)
+                .WriteTo.Sink(new StatusLogSink(UpdateStatus))
+                .MinimumLevel.Information()
+                .CreateLogger();
 
-        IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
+            using IPlaywright playwright = await Playwright.CreateAsync();
+
+            IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            {
+                Headless = false,
+                SlowMo = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
+                Channel = "chrome",
+                Args = ["--disable-blink-features=AutomationControlled"],
+            });
+
+            IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
+            {
+                BaseURL = scrapeConfiguration.SearchConfiguration.BaseUrl,
+                ViewportSize = new ViewportSize { Width = 1920, Height = 1080 },
+                Locale = "en-US",
+                TimezoneId = "America/New_York",
+            });
+
+            await ApplyCookies(context, scrapeLogger);
+
+            IPage page = await context.NewPageAsync();
+            page.SetDefaultTimeout(60_000);
+
+            var configSaver = new ConfigurationSaver(scrapeConfiguration, scrapeLogger, dbContext);
+            var tagsToIgnoreCompletely = TagsFactory.LoadTagsToIgnoreCompletely(dbContext);
+            var tagsTextToIgnore = TagsFactory.LoadTagsTextToIgnore(dbContext);
+
+            var scrapedTagRepository = new ScrapedTagRepository(scrapeConfiguration.ConnectionStrings.Sqlite);
+            var imagePage = new ImagePage(page, scrapeConfiguration, tagsToIgnoreCompletely, tagsTextToIgnore, scrapedTagRepository);
+            var fileDetailRepository = new FileDetailRepository(scrapeConfiguration.ConnectionStrings.Sqlite);
+            var fileClassificationService = new FileClassificationService(scrapeConfiguration.ConnectionStrings.Sqlite);
+            var imagePageService = new ImagePageService(imagePage, fileDetailRepository, fileClassificationService, scrapeConfiguration, scrapeLogger);
+
+            var searchResultsPage = new SearchResultsPage(page, scrapeLogger);
+            var searchWorkflow = new SearchWorkflow(searchResultsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, scrapeLogger);
+            await searchWorkflow.RunAsync(ct);
+
+            var subscriptionsPage = new SubscriptionsImagesListPage(page, scrapeConfiguration.SearchConfiguration);
+            var subscriptionsWorkflow = new SubscriptionsWorkflow(subscriptionsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, scrapeLogger);
+            await subscriptionsWorkflow.RunAsync(ct);
+
+            var topWallpapersPage = new TopWallpapersPage(page, scrapeConfiguration.SearchConfiguration);
+            var topWallpapersWorkflow = new TopWallpapersWorkflow(topWallpapersPage, imagePageService, scrapeConfiguration.SearchConfiguration, configSaver, scrapeLogger);
+            await topWallpapersWorkflow.RunAsync(ct);
+
+            await configSaver.SaveUpdatedConfigurationAsync();
+            UpdateStatus("Scrape completed.");
+        }
+        catch (OperationCanceledException)
         {
-            BaseURL = scrapeConfiguration.SearchConfiguration.BaseUrl,
-            ViewportSize = new ViewportSize { Width = 1920, Height = 1080 },
-            Locale = "en-US",
-            TimezoneId = "America/New_York",
-        });
-
-        await ApplyCookies(context);
-        
-        IPage page = await context.NewPageAsync();
-        page.SetDefaultTimeout(60_000);
-
-var configSaver = new ConfigurationSaver(scrapeConfiguration, logger, dbContext);
-var tagsToIgnoreCompletely = TagsFactory.LoadTagsToIgnoreCompletely(dbContext);
-var tagsTextToIgnore = TagsFactory.LoadTagsTextToIgnore(dbContext);
-
-        var scrapedTagRepository = new ScrapedTagRepository(scrapeConfiguration.ConnectionStrings.Sqlite);
-        var imagePage = new ImagePage(
-            page,
-            scrapeConfiguration,
-            tagsToIgnoreCompletely,
-            tagsTextToIgnore,
-            scrapedTagRepository);
-        var fileDetailRepository = new FileDetailRepository(scrapeConfiguration.ConnectionStrings.Sqlite);
-        var fileClassificationService = new FileClassificationService(scrapeConfiguration.ConnectionStrings.Sqlite);
-        var imagePageService = new ImagePageService(imagePage, fileDetailRepository, fileClassificationService, scrapeConfiguration, logger);
-
-        var searchResultsPage = new SearchResultsPage(page, logger);
-        var searchWorkflow = new SearchWorkflow(searchResultsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
-        await searchWorkflow.RunAsync();
-
-        var subscriptionsPage = new SubscriptionsImagesListPage(page, scrapeConfiguration.SearchConfiguration);
-        var subscriptionsWorkflow = new SubscriptionsWorkflow(subscriptionsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configSaver, logger);
-        await subscriptionsWorkflow.RunAsync();
-
-        var topWallpapersPage = new TopWallpapersPage(page, scrapeConfiguration.SearchConfiguration);
-        var topWallpapersWorkflow = new TopWallpapersWorkflow(topWallpapersPage, imagePageService, scrapeConfiguration.SearchConfiguration, configSaver, logger);
-        await topWallpapersWorkflow.RunAsync();
-
-        await configSaver.SaveUpdatedConfigurationAsync();
+            UpdateStatus("Scrape cancelled.");
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus($"Error: {ex.Message}");
+            logger.Error(ex, "Scrape failed");
+        }
+        finally
+        {
+            ScrapeSiteButton.IsEnabled = true;
+            CancelButton.IsEnabled = false;
+            _cts?.Dispose();
+            _cts = null;
+        }
     }
 
-    private async Task ApplyCookies(IBrowserContext context)
+    private void OnCancelClicked(object? sender, RoutedEventArgs e) => _cts?.Cancel();
+
+    private void UpdateStatus(string message)
+        => Dispatcher.UIThread.Post(() =>
+        {
+            StatusLabel.Text += message + Environment.NewLine;
+            StatusScroller.ScrollToEnd();
+        });
+
+    private async Task ApplyCookies(IBrowserContext context, Logger scrapeLogger)
     {
         var chromeCookies = await ChromeCookieExtractor.ExtractAsync("wallhaven.cc", null);
-        logger.Information("Extracted {Count} cookies from Chrome profile", chromeCookies.Count);
+        scrapeLogger.Information("Extracted {Count} cookies from Chrome profile", chromeCookies.Count);
         var injected = 0;
         foreach (var cookie in chromeCookies)
         {
@@ -101,10 +142,15 @@ var tagsTextToIgnore = TagsFactory.LoadTagsTextToIgnore(dbContext);
             }
             catch (Exception ex)
             {
-                logger.Debug("Skipped cookie '{Name}' ({Domain}): {Message}", cookie.Name, cookie.Domain, ex.Message);
+                scrapeLogger.Debug("Skipped cookie '{Name}' ({Domain}): {Message}", cookie.Name, cookie.Domain, ex.Message);
             }
         }
-        
-        logger.Information("Injected {Injected}/{Total} cookies", injected, chromeCookies.Count);
+
+        scrapeLogger.Information("Injected {Injected}/{Total} cookies", injected, chromeCookies.Count);
+    }
+
+    private sealed class StatusLogSink(Action<string> onMessage) : ILogEventSink
+    {
+        public void Emit(LogEvent logEvent) => onMessage(logEvent.RenderMessage());
     }
 }

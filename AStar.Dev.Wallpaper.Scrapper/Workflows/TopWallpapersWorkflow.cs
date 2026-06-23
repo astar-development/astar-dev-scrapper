@@ -16,20 +16,20 @@ public sealed class TopWallpapersWorkflow(
 {
     private SearchConfiguration _searchConfiguration = searchConfiguration;
 
-    public async Task RunAsync()
+    public async Task RunAsync(CancellationToken ct = default)
     {
         try
         {
-            await GetTheNewTopWallpapersAsync();
+            await GetTheNewTopWallpapersAsync(ct);
         }
-        catch(Exception exception)
+        catch(Exception exception) when (exception is not OperationCanceledException)
         {
             logger.Error(exception.GetBaseException().Message);
             throw;
         }
     }
 
-    private async Task GetTheNewTopWallpapersAsync()
+    private async Task GetTheNewTopWallpapersAsync(CancellationToken ct)
     {
         IResponse? pageDetails = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber);
 
@@ -45,14 +45,15 @@ public sealed class TopWallpapersWorkflow(
             currentPageNumber <= _searchConfiguration.TopWallpapersTotalPages;
             currentPageNumber++)
         {
+            ct.ThrowIfCancellationRequested();
             var delay = Random.Shared.Next(_searchConfiguration.ImagePauseInSeconds, _searchConfiguration.ImagePauseInSeconds + 4);
-            await Task.Delay(TimeSpan.FromSeconds(delay));
+            await Task.Delay(TimeSpan.FromSeconds(delay), ct);
             _searchConfiguration = _searchConfiguration with { TopWallpapersStartingPageNumber = currentPageNumber };
             await configurationSaver.SaveUpdatedConfigurationAsync();
             _ = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber);
             IReadOnlyCollection<string> imagePageLinks = await topWallpapersPage.GetImagePageLinks();
 
-            await imagePageService.GetTheImagePagesAsync(imagePageLinks);
+            await imagePageService.GetTheImagePagesAsync(imagePageLinks, ct);
         }
     }
 }

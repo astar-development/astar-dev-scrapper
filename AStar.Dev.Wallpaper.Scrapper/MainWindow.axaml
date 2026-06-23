@@ -7,11 +7,11 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="12,12,12,0" Spacing="8">
             <Button Content="Edit Configuration" Click="OnEditConfigurationClicked" />
-            <Button Content="Scrape Site" Click="OnScrapeSiteClicked" />
+            <Button x:Name="ScrapeSiteButton" Content="Scrape Site" Click="OnScrapeSiteClicked" />
+            <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClicked" IsEnabled="False" />
         </StackPanel>
-        <TextBlock HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   FontSize="24"
-                   Text="Welcome" />
+        <ScrollViewer x:Name="StatusScroller" Margin="12,8">
+            <TextBlock x:Name="StatusLabel" TextWrapping="Wrap" FontFamily="Consolas,Monospace" />
+        </ScrollViewer>
     </DockPanel>
 </Window>

@@ -11,10 +11,11 @@ namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
 public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ScrapeConfiguration scrapeConfiguration, Logger logger)
 {
-    public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks)
+    public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks, CancellationToken ct = default)
     {
         foreach(var pageLink in imagePageLinks)
         {
+            ct.ThrowIfCancellationRequested();
             try
             {
                 var fileName = Path.GetFileName(pageLink);
@@ -25,21 +26,21 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
                     continue;
                 }
 
-                await ProcessImagePageAsync(pageLink);
+                await ProcessImagePageAsync(pageLink, ct);
             }
-            catch(Exception ex)
+            catch(Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.Warning(ex, "Failed to process {pageLink}, retrying after delay.", pageLink);
-                await Task.Delay(TimeSpan.FromSeconds(10));
-                await ProcessImagePageAsync(pageLink);
+                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                await ProcessImagePageAsync(pageLink, ct);
             }
         }
     }
 
-    private async Task ProcessImagePageAsync(string pageLink)
+    private async Task ProcessImagePageAsync(string pageLink, CancellationToken ct)
     {
         var delay = Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4);
-        await Task.Delay(TimeSpan.FromSeconds(delay));
+        await Task.Delay(TimeSpan.FromSeconds(delay), ct);
 
         var result = await imagePage.GetImageFromPage(pageLink);
         if(result.Skip || result.ImageUrl is null) return;
