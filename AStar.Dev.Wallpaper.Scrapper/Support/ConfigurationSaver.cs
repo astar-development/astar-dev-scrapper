@@ -6,7 +6,7 @@ using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
-public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logger logger, FilesContext dbContext)
+public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logger logger, IDbContextFactory<FilesContext> contextFactory)
 {
     public async Task SaveUpdatedConfigurationAsync()
     {
@@ -23,6 +23,7 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
 
     private async Task UpdateAndSaveTheConfigurationAsync()
     {
+        await using var dbContext = await contextFactory.CreateDbContextAsync();
         var entity = await dbContext.ScrapeConfiguration
                                     .Include(e => e.SearchConfiguration)
                                     .ThenInclude(sc => sc.SearchCategories)

@@ -4,14 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public sealed class FileClassificationService(string connectionString)
+public sealed class FileClassificationService(IDbContextFactory<FilesContext> contextFactory)
 {
-    private DbContextOptions<FilesContext> CreateOptions()
-        => new DbContextOptionsBuilder<FilesContext>().UseSqlite(connectionString).Options;
-
     public async Task ClassifyAsync(FileDetail fileDetail)
     {
-        await using var context = new FilesContext(CreateOptions());
+        await using var context = await contextFactory.CreateDbContextAsync();
 
         var classifications = await context.FileClassifications
             .Include(fc => fc.FileNameParts)

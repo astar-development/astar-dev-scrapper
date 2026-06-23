@@ -2,9 +2,12 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using AStar.Dev.Infrastructure.FilesDb.Data;
+using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
+using AStar.Dev.Wallpaper.Scrapper.Repositories;
 using AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
 using AStar.Dev.Wallpaper.Scrapper.Services;
+using AStar.Dev.Wallpaper.Scrapper.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,6 +56,18 @@ public partial class App : Application
                 .CreateLogger())
             .AddDbContextFactory<FilesContext>(options =>
                 options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite")))
+            .AddSingleton<TagsToIgnoreCompletely>(sp => {
+                using var ctx = sp.GetRequiredService<IDbContextFactory<FilesContext>>().CreateDbContext();
+                return TagsFactory.LoadTagsToIgnoreCompletely(ctx);
+            })
+            .AddSingleton<TagsTextToIgnore>(sp => {
+                using var ctx = sp.GetRequiredService<IDbContextFactory<FilesContext>>().CreateDbContext();
+                return TagsFactory.LoadTagsTextToIgnore(ctx);
+            })
+            .AddTransient<IScrapedTagRepository, ScrapedTagRepository>()
+            .AddTransient<IFileDetailRepository, FileDetailRepository>()
+            .AddTransient<FileClassificationService>()
+            .AddTransient<ConfigurationSaver>()
             .AddTransient<DatabaseInitializationService>()
             .AddTransient<ScrapeConfigurationViewModel>()
             .AddTransient<ScrapeConfigurationView>()
