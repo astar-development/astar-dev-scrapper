@@ -61,10 +61,7 @@ public sealed class FilesContext : DbContext
     public DbSet<SearchConfiguration> SearchConfigurations { get; set; } = null!;
 
     /// <inheritdoc />
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        _ = optionsBuilder.UseSqlite("Data Source=/home/jbarden/Documents/Scrapper/files.db");
-    }
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => _ = optionsBuilder.UseSqlite("Data Source=/home/jbarden/Documents/Scrapper/files.db");
 
     /// <summary>
     ///     Gets or sets all unique tags observed during scraping

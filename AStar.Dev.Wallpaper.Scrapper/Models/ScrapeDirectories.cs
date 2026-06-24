@@ -3,15 +3,12 @@ namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
 public record ScrapeDirectories(string RootDirectory, string BaseSaveDirectory, string BaseDirectory, string BaseDirectoryFamous, string SubDirectoryName)
 {
-    internal Infrastructure.FilesDb.Models.ScrapeDirectories ToEntity()
+    internal Infrastructure.FilesDb.Models.ScrapeDirectories ToEntity() => new Infrastructure.FilesDb.Models.ScrapeDirectories
     {
-        return new Infrastructure.FilesDb.Models.ScrapeDirectories
-        {
-            RootDirectory = RootDirectory,
-            BaseSaveDirectory = BaseSaveDirectory,
-            BaseDirectory = BaseDirectory,
-            BaseDirectoryFamous = BaseDirectoryFamous,
-            SubDirectoryName = SubDirectoryName
-        };
-    }
+        RootDirectory = RootDirectory,
+        BaseSaveDirectory = BaseSaveDirectory,
+        BaseDirectory = BaseDirectory,
+        BaseDirectoryFamous = BaseDirectoryFamous,
+        SubDirectoryName = SubDirectoryName
+    };
 }

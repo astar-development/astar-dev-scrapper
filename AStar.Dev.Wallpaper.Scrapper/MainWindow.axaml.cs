@@ -50,13 +50,24 @@ public partial class MainWindow : Window
     private async void OnEditConfigurationClicked(object? sender, RoutedEventArgs e)
         => await scrapeConfigViewFactory().ShowDialog(this);
 
-    private async void OnScrapeSiteNewClicked(object? sender, RoutedEventArgs e)
+    private async void OnScrapeSiteFunctionalClicked(object? sender, RoutedEventArgs e)
     {
-        var ct = ResetCancellationTokenSource();
-        DisableControlsAndClearStatus();
         using var scrapeLogger = GetScrapeLoggerForDisplaySync();
-        scrapeLogger.Information("Starting scrape...");
-        scrapeLogger.Information("Configuring Playwright...");
+        var x = await ResetCancellationTokenSource()
+            .Match(
+                onSuccess: DisableControlsAndClearStatus,
+                onFailure: ex => 
+                {
+                    scrapeLogger.Error(ex, "Failed to reset cancellation token source");
+                    UpdateStatus($"Error: {ex.Message}");
+                    
+                    return Unit.Value;
+                }
+            )
+            .Tap(_ => scrapeLogger.Information("Configuring Playwright..."))
+            .MapAsync(_ => playwrightService.ConfigurePlaywright(scrapeLogger))
+            .TapAsync(_ => scrapeLogger.Information("Starting scrape..."));
+
         IPage page = await playwrightService.ConfigurePlaywright(scrapeLogger);
         scrapeLogger.Information("Playwright configured. Starting scrape...");
         await imagePageResultFunctional.GetImagePagesAsync(scrapeLogger);
@@ -73,24 +84,34 @@ public partial class MainWindow : Window
         return cts.Token;
     }
 
+    private Result<CancellationToken, Unit> DisableControlsAndClearStatus(CancellationToken ct = default)
+    {
+        EditConfigurationButton.IsEnabled = false;
+        ScrapeSiteButton.IsEnabled = false;
+        CancelButton.IsEnabled = true;
+        StatusLabel.Text = string.Empty;
+        
+        return ct;
+    }
+
     private async void OnScrapeSiteClicked(object? sender, RoutedEventArgs e)
     {
-        var cancellationResult = ResetCancellationTokenSource();
+        using var scrapeLogger = GetScrapeLoggerForDisplaySync();
+        var cancellationTokenResult = ResetCancellationTokenSource();
         DisableControlsAndClearStatus();
 
         try
         {
-            using var scrapeLogger = GetScrapeLoggerForDisplaySync();
             IPage page = await playwrightService.ConfigurePlaywright(scrapeLogger);
 
             var imagePage = new ImagePage(page, scrapeConfiguration, tagsToIgnoreCompletely, tagsTextToIgnore, scrapedTagRepository);
             var imagePageService = new ImagePageService(imagePage, fileDetailRepository, fileClassificationService, scrapeConfiguration, scrapeLogger);
 
-            await cancellationResult.Match(
+            await cancellationTokenResult.Match(
                 onSuccess: async ct => await RunScrapeWorkflowAsync(scrapeLogger, page, imagePageService, ct),
                 onFailure: ex => 
                 {
-                    logger.Error(ex, "Scrape failed");
+                    scrapeLogger.Error(ex, "Scrape failed");
 
                     return Task.FromException(ex);
                 }
@@ -106,7 +127,7 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             UpdateStatus($"Error: {ex.Message}");
-            logger.Error(ex, "Scrape failed");
+            scrapeLogger.Error(ex, "Scrape failed");
         }
         finally
         {
@@ -121,14 +142,11 @@ public partial class MainWindow : Window
         await RunTopWallpapersAsync(scrapeLogger, page, imagePageService, ct);
     }
 
-    private Logger GetScrapeLoggerForDisplaySync()
-    {
-        return new LoggerConfiguration()
+    private Logger GetScrapeLoggerForDisplaySync() => new LoggerConfiguration()
                         .WriteTo.Logger(logger)
                         .WriteTo.Sink(new StatusLogSink(UpdateStatus))
                         .MinimumLevel.Information()
                         .CreateLogger();
-    }
 
     private void ResetUI()
     {
@@ -137,14 +155,6 @@ public partial class MainWindow : Window
         CancelButton.IsEnabled = false;
         cts?.Dispose();
         cts = null;
-    }
-
-    private void DisableControlsAndClearStatus()
-    {
-        EditConfigurationButton.IsEnabled = false;
-        ScrapeSiteButton.IsEnabled = false;
-        CancelButton.IsEnabled = true;
-        StatusLabel.Text = string.Empty;
     }
 
     private async Task RunTopWallpapersAsync(Logger logger, IPage page, ImagePageService imagePageService, CancellationToken ct)

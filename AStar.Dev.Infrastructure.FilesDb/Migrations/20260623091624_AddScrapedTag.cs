@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -33,11 +32,8 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
         }
 
         /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropTable(
+        protected override void Down(MigrationBuilder migrationBuilder) => migrationBuilder.DropTable(
                 name: "ScrapedTag",
                 schema: "files");
-        }
     }
 }
