@@ -19,7 +19,7 @@ public static class DataSeed
 
     public static async Task Seed(ScrapeConfiguration scrapeConfiguration, Logger logger, FilesContext dbContext)
     {
-        if(!dbContext.TagsToIgnore.Any(t => t.IgnoreImage))
+        if (!dbContext.TagsToIgnore.Any(t => t.IgnoreImage))
         {
             logger.Information("Seeding tags to ignore completely...");
             dbContext.TagsToIgnore.AddRange(
@@ -27,7 +27,7 @@ public static class DataSeed
             await dbContext.SaveChangesAsync();
         }
 
-        if(!dbContext.ScrapeConfiguration.Any())
+        if (!dbContext.ScrapeConfiguration.Any())
         {
             logger.Information("Seeding ScrapeConfiguration...");
             dbContext.ScrapeConfiguration.Add(new ScrapeConfigurationEntity
@@ -38,13 +38,13 @@ public static class DataSeed
                 },
                 UserConfiguration = new Infrastructure.FilesDb.Models.UserConfiguration
                 {
-                    Username          = scrapeConfiguration.UserConfiguration.Username,
-                    Password          = scrapeConfiguration.UserConfiguration.Password,
+                    Username = scrapeConfiguration.UserConfiguration.Username,
+                    Password = scrapeConfiguration.UserConfiguration.Password,
                     LoginEmailAddress = scrapeConfiguration.UserConfiguration.LoginEmailAddress,
-                    SessionCookie     = scrapeConfiguration.UserConfiguration.SessionCookie,
+                    SessionCookie = scrapeConfiguration.UserConfiguration.SessionCookie,
                 },
                 SearchConfiguration = BuildSearchConfigurationEntity(scrapeConfiguration),
-                ScrapeDirectories   = scrapeConfiguration.ScrapeDirectories.ToEntity(),
+                ScrapeDirectories = scrapeConfiguration.ScrapeDirectories.ToEntity(),
             });
             await dbContext.SaveChangesAsync();
         }
@@ -56,58 +56,61 @@ public static class DataSeed
 
     public static async Task SeedFileClassificationsAsync(string csvPath, Logger logger, FilesContext dbContext)
     {
-        if(dbContext.FileClassifications.Any()) return;
-
-        logger.Information("Seeding file classifications from {CsvPath}...", csvPath);
-
-        var lines = await File.ReadAllLinesAsync(csvPath);
-        var rows = lines.Skip(1)
-            .Where(line => !string.IsNullOrWhiteSpace(line))
-            .Select(line => line.Split(','))
-            .Where(parts => parts.Length >= 4)
-            .Select(parts => new
-            {
-                FileNameContains = parts[0],
-                DatabaseMapping  = parts[1].Trim(),
-                Celebrity        = parts[2].Trim().Equals("TRUE", StringComparison.OrdinalIgnoreCase),
-                Searchable       = parts[3].Trim().Equals("TRUE", StringComparison.OrdinalIgnoreCase)
-            })
-            .ToList();
-
-        foreach(var group in rows.GroupBy(r => r.DatabaseMapping))
+        if (File.Exists(csvPath))
         {
-            var first          = group.First();
-            var classification = new FileClassification
-            {
-                Name            = group.Key,
-                Celebrity       = first.Celebrity,
-                IncludeInSearch = first.Searchable,
-                FileNameParts   = [.. group.Select(r => new FileNamePart { Text = r.FileNameContains, IncludeInSearch = r.Searchable })]
-            };
-            dbContext.FileClassifications.Add(classification);
-        }
+            if (dbContext.FileClassifications.Any()) return;
 
-        await dbContext.SaveChangesAsync();
+            logger.Information("Seeding file classifications from {CsvPath}...", csvPath);
+        
+            var lines = await File.ReadAllLinesAsync(csvPath);
+            var rows = lines.Skip(1)
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .Select(line => line.Split(','))
+                .Where(parts => parts.Length >= 4)
+                .Select(parts => new
+                {
+                    FileNameContains = parts[0],
+                    DatabaseMapping = parts[1].Trim(),
+                    Celebrity = parts[2].Trim().Equals("TRUE", StringComparison.OrdinalIgnoreCase),
+                    Searchable = parts[3].Trim().Equals("TRUE", StringComparison.OrdinalIgnoreCase)
+                })
+                .ToList();
+
+            foreach (var group in rows.GroupBy(r => r.DatabaseMapping))
+            {
+                var first = group.First();
+                var classification = new FileClassification
+                {
+                    Name = group.Key,
+                    Celebrity = first.Celebrity,
+                    IncludeInSearch = first.Searchable,
+                    FileNameParts = [.. group.Select(r => new FileNamePart { Text = r.FileNameContains, IncludeInSearch = r.Searchable })]
+                };
+                dbContext.FileClassifications.Add(classification);
+            }
+
+            await dbContext.SaveChangesAsync();
+        }
     }
 
     private static async Task UpdateIncompleteSearchConfigurationAsync(ScrapeConfiguration scrapeConfiguration, Logger logger, FilesContext dbContext)
     {
         var existing = await dbContext.SearchConfigurations.SingleAsync();
-        if(!string.IsNullOrEmpty(existing.SearchStringPrefix)) return;
+        if (!string.IsNullOrEmpty(existing.SearchStringPrefix)) return;
 
         logger.Information("Updating incomplete SearchConfiguration with missing fields...");
-        existing.LoginUrl                       = scrapeConfiguration.SearchConfiguration.LoginUrl;
-        existing.UseHeadless                    = scrapeConfiguration.SearchConfiguration.UseHeadless;
-        existing.SlowMotionDelay                = scrapeConfiguration.SearchConfiguration.SlowMotionDelay;
-        existing.SearchStringPrefix             = scrapeConfiguration.SearchConfiguration.SearchStringPrefix;
-        existing.SearchStringSuffix             = scrapeConfiguration.SearchConfiguration.SearchStringSuffix;
-        existing.Subscriptions                  = scrapeConfiguration.SearchConfiguration.Subscriptions;
-        existing.ImagePauseInSeconds            = scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds;
-        existing.StartingPageNumber             = scrapeConfiguration.SearchConfiguration.StartingPageNumber;
-        existing.TotalPages                     = scrapeConfiguration.SearchConfiguration.TotalPages;
+        existing.LoginUrl = scrapeConfiguration.SearchConfiguration.LoginUrl;
+        existing.UseHeadless = scrapeConfiguration.SearchConfiguration.UseHeadless;
+        existing.SlowMotionDelay = scrapeConfiguration.SearchConfiguration.SlowMotionDelay;
+        existing.SearchStringPrefix = scrapeConfiguration.SearchConfiguration.SearchStringPrefix;
+        existing.SearchStringSuffix = scrapeConfiguration.SearchConfiguration.SearchStringSuffix;
+        existing.Subscriptions = scrapeConfiguration.SearchConfiguration.Subscriptions;
+        existing.ImagePauseInSeconds = scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds;
+        existing.StartingPageNumber = scrapeConfiguration.SearchConfiguration.StartingPageNumber;
+        existing.TotalPages = scrapeConfiguration.SearchConfiguration.TotalPages;
         existing.SubscriptionsStartingPageNumber = scrapeConfiguration.SearchConfiguration.SubscriptionsStartingPageNumber;
-        existing.SubscriptionsTotalPages        = scrapeConfiguration.SearchConfiguration.SubscriptionsTotalPages;
-        existing.TopWallpapersTotalPages        = scrapeConfiguration.SearchConfiguration.TopWallpapersTotalPages;
+        existing.SubscriptionsTotalPages = scrapeConfiguration.SearchConfiguration.SubscriptionsTotalPages;
+        existing.TopWallpapersTotalPages = scrapeConfiguration.SearchConfiguration.TopWallpapersTotalPages;
         existing.TopWallpapersStartingPageNumber = scrapeConfiguration.SearchConfiguration.TopWallpapersStartingPageNumber;
         await dbContext.SaveChangesAsync();
     }
@@ -115,24 +118,24 @@ public static class DataSeed
     private static Infrastructure.FilesDb.Models.SearchConfiguration BuildSearchConfigurationEntity(ScrapeConfiguration scrapeConfiguration)
         => new()
         {
-            BaseUrl                         = scrapeConfiguration.SearchConfiguration.BaseUrl,
-            ApiKey                          = scrapeConfiguration.SearchConfiguration.ApiKey,
-            LoginUrl                        = scrapeConfiguration.SearchConfiguration.LoginUrl,
-            UseHeadless                     = scrapeConfiguration.SearchConfiguration.UseHeadless,
-            SlowMotionDelay                 = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
-            SearchString                    = scrapeConfiguration.SearchConfiguration.SearchString,
-            TopWallpapers                   = scrapeConfiguration.SearchConfiguration.TopWallpapers,
-            SearchStringPrefix              = scrapeConfiguration.SearchConfiguration.SearchStringPrefix,
-            SearchStringSuffix              = scrapeConfiguration.SearchConfiguration.SearchStringSuffix,
-            Subscriptions                   = scrapeConfiguration.SearchConfiguration.Subscriptions,
-            ImagePauseInSeconds             = scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds,
-            StartingPageNumber              = scrapeConfiguration.SearchConfiguration.StartingPageNumber,
-            TotalPages                      = scrapeConfiguration.SearchConfiguration.TotalPages,
+            BaseUrl = scrapeConfiguration.SearchConfiguration.BaseUrl,
+            ApiKey = scrapeConfiguration.SearchConfiguration.ApiKey,
+            LoginUrl = scrapeConfiguration.SearchConfiguration.LoginUrl,
+            UseHeadless = scrapeConfiguration.SearchConfiguration.UseHeadless,
+            SlowMotionDelay = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
+            SearchString = scrapeConfiguration.SearchConfiguration.SearchString,
+            TopWallpapers = scrapeConfiguration.SearchConfiguration.TopWallpapers,
+            SearchStringPrefix = scrapeConfiguration.SearchConfiguration.SearchStringPrefix,
+            SearchStringSuffix = scrapeConfiguration.SearchConfiguration.SearchStringSuffix,
+            Subscriptions = scrapeConfiguration.SearchConfiguration.Subscriptions,
+            ImagePauseInSeconds = scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds,
+            StartingPageNumber = scrapeConfiguration.SearchConfiguration.StartingPageNumber,
+            TotalPages = scrapeConfiguration.SearchConfiguration.TotalPages,
             SubscriptionsStartingPageNumber = scrapeConfiguration.SearchConfiguration.SubscriptionsStartingPageNumber,
-            SubscriptionsTotalPages         = scrapeConfiguration.SearchConfiguration.SubscriptionsTotalPages,
-            TopWallpapersTotalPages         = scrapeConfiguration.SearchConfiguration.TopWallpapersTotalPages,
+            SubscriptionsTotalPages = scrapeConfiguration.SearchConfiguration.SubscriptionsTotalPages,
+            TopWallpapersTotalPages = scrapeConfiguration.SearchConfiguration.TopWallpapersTotalPages,
             TopWallpapersStartingPageNumber = scrapeConfiguration.SearchConfiguration.TopWallpapersStartingPageNumber,
-            SearchCategories                = [.. scrapeConfiguration.SearchConfiguration.SearchCategories.Select(c => new SearchCategories
+            SearchCategories = [.. scrapeConfiguration.SearchConfiguration.SearchCategories.Select(c => new SearchCategories
             {
                 Id                  = c.Id,
                 Name                = c.Name,

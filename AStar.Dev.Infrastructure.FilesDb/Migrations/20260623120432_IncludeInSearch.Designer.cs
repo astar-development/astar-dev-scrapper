@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using AStar.Dev.Infrastructure.FilesDb.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AStar.Dev.Infrastructure.FilesDb.Migrations
 {
     [DbContext(typeof(FilesContext))]
-    partial class FilesContextModelSnapshot : ModelSnapshot
+    [Migration("20260623120432_IncludeInSearch")]
+    partial class IncludeInSearch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,28 +66,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DeletionStatus", "files");
-                });
-
-            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.DownloadedFileClassification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("FileClassificationId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("FileDetailId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FileClassificationId");
-
-                    b.HasIndex("FileDetailId", "FileClassificationId")
-                        .IsUnique();
-
-                    b.ToTable("DownloadedFileClassification", "files");
                 });
 
             modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.DuplicatesDetails", b =>
@@ -443,10 +424,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IncludeInSearch")
                         .HasColumnType("INTEGER");
 
@@ -470,9 +447,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
 
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(128)");
-
-                    b.Property<bool>("IncludeInSearch")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("LastKnownImageCount")
                         .HasColumnType("int");
@@ -643,25 +617,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                         .IsRequired();
 
                     b.Navigation("ScrapeConfigurationEntity");
-                });
-
-            modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.DownloadedFileClassification", b =>
-                {
-                    b.HasOne("AStar.Dev.Infrastructure.FilesDb.Models.FileClassification", "FileClassification")
-                        .WithMany()
-                        .HasForeignKey("FileClassificationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AStar.Dev.Infrastructure.FilesDb.Models.FileDetail", "FileDetail")
-                        .WithMany()
-                        .HasForeignKey("FileDetailId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("FileClassification");
-
-                    b.Navigation("FileDetail");
                 });
 
             modelBuilder.Entity("AStar.Dev.Infrastructure.FilesDb.Models.FileDetail", b =>

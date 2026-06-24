@@ -18,20 +18,20 @@ public sealed class SubscriptionsWorkflow(
     private SearchConfiguration _searchConfiguration = searchConfiguration;
     private ScrapeDirectories   _scrapeDirectories   = scrapeDirectories;
 
-    public async Task RunAsync()
+    public async Task RunAsync(CancellationToken ct = default)
     {
         try
         {
-            await GetTheNewSubscriptionImagesAsync();
+            await GetTheNewSubscriptionImagesAsync(ct);
         }
-        catch(Exception exception)
+        catch(Exception exception) when (exception is not OperationCanceledException)
         {
             logger.Error(exception.GetBaseException().Message);
             throw;
         }
     }
 
-    private async Task GetTheNewSubscriptionImagesAsync()
+    private async Task GetTheNewSubscriptionImagesAsync(CancellationToken ct)
     {
         _searchConfiguration = _searchConfiguration with { SubscriptionsStartingPageNumber = 1 };
         IResponse? pageDetails = await subscriptionsImagesListPage.LoadSubscriptionResultsPageAsync(_searchConfiguration.SubscriptionsStartingPageNumber);
@@ -42,7 +42,7 @@ public sealed class SubscriptionsWorkflow(
 
         if(subDirectoryName.Length > 0) _scrapeDirectories = _scrapeDirectories with { SubDirectoryName = subDirectoryName };
 
-        _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
+        // _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
         UpdateSearchTotalPagesIfRequired(pageCount);
 
         await configurationSaver.SaveUpdatedConfigurationAsync();
@@ -51,15 +51,16 @@ public sealed class SubscriptionsWorkflow(
             currentPageNumber <= _searchConfiguration.SubscriptionsTotalPages;
             currentPageNumber++)
         {
+            ct.ThrowIfCancellationRequested();
             var delay = Random.Shared.Next(_searchConfiguration.ImagePauseInSeconds, _searchConfiguration.ImagePauseInSeconds + 4);
-            await Task.Delay(TimeSpan.FromSeconds(delay));
+            await Task.Delay(TimeSpan.FromSeconds(delay), ct);
             _searchConfiguration = _searchConfiguration with { SubscriptionsStartingPageNumber = currentPageNumber };
             await configurationSaver.SaveUpdatedConfigurationAsync();
             logger.Information("Getting page {subscriptionPage} (of {totalPagesForSubscriptions}) now.", currentPageNumber, _searchConfiguration.SubscriptionsTotalPages);
             _ = await subscriptionsImagesListPage.LoadSubscriptionResultsPageAsync(currentPageNumber);
             IReadOnlyCollection<string> imagePageLinks = await subscriptionsImagesListPage.GetImagePageLinks();
 
-            await imagePageService.GetTheImagePagesAsync(imagePageLinks);
+            await imagePageService.GetTheImagePagesAsync(imagePageLinks, ct: ct);
         }
 
         if(pageCount > 0)

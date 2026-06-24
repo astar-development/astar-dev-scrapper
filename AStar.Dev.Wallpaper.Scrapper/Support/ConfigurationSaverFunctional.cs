@@ -6,7 +6,7 @@ using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
-public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logger logger, IDbContextFactory<FilesContext> contextFactory)
+public sealed class ConfigurationSaverFunctional(ScrapeConfiguration scrapeConfiguration, Logger logger, IDbContextFactory<FilesContext> contextFactory)
 {
     public async Task SaveUpdatedConfigurationAsync()
     {

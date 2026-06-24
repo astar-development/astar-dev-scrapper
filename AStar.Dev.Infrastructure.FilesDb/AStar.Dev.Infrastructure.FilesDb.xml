@@ -16,6 +16,12 @@
             <typeparam name="TEntity"></typeparam>
             <returns></returns>
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Configurations.DownloadedFileClassificationConfiguration">
+            <summary>EF Core configuration for <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.DownloadedFileClassification" />.</summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Configurations.DownloadedFileClassificationConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{AStar.Dev.Infrastructure.FilesDb.Models.DownloadedFileClassification})">
+            <inheritdoc />
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Configurations.EventConfiguration">
             <summary>
             </summary>
@@ -74,6 +80,13 @@
             </summary>
         </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Configurations.ScrapeConfigurationEntityConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity})">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Configurations.ScrapedTagConfiguration">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Configurations.ScrapedTagConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag})">
             <inheritdoc />
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Configurations.TagToIgnoreConfiguration">
@@ -137,42 +150,27 @@
                Gets or sets the Scrape Configuration details for the scraper, including connection strings, user configuration, search configuration, and scrape directories. This property serves as a central point for managing all the necessary settings and parameters that the scraper needs to operate effectively. The ScrapeConfiguration property allows for flexible configuration of different aspects of the scraping process, enabling the scraper to adapt to various environments and requirements without hardcoding sensitive information directly into the codebase. Proper management of scrape configuration is crucial for ensuring that the scraper can operate efficiently and securely, allowing it to access necessary resources and perform its tasks without issues.
             </summary>
         </member>
-        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.ConnectionStrings">
-            <summary>
-               Gets or sets the connection string configuration table.
-            </summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.UserConfigurations">
-            <summary>
-               Gets or sets the user configuration table.
-            </summary>
-        </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.SearchConfigurations">
             <summary>
                Gets or sets the search configuration table.
             </summary>
         </member>
-        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.ScrapeDirectories">
-            <summary>
-               Gets or sets the scrape directories table.
-            </summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.SearchCategories">
-            <summary>
-               Gets or sets the search categories table.
-            </summary>
-        </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
             <inheritdoc />
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.ScrapedTags">
+            <summary>
+                Gets or sets all unique tags observed during scraping
+            </summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.FileClassifications">
             <summary>
                 Gets or sets the File Classifications
             </summary>
         </member>
-        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.DuplicatesDetails">
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.DownloadedFileClassifications">
             <summary>
-                Gets or sets the DuplicatesDetails loaded from the configured view in the database
+                Gets or sets the classifications applied to files at download time
             </summary>
         </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
@@ -361,6 +359,66 @@
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddMissingSearchConfigFields.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddSearchCategoryIncludeInSearch">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddSearchCategoryIncludeInSearch.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddSearchCategoryIncludeInSearch.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddSearchCategoryIncludeInSearch.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddDownloadedFileClassifications">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddDownloadedFileClassifications.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddDownloadedFileClassifications.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddDownloadedFileClassifications.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity">
             <summary>
                The <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity"></see> class provides common properties for tracking the creation and modification of entities.
@@ -439,6 +497,26 @@
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.DirectoryName.Value">
             <summary></summary>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.DownloadedFileClassification">
+            <summary>
+                Records the classification applied to a file at download time.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.DownloadedFileClassification.Id">
+            <summary>Gets or sets the primary key.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.DownloadedFileClassification.FileDetailId">
+            <summary>Gets or sets the id of the classified file.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.DownloadedFileClassification.FileDetail">
+            <summary>Gets or sets the classified file.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.DownloadedFileClassification.FileClassificationId">
+            <summary>Gets or sets the id of the applied classification.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.DownloadedFileClassification.FileClassification">
+            <summary>Gets or sets the applied classification.</summary>
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.DuplicatesDetails">
             <summary>
@@ -1162,6 +1240,55 @@
             The subdirectory name is an additional folder that can be created under the base save directory to further organize the scraped data. This allows users to create specific folders for different search criteria, categories, or sessions. For example, if the base save directory is "C:\ScrapedData\Wallpapers", a subdirectory could be created for a specific search term like "Nature", resulting in a full path like "C:\ScrapedData\Wallpapers\Nature". This structure helps keep the scraped data organized and easily accessible based on the user's preferences and the context of the scraping session.
             </summary>
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag">
+            <summary>
+                Represents a unique tag observed during a scrape run
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag.Id">
+            <summary>
+                Gets or sets the Id of the <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag" />
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag.Value">
+            <summary>
+                Gets or sets the tag text value (unique)
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag.Category">
+            <summary>
+                Gets or sets the category for the tag.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag.IncludeInSearch">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId">
+            <summary>
+                Defines the ScrapedTagId
+            </summary>
+            <param name="Value">The value of the Scraped Tag Id</param>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId.#ctor(System.Guid)">
+            <summary>
+                Defines the ScrapedTagId
+            </summary>
+            <param name="Value">The value of the Scraped Tag Id</param>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId.Value">
+            <summary>The value of the Scraped Tag Id</summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId.CreateNew">
+            <summary>
+                Creates a new instance of <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId" /> with a new Guid value
+            </summary>
+            <returns>A new <see cref="T:AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTagId" /> instance</returns>
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories">
             <summary>
             Represents a search category with its associated metadata, including the category's unique identifier, name, last known image count, last page visited, and total pages available. This information is crucial for managing and tracking the scraping process for each category, allowing for efficient navigation through search results and ensuring that the scraper can resume from the last visited page in case of interruptions. The LastKnownImageCount helps in determining if there are new images to scrape since the last run, while LastPageVisited and TotalPages assist in navigating through paginated search results effectively.
@@ -1184,7 +1311,7 @@
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.Name">
             <summary>
-            The name of the search category. This is a human-readable string that describes the category being scraped, such as "Nature", "Cityscapes", or "Abstract". The name helps users understand the context of the category and can be used for organizing and labeling the scraped data. It also provides clarity when reviewing logs or reports related to the scraping process, making it easier to identify which categories were processed and how many images were scraped for each category.
+            The name of the search category. This is a human-readable string that describes the category being scraped, such as "Nature", "City-scapes", or "Abstract". The name helps users understand the context of the category and can be used for organizing and labeling the scraped data. It also provides clarity when reviewing logs or reports related to the scraping process, making it easier to identify which categories were processed and how many images were scraped for each category.
             </summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.LastKnownImageCount">
@@ -1200,6 +1327,11 @@
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.TotalPages">
             <summary>
             The total number of pages available for the search category. This property provides insight into the scope of the scraping task for each category, allowing the scraper to plan its navigation through the search results effectively. Knowing the total pages helps in estimating the time required for scraping and in managing expectations regarding the volume of data that will be collected for each category. It also assists in determining when to stop scraping for a category, ensuring that the scraper does not attempt to access non-existent pages and handles pagination gracefully.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Models.SearchCategories.IncludeInSearch">
+            <summary>
+            Indicates whether the search category should be included in the scraping process. This boolean property allows for selective scraping, enabling users to exclude certain categories from being processed based on specific criteria or preferences. By setting this property to false, the scraper can skip over categories that are not relevant or desired, optimizing the scraping process and focusing resources on categories that are of interest. This feature is particularly useful for managing large datasets and ensuring that the scraper operates efficiently by avoiding unnecessary processing of unwanted categories.
             </summary>
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.SearchConfiguration">

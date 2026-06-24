@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AStar.Dev.Wallpaper.Scrapper.MainWindow"
+        Title="AStar Wallpaper Scrapper"
+        Width="2600"
+        Height="800">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="12,12,12,0" Spacing="8">
+            <Button x:Name="EditConfigurationButton" Content="Edit Configuration" Click="OnEditConfigurationClicked" />
+            <Button x:Name="ScrapeSiteButton" Content="Scrape Site" Click="OnScrapeSiteClicked" />
+            <Button x:Name="ScrapeSiteNewButton" Content="Scrape Site New" Click="OnScrapeSiteNewClicked" />
+            <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClicked" IsEnabled="False" />
+        </StackPanel>
+        <ScrollViewer x:Name="StatusScroller" Margin="12,8">
+            <TextBlock x:Name="StatusLabel" TextWrapping="Wrap" FontFamily="Consolas,Monospace" />
+        </ScrollViewer>
+    </DockPanel>
+</Window>
