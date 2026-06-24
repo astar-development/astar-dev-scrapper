@@ -54,11 +54,8 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
         }
 
         /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropTable(
+        protected override void Down(MigrationBuilder migrationBuilder) => migrationBuilder.DropTable(
                 name: "DownloadedFileClassification",
                 schema: "files");
-        }
     }
 }

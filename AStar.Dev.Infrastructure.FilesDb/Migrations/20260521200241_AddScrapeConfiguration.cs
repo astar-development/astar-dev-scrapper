@@ -8,9 +8,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
     public partial class AddScrapeConfiguration : Migration
     {
         /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.CreateTable(
+        protected override void Up(MigrationBuilder migrationBuilder) => migrationBuilder.CreateTable(
                 name: "ScrapeConfiguration",
                 schema: "files",
                 columns: table => new
@@ -47,14 +45,10 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                 {
                     table.PrimaryKey("PK_ScrapeConfiguration", x => x.Id);
                 });
-        }
 
         /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropTable(
+        protected override void Down(MigrationBuilder migrationBuilder) => migrationBuilder.DropTable(
                 name: "ScrapeConfiguration",
                 schema: "files");
-        }
     }
 }
