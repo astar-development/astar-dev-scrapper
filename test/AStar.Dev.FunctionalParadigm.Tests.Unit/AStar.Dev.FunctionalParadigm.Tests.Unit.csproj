@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AStar.Dev.FunctionalParadigm\AStar.Dev.FunctionalParadigm.csproj" />
+    <ProjectReference Include="..\..\src\AStar.Dev.FunctionalParadigm\AStar.Dev.FunctionalParadigm.csproj" />
   </ItemGroup>
   
   <ItemGroup>
