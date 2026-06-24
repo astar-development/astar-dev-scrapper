@@ -11,23 +11,24 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
     {
         _ = await page.GotoAsync(link);
 
-        IReadOnlyList<ILocator> tags          = await page.Locator(".tagname").AllAsync();
+        IReadOnlyList<ILocator> tagLocators   = await page.Locator(".tagname").AllAsync();
         var                     directoryName = scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory;
-        var (directoryNameUpdated, filePrefix, skip) = await ProcessTheImageTags(tags, [directoryName]);
+        var (directoryNameUpdated, filePrefix, skip, imageTags) = await ProcessTheImageTags(tagLocators, [directoryName]);
 
-        if(skip) return new ImagePageResult(null, directoryNameUpdated, filePrefix, Skip: true);
+        if(skip) return new ImagePageResult(null, directoryNameUpdated, filePrefix, Skip: true, Tags: imageTags);
 
         ILocator imageTag   = page.Locator("#wallpaper");
         var      sourcePath = await imageTag.GetAttributeAsync("src");
-        return new ImagePageResult(sourcePath, directoryNameUpdated, filePrefix, Skip: false);
+        return new ImagePageResult(sourcePath, directoryNameUpdated, filePrefix, Skip: false, Tags: imageTags);
     }
 
-    private async Task<(List<string> directoryName, string filePrefix, bool skip)> ProcessTheImageTags(IEnumerable<ILocator> tags, List<string> directoryName)
+    private async Task<(List<string> directoryName, string filePrefix, bool skip, IReadOnlyList<string> tags)> ProcessTheImageTags(IEnumerable<ILocator> tags, List<string> directoryName)
     {
-        var skip                     = false;
-        var filePrefix               = string.Empty;
+        var skip       = false;
+        var filePrefix = string.Empty;
 
-        var tagData = await Task.WhenAll(tags.Select(GetTags));
+        var tagData    = await Task.WhenAll(tags.Select(GetTags));
+        var imageTags  = tagData.Select(t => t.Tag).Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
 
         await scrapedTagRepository.SaveAsync([.. tagData.Where(t => !string.IsNullOrWhiteSpace(t.Category))]);
 
@@ -54,7 +55,7 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
 
         filePrefix = UpdateFilePrefixIfRequired(filePrefix);
 
-        return (directoryName, filePrefix, skip);
+        return (directoryName, filePrefix, skip, imageTags);
     }
 
     private static string UpdateFilePrefixIfRequired(string filePrefix)

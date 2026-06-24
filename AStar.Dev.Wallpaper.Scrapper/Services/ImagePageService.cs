@@ -11,7 +11,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
 public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ScrapeConfiguration scrapeConfiguration, Logger logger)
 {
-    public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks, CancellationToken ct = default)
+    public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks, string categoryId = "", CancellationToken ct = default)
     {
         foreach(var pageLink in imagePageLinks)
         {
@@ -26,18 +26,18 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
                     continue;
                 }
 
-                await ProcessImagePageAsync(pageLink, ct);
+                await ProcessImagePageAsync(pageLink, categoryId, ct);
             }
             catch(Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.Warning(ex, "Failed to process {pageLink}, retrying after delay.", pageLink);
                 await Task.Delay(TimeSpan.FromSeconds(10), ct);
-                await ProcessImagePageAsync(pageLink, ct);
+                await ProcessImagePageAsync(pageLink, categoryId, ct);
             }
         }
     }
 
-    private async Task ProcessImagePageAsync(string pageLink, CancellationToken ct)
+    private async Task ProcessImagePageAsync(string pageLink, string categoryId, CancellationToken ct)
     {
         var delay = Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4);
         await Task.Delay(TimeSpan.FromSeconds(delay), ct);
@@ -52,7 +52,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
 
         var imageNameWithPath = directoryName.Value.CombinePath(fileNameCombined.Replace(' ', '-').ToLowerInvariant());
         var image             = await ImageRetrieverHelper.GetTheImageAsync(result.ImageUrl);
-        logger.Information("About to save {filename} as {imageNameWithPath} as we do not appear to have it.", filename, imageNameWithPath);
+        logger.Information("About to save {filename} as {imageNameWithPath} as we don't appear to have it.", filename, imageNameWithPath);
         await ImageSaveHelper.SaveImage(image, imageNameWithPath);
 
         var fileInfo   = new FileInfo(imageNameWithPath);
@@ -76,6 +76,6 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
         }
 
         await fileDetailRepository.AddAsync(fileDetail);
-        await fileClassificationService.ClassifyAsync(fileDetail);
+        await fileClassificationService.ClassifyAsync(fileDetail, categoryId, result.Tags);
     }
 }

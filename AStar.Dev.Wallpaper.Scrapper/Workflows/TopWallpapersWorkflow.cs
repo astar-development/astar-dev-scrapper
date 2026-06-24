@@ -53,7 +53,7 @@ public sealed class TopWallpapersWorkflow(
             _ = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber);
             IReadOnlyCollection<string> imagePageLinks = await topWallpapersPage.GetImagePageLinks();
 
-            await imagePageService.GetTheImagePagesAsync(imagePageLinks, ct);
+            await imagePageService.GetTheImagePagesAsync(imagePageLinks, ct: ct);
         }
     }
 }

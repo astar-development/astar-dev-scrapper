@@ -77,6 +77,11 @@ public sealed class FilesContext : DbContext
     public DbSet<FileClassification> FileClassifications { get; set; } = null!;
 
     /// <summary>
+    ///     Gets or sets the classifications applied to files at download time
+    /// </summary>
+    public DbSet<DownloadedFileClassification> DownloadedFileClassifications { get; set; } = null!;
+
+    /// <summary>
     ///     The overridden OnModelCreating method
     /// </summary>
     /// <param name="modelBuilder">

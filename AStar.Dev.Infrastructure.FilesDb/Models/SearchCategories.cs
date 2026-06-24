@@ -39,5 +39,10 @@ public class SearchCategories
     /// The total number of pages available for the search category. This property provides insight into the scope of the scraping task for each category, allowing the scraper to plan its navigation through the search results effectively. Knowing the total pages helps in estimating the time required for scraping and in managing expectations regarding the volume of data that will be collected for each category. It also assists in determining when to stop scraping for a category, ensuring that the scraper does not attempt to access non-existent pages and handles pagination gracefully.
     /// </summary>
     public int TotalPages { get; set; }
+
+    /// <summary>
+    /// Indicates whether the search category should be included in the scraping process. This boolean property allows for selective scraping, enabling users to exclude certain categories from being processed based on specific criteria or preferences. By setting this property to false, the scraper can skip over categories that are not relevant or desired, optimizing the scraping process and focusing resources on categories that are of interest. This feature is particularly useful for managing large datasets and ensuring that the scraper operates efficiently by avoiding unnecessary processing of unwanted categories.
+    /// </summary>
+    public bool IncludeInSearch { get; set; } = true;
 }
 
