@@ -15,11 +15,11 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
         var                     directoryName = scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory;
         var (directoryNameUpdated, filePrefix, skip, imageTags) = await ProcessTheImageTags(tagLocators, [directoryName]);
 
-        if(skip) return new ImagePageResult(null, directoryNameUpdated, filePrefix, Skip: true, Tags: imageTags);
+        if(skip) return new ImagePageResult(null, directoryNameUpdated, filePrefix, skip, imageTags);
 
         ILocator imageTag   = page.Locator("#wallpaper");
         var      sourcePath = await imageTag.GetAttributeAsync("src");
-        return new ImagePageResult(sourcePath, directoryNameUpdated, filePrefix, Skip: false, Tags: imageTags);
+        return new ImagePageResult(sourcePath, directoryNameUpdated, filePrefix, skip, imageTags);
     }
 
     private async Task<(List<string> directoryName, string filePrefix, bool skip, IReadOnlyList<string> tags)> ProcessTheImageTags(IEnumerable<ILocator> tags, List<string> directoryName)

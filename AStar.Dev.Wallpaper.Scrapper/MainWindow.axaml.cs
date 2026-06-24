@@ -12,7 +12,6 @@ using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using Serilog;
 using Serilog.Core;
-using Serilog.Events;
 using AStar.Dev.FunctionalParadigm;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
@@ -28,9 +27,11 @@ public partial class MainWindow : Window
     private readonly ConfigurationSaver configurationSaver;
     private readonly TagsToIgnoreCompletely tagsToIgnoreCompletely;
     private readonly TagsTextToIgnore tagsTextToIgnore;
+    private readonly IPlaywrightService playwrightService;
+    private readonly IImagePageResultFunctional imagePageResultFunctional;
     private CancellationTokenSource? cts;
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, ScrapeConfiguration scrapeConfiguration, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory,IImagePageResultFunctional imagePageResultFunctional, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.scrapeConfiguration = scrapeConfiguration;
@@ -41,6 +42,8 @@ public partial class MainWindow : Window
         this.configurationSaver = configurationSaver;
         this.tagsToIgnoreCompletely = tagsToIgnoreCompletely;
         this.tagsTextToIgnore = tagsTextToIgnore;
+        this.playwrightService = playwrightService;
+        this.imagePageResultFunctional = imagePageResultFunctional;
         InitializeComponent();
     }
 
@@ -54,8 +57,9 @@ public partial class MainWindow : Window
         using var scrapeLogger = GetScrapeLoggerForDisplaySync();
         scrapeLogger.Information("Starting scrape...");
         scrapeLogger.Information("Configuring Playwright...");
-        IPage page = await ConfigurePlaywright(scrapeLogger);
+        IPage page = await playwrightService.ConfigurePlaywright(scrapeLogger);
         scrapeLogger.Information("Playwright configured. Starting scrape...");
+        await imagePageResultFunctional.GetImagePagesAsync(scrapeLogger);
         await Task.Delay(TimeSpan.FromSeconds(2));
         scrapeLogger.Information("Done (MOCK)...");
 
@@ -77,7 +81,7 @@ public partial class MainWindow : Window
         try
         {
             using var scrapeLogger = GetScrapeLoggerForDisplaySync();
-            IPage page = await ConfigurePlaywright(scrapeLogger);
+            IPage page = await playwrightService.ConfigurePlaywright(scrapeLogger);
 
             var imagePage = new ImagePage(page, scrapeConfiguration, tagsToIgnoreCompletely, tagsTextToIgnore, scrapedTagRepository);
             var imagePageService = new ImagePageService(imagePage, fileDetailRepository, fileClassificationService, scrapeConfiguration, scrapeLogger);
@@ -87,7 +91,7 @@ public partial class MainWindow : Window
                 onFailure: ex => 
                 {
                     logger.Error(ex, "Scrape failed");
-                    
+
                     return Task.FromException(ex);
                 }
             );
@@ -115,34 +119,6 @@ public partial class MainWindow : Window
         await RunSearchAsync(scrapeLogger, page, imagePageService, ct);
         await RunSubscriptionsAsync(scrapeLogger, page, imagePageService, ct);
         await RunTopWallpapersAsync(scrapeLogger, page, imagePageService, ct);
-    }
-
-    private async Task<IPage> ConfigurePlaywright(Logger scrapeLogger)
-    {
-        using IPlaywright playwright = await Playwright.CreateAsync();
-
-        IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-        {
-            Headless = false,
-            SlowMo = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
-            Channel = "chrome",
-            Args = ["--disable-blink-features=AutomationControlled"],
-        });
-
-        IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
-        {
-            BaseURL = scrapeConfiguration.SearchConfiguration.BaseUrl,
-            ViewportSize = new ViewportSize { Width = 2440, Height = 1200 },
-            Locale = "en-GB",
-            TimezoneId = "Europe/London",
-        });
-
-        await ApplyCookiesAsync(context, scrapeLogger);
-
-        IPage page = await context.NewPageAsync();
-        page.SetDefaultTimeout(60_000);
-
-        return page;
     }
 
     private Logger GetScrapeLoggerForDisplaySync()
@@ -200,30 +176,4 @@ public partial class MainWindow : Window
             StatusLabel.Text += message + Environment.NewLine;
             StatusScroller.ScrollToEnd();
         });
-
-    private static async Task ApplyCookiesAsync(IBrowserContext context, Logger logger)
-    {
-        var chromeCookies = await ChromeCookieExtractor.ExtractAsync("wallhaven.cc", null);
-        logger.Information("Extracted {Count} cookies from Chrome profile", chromeCookies.Count);
-        var injected = 0;
-        foreach (var cookie in chromeCookies)
-        {
-            try
-            {
-                await context.AddCookiesAsync([cookie]);
-                injected++;
-            }
-            catch (Exception ex)
-            {
-                logger.Debug("Skipped cookie '{Name}' ({Domain}): {Message}", cookie.Name, cookie.Domain, ex.Message);
-            }
-        }
-
-        logger.Information("Injected {Injected}/{Total} cookies", injected, chromeCookies.Count);
-    }
-
-    private sealed class StatusLogSink(Action<string> onMessage) : ILogEventSink
-    {
-        public void Emit(LogEvent logEvent) => onMessage(logEvent.RenderMessage());
-    }
 }

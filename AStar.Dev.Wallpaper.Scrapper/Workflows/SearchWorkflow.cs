@@ -24,7 +24,7 @@ public sealed class SearchWorkflow(
         try
         {
             List<Category> searchCategories = FilterSearchCategories([.. _searchConfiguration.SearchCategories]);
-            await ProcessSearchCategories(searchCategories, ct);
+            await ProcessSearchCategories([.. _searchConfiguration.SearchCategories], ct);
         }
         catch(Exception exception) when (exception is not OperationCanceledException)
         {

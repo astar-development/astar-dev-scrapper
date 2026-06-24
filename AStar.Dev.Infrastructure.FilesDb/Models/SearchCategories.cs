@@ -21,7 +21,7 @@ public class SearchCategories
     public string Id { get; set; } = string.Empty;
 
     /// <summary>
-    /// The name of the search category. This is a human-readable string that describes the category being scraped, such as "Nature", "Cityscapes", or "Abstract". The name helps users understand the context of the category and can be used for organizing and labeling the scraped data. It also provides clarity when reviewing logs or reports related to the scraping process, making it easier to identify which categories were processed and how many images were scraped for each category.
+    /// The name of the search category. This is a human-readable string that describes the category being scraped, such as "Nature", "City-scapes", or "Abstract". The name helps users understand the context of the category and can be used for organizing and labeling the scraped data. It also provides clarity when reviewing logs or reports related to the scraping process, making it easier to identify which categories were processed and how many images were scraped for each category.
     /// </summary>
     public string Name { get; set; } = string.Empty;
 

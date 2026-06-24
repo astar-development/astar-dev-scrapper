@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using AStar.Dev.Infrastructure.FilesDb.Data;
-using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Repositories;
 using AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
@@ -15,6 +14,8 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Exceptions;
 using ScrapeConfigModel = AStar.Dev.Wallpaper.Scrapper.Models.ScrapeConfiguration;
+using AStar.Dev.Wallpaper.Scrapper.Pages;
+using AStar.Dev.Wallpaper.Scrapper.Workflows;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 
@@ -38,7 +39,7 @@ public partial class App : Application
 
         builder.Services
             .Configure<ScrapeConfigModel>(builder.Configuration.GetSection(nameof(ScrapeConfigModel)))
-            .AddSingleton<ScrapeConfigModel>(sp => sp.GetRequiredService<IDbContextFactory<FilesContext>>()
+            .AddSingleton(sp => sp.GetRequiredService<IDbContextFactory<FilesContext>>()
                 .CreateDbContext().ScrapeConfiguration
                 .Include(e => e.ConnectionStrings)
                 .Include(e => e.UserConfiguration)
@@ -56,21 +57,25 @@ public partial class App : Application
                 .CreateLogger())
             .AddDbContextFactory<FilesContext>(options =>
                 options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite")))
-            .AddSingleton<TagsToIgnoreCompletely>(sp => {
+            .AddSingleton(sp => {
                 using var ctx = sp.GetRequiredService<IDbContextFactory<FilesContext>>().CreateDbContext();
                 return TagsFactory.LoadTagsToIgnoreCompletely(ctx);
             })
-            .AddSingleton<TagsTextToIgnore>(sp => {
+            .AddSingleton(sp => {
                 using var ctx = sp.GetRequiredService<IDbContextFactory<FilesContext>>().CreateDbContext();
                 return TagsFactory.LoadTagsTextToIgnore(ctx);
             })
             .AddTransient<IScrapedTagRepository, ScrapedTagRepository>()
             .AddTransient<IFileDetailRepository, FileDetailRepository>()
             .AddTransient<FileClassificationService>()
+            .AddTransient<IImagePageResultFunctional, ImagePageResultFunctional>()
+            .AddTransient<ConfigurationSaverFunctional>()
             .AddTransient<ConfigurationSaver>()
             .AddTransient<DatabaseInitializationService>()
             .AddTransient<ScrapeConfigurationViewModel>()
+            .AddTransient<TopWallpapersWorkflowFunctional>()
             .AddTransient<ScrapeConfigurationView>()
+            .AddTransient<IPlaywrightService, PlaywrightService>()
             .AddTransient<Func<ScrapeConfigurationView>>(sp => () => sp.GetRequiredService<ScrapeConfigurationView>())
             .AddTransient<MainWindow>();
 
