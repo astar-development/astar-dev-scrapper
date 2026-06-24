@@ -43,4 +43,30 @@ public class GivenTapAsync
         actual.ShouldBe(new Fail<int, string>("error"));
         sideEffect.ShouldBeTrue();
     }
+
+    [Fact]
+    public async Task when_called_on_task_result_then_returns_same_result_and_executes_finalizer()
+    {
+        var resultTask = Task.FromResult<Result<int, string>>(Result<int, string>.Success(7));
+        var finalizerCalled = false;
+
+        var actual = await resultTask.EnsureAsync(() => finalizerCalled = true);
+
+        actual.ShouldBeOfType<Ok<int, string>>();
+        actual.ShouldBe(new Ok<int, string>(7));
+        finalizerCalled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task when_called_on_task_failure_then_returns_same_failure_and_executes_finalizer()
+    {
+        var resultTask = Task.FromResult<Result<int, string>>(Result<int, string>.Failure("error"));
+        var finalizerCalled = false;
+
+        var actual = await resultTask.EnsureAsync(() => finalizerCalled = true);
+
+        actual.ShouldBeOfType<Fail<int, string>>();
+        actual.ShouldBe(new Fail<int, string>("error"));
+        finalizerCalled.ShouldBeTrue();
+    }
 }

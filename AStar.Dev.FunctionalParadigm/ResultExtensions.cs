@@ -61,6 +61,44 @@ public static class ResultExtensions
         _ => throw new InvalidOperationException("Unexpected result type.")
     };
 
+    public static async Task<Result<TMapped, TError>> BindAsync<TResult, TMapped, TError>(this Result<TResult, TError> result, Func<TResult, Task<Result<TMapped, TError>>> binder) => result switch
+    {
+        Ok<TResult, TError> ok => await binder(ok.Value).ConfigureAwait(false),
+        Fail<TResult, TError> fail => new Fail<TMapped, TError>(fail.Error),
+        _ => throw new InvalidOperationException("Unexpected result type.")
+    };
+
+    public static async Task<Result<TMapped, TError>> BindAsync<TResult, TMapped, TError>(this Task<Result<TResult, TError>> resultTask, Func<TResult, Task<Result<TMapped, TError>>> binder)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        return await result.BindAsync(binder).ConfigureAwait(false);
+    }
+
+    public static async Task<Result<TMapped, TError>> BindAsync<TResult, TMapped, TError>(this Task<Result<TResult, TError>> resultTask, Func<TResult, ValueTask<Result<TMapped, TError>>> binder)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        return await result.BindAsync(binder).ConfigureAwait(false);
+    }
+
+    public static async ValueTask<Result<TMapped, TError>> BindAsync<TResult, TMapped, TError>(this Result<TResult, TError> result, Func<TResult, ValueTask<Result<TMapped, TError>>> binder) => result switch
+    {
+        Ok<TResult, TError> ok => await binder(ok.Value).ConfigureAwait(false),
+        Fail<TResult, TError> fail => new Fail<TMapped, TError>(fail.Error),
+        _ => throw new InvalidOperationException("Unexpected result type.")
+    };
+
+    public static async ValueTask<Result<TMapped, TError>> BindAsync<TResult, TMapped, TError>(this ValueTask<Result<TResult, TError>> resultTask, Func<TResult, Task<Result<TMapped, TError>>> binder)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        return await result.BindAsync(binder).ConfigureAwait(false);
+    }
+
+    public static async ValueTask<Result<TMapped, TError>> BindAsync<TResult, TMapped, TError>(this ValueTask<Result<TResult, TError>> resultTask, Func<TResult, ValueTask<Result<TMapped, TError>>> binder)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        return await result.BindAsync(binder).ConfigureAwait(false);
+    }
+
     public static Result<TMapped, TError> Bind<TResult, TMapped, TError>(this Result<TResult, TError> result, Func<TResult, Result<TMapped, TError>> binder)
         => result switch
             {
@@ -68,6 +106,40 @@ public static class ResultExtensions
                 Fail<TResult, TError> fail => new Fail<TMapped, TError>(fail.Error),
                 _ => throw new InvalidOperationException("Unexpected result type.")
             };
+
+    public static Result<TResult, TError> Ensure<TResult, TError>(this Result<TResult, TError> result, Action finallyAction)
+    {
+        finallyAction();
+        return result;
+    }
+
+    public static async Task<Result<TResult, TError>> EnsureAsync<TResult, TError>(this Task<Result<TResult, TError>> resultTask, Action finallyAction)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        finallyAction();
+        return result;
+    }
+
+    public static async Task<Result<TResult, TError>> EnsureAsync<TResult, TError>(this Task<Result<TResult, TError>> resultTask, Func<ValueTask> finallyAction)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        await finallyAction().ConfigureAwait(false);
+        return result;
+    }
+
+    public static async ValueTask<Result<TResult, TError>> EnsureAsync<TResult, TError>(this ValueTask<Result<TResult, TError>> resultTask, Action finallyAction)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        finallyAction();
+        return result;
+    }
+
+    public static async ValueTask<Result<TResult, TError>> EnsureAsync<TResult, TError>(this ValueTask<Result<TResult, TError>> resultTask, Func<ValueTask> finallyAction)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        await finallyAction().ConfigureAwait(false);
+        return result;
+    }
 
     public static TOut Match<TResult, TError, TOut>(this Result<TResult, TError> result, Func<TResult, TOut> onSuccess, Func<TError, TOut> onFailure)
         => result switch

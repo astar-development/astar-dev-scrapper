@@ -8,10 +8,10 @@ public class GivenUnit
     [Fact]
     public void unit_value_is_singleton_like()
     {
-        var a = Unit.Value;
-        var b = new Unit();
+        var a = global::AStar.Dev.FunctionalParadigm.Unit.Value;
+        var b = new global::AStar.Dev.FunctionalParadigm.Unit();
 
         a.ShouldBe(b);
-        Unit.Value.ShouldBe(a);
+        global::AStar.Dev.FunctionalParadigm.Unit.Value.ShouldBe(a);
     }
 }
