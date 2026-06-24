@@ -114,24 +114,24 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task RunTopWallpapersAsync(Logger scrapeLogger, IPage page, ImagePageService imagePageService, CancellationToken ct)
+    private async Task RunTopWallpapersAsync(Logger logger, IPage page, ImagePageService imagePageService, CancellationToken ct)
     {
         var topWallpapersPage = new TopWallpapersPage(page, scrapeConfiguration.SearchConfiguration);
-        var topWallpapersWorkflow = new TopWallpapersWorkflow(topWallpapersPage, imagePageService, scrapeConfiguration.SearchConfiguration, configurationSaver, scrapeLogger);
+        var topWallpapersWorkflow = new TopWallpapersWorkflow(topWallpapersPage, imagePageService, scrapeConfiguration.SearchConfiguration, configurationSaver, logger);
         await topWallpapersWorkflow.RunAsync(ct);
     }
 
-    private async Task RunSubscriptionsAsync(Logger scrapeLogger, IPage page, ImagePageService imagePageService, CancellationToken ct)
+    private async Task RunSubscriptionsAsync(Logger logger, IPage page, ImagePageService imagePageService, CancellationToken ct)
     {
         var subscriptionsPage = new SubscriptionsImagesListPage(page, scrapeConfiguration.SearchConfiguration);
-        var subscriptionsWorkflow = new SubscriptionsWorkflow(subscriptionsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configurationSaver, scrapeLogger);
+        var subscriptionsWorkflow = new SubscriptionsWorkflow(subscriptionsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configurationSaver, logger);
         await subscriptionsWorkflow.RunAsync(ct);
     }
 
-    private async Task RunSearchAsync(Logger scrapeLogger, IPage page, ImagePageService imagePageService, CancellationToken ct)
+    private async Task RunSearchAsync(Logger logger, IPage page, ImagePageService imagePageService, CancellationToken ct)
     {
-        var searchResultsPage = new SearchResultsPage(page, scrapeLogger);
-        var searchWorkflow = new SearchWorkflow(searchResultsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configurationSaver, scrapeLogger);
+        var searchResultsPage = new SearchResultsPage(page, logger);
+        var searchWorkflow = new SearchWorkflow(searchResultsPage, imagePageService, scrapeConfiguration.SearchConfiguration, scrapeConfiguration.ScrapeDirectories, configurationSaver, logger);
         await searchWorkflow.RunAsync(ct);
     }
 
@@ -144,10 +144,10 @@ public partial class MainWindow : Window
             StatusScroller.ScrollToEnd();
         });
 
-    private static async Task ApplyCookiesAsync(IBrowserContext context, Logger scrapeLogger)
+    private static async Task ApplyCookiesAsync(IBrowserContext context, Logger logger)
     {
         var chromeCookies = await ChromeCookieExtractor.ExtractAsync("wallhaven.cc", null);
-        scrapeLogger.Information("Extracted {Count} cookies from Chrome profile", chromeCookies.Count);
+        logger.Information("Extracted {Count} cookies from Chrome profile", chromeCookies.Count);
         var injected = 0;
         foreach (var cookie in chromeCookies)
         {
@@ -158,11 +158,11 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
-                scrapeLogger.Debug("Skipped cookie '{Name}' ({Domain}): {Message}", cookie.Name, cookie.Domain, ex.Message);
+                logger.Debug("Skipped cookie '{Name}' ({Domain}): {Message}", cookie.Name, cookie.Domain, ex.Message);
             }
         }
 
-        scrapeLogger.Information("Injected {Injected}/{Total} cookies", injected, chromeCookies.Count);
+        logger.Information("Injected {Injected}/{Total} cookies", injected, chromeCookies.Count);
     }
 
     private sealed class StatusLogSink(Action<string> onMessage) : ILogEventSink

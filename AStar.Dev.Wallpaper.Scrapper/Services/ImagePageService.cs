@@ -69,7 +69,6 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
             var imageDetail = SKImage.FromEncodedData(imageNameWithPath);
             if(imageDetail is not null)
             {
-                logger.Information("Image: {FileName} was found", imageNameWithPath);
                 fileDetail.Height      = imageDetail.Height;
                 fileDetail.Width       = imageDetail.Width;
                 fileDetail.ImageDetail = new ImageDetail { Width = imageDetail.Width, Height = imageDetail.Height };
