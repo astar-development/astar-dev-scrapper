@@ -6,14 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Repositories;
 
-public sealed class ScrapedTagRepository(string connectionString) : IScrapedTagRepository
+public sealed class ScrapedTagRepository(IDbContextFactory<FilesContext> contextFactory) : IScrapedTagRepository
 {
-    private DbContextOptions<FilesContext> CreateOptions() =>
-        new DbContextOptionsBuilder<FilesContext>().UseSqlite(connectionString).Options;
-
     public async Task SaveAsync(IReadOnlyList<TagData> tags)
     {
-        await using var context = new FilesContext(CreateOptions());
+        await using var context = await contextFactory.CreateDbContextAsync();
         var titleCasedTags = new List<ScrapedTag>();
 
         var textInfo = new CultureInfo("en-GB",false).TextInfo;

@@ -19,24 +19,25 @@ public sealed class SearchWorkflow(
     private ScrapeDirectories   _scrapeDirectories   = scrapeDirectories   ?? throw new ArgumentNullException(nameof(scrapeDirectories));
     private SearchConfiguration _searchConfiguration = searchConfiguration ?? throw new ArgumentNullException(nameof(searchConfiguration));
 
-    public async Task RunAsync()
+    public async Task RunAsync(CancellationToken ct = default)
     {
         try
         {
             List<Category> searchCategories = FilterSearchCategories([.. _searchConfiguration.SearchCategories]);
-            await ProcessSearchCategories(searchCategories);
+            await ProcessSearchCategories([.. _searchConfiguration.SearchCategories], ct);
         }
-        catch(Exception exception)
+        catch(Exception exception) when (exception is not OperationCanceledException)
         {
             logger.Error(exception.GetBaseException().Message);
             throw;
         }
     }
 
-    private async Task ProcessSearchCategories(List<Category> searchCategories)
+    private async Task ProcessSearchCategories(List<Category> searchCategories, CancellationToken ct)
     {
         foreach(Category searchCategory in searchCategories)
         {
+            ct.ThrowIfCancellationRequested();
             var combinedSearchString = $"{_searchConfiguration.SearchStringPrefix}{searchCategory.Id}{_searchConfiguration.SearchStringSuffix}";
 
             _searchConfiguration = UpdateSearchDetailsIfRequired(combinedSearchString);
@@ -54,20 +55,23 @@ public sealed class SearchWorkflow(
                 continue;
             }
 
-            searchCategory.LastKnownImageCount       = imageCount;
-            searchCategory.LastPageVisited           = 1;
-            _searchConfiguration = _searchConfiguration with { StartingPageNumber = 1 };
+            var startingPage = searchCategory.LastPageVisited > 0 ? searchCategory.LastPageVisited : 1;
+            _searchConfiguration = _searchConfiguration with { StartingPageNumber = startingPage };
 
-            logger.Debug("Visiting {Category} now...", searchCategory.Name);
+            logger.Debug("Visiting {Category} from page {StartingPage} now...", searchCategory.Name, startingPage);
             _scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
 
-            _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
+            // _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
 
-            await ProcessAllCategoryPages(searchCategory, combinedSearchString);
+            await ProcessAllCategoryPages(searchCategory, combinedSearchString, ct);
+
+            searchCategory.LastKnownImageCount = imageCount;
+            searchCategory.LastPageVisited     = 0;
+            await configurationSaver.SaveUpdatedConfigurationAsync();
         }
     }
 
-    private async Task ProcessAllCategoryPages(Category searchCategory, string combinedSearchString)
+    private async Task ProcessAllCategoryPages(Category searchCategory, string combinedSearchString, CancellationToken ct)
     {
         var stopwatch = new Stopwatch();
         stopwatch.Start();
@@ -75,7 +79,7 @@ public sealed class SearchWorkflow(
 
         for(var currentPageNumber = _searchConfiguration.StartingPageNumber; currentPageNumber <= _searchConfiguration.TotalPages; currentPageNumber++)
         {
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            await Task.Delay(TimeSpan.FromSeconds(2), ct);
             logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, _searchConfiguration.TotalPages, searchCategory.Name);
             _searchConfiguration = _searchConfiguration with { StartingPageNumber = currentPageNumber };
             searchCategory.LastPageVisited          = currentPageNumber;
@@ -83,7 +87,7 @@ public sealed class SearchWorkflow(
             _ = await searchResultsPage.LoadSearchPageAsync(combinedSearchString, currentPageNumber);
 
             IReadOnlyCollection<string> imagePageLinks = await searchResultsPage.ImagePageLinksAsync();
-            await imagePageService.GetTheImagePagesAsync(imagePageLinks);
+            await imagePageService.GetTheImagePagesAsync(imagePageLinks, searchCategory.Id, ct);
         }
 
         stopwatch.Stop();

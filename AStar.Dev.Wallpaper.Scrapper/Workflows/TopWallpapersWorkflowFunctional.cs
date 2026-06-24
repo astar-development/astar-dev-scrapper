@@ -7,11 +7,11 @@ using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
-public sealed class TopWallpapersWorkflow(
+public sealed class TopWallpapersWorkflowFunctional(
     TopWallpapersPage   topWallpapersPage,
     ImagePageService    imagePageService,
     SearchConfiguration searchConfiguration,
-    ConfigurationSaver  configurationSaver,
+    ConfigurationSaverFunctional  configurationSaver,
     Logger              logger)
 {
     private SearchConfiguration _searchConfiguration = searchConfiguration;

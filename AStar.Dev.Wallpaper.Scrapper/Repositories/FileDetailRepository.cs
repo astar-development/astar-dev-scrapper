@@ -4,20 +4,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Repositories;
 
-public sealed class FileDetailRepository(string connectionString) : IFileDetailRepository
+public sealed class FileDetailRepository(IDbContextFactory<FilesContext> contextFactory) : IFileDetailRepository
 {
-    private DbContextOptions<FilesContext> CreateOptions() =>
-        new DbContextOptionsBuilder<FilesContext>().UseSqlite(connectionString).Options;
-
     public async Task<bool> ExistsAsync(string fileName)
     {
-        await using var context = new FilesContext(CreateOptions());
+        await using var context = await contextFactory.CreateDbContextAsync();
         return await context.Files.FirstOrDefaultAsync(f => f.FileName.Value.Contains(fileName)) != null;
     }
 
     public async Task AddAsync(FileDetail fileDetail)
     {
-        await using var context = new FilesContext(CreateOptions());
+        await using var context = await contextFactory.CreateDbContextAsync();
 
         var handle = FileHandle.Create(fileDetail.FileName.Value ?? fileDetail.FileHandle.Value);
         var existingCount = await context.Files.AsAsyncEnumerable().CountAsync(f => f.FileHandle.Value == handle.Value);
