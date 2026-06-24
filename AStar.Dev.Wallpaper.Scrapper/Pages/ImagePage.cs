@@ -122,10 +122,7 @@ public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguratio
         return (filePrefixUpdated, directoryName);
     }
 
-    private static bool IsPeopleTag(string tagToUse)
-    {
-        return TagContains(tagToUse, "people > model") || TagContains(tagToUse, "people > porn") || TagContains(tagToUse, "people > actress") || TagContains(tagToUse, "people > actor") || TagContains(tagToUse, "people > singer");
-    }
+    private static bool IsPeopleTag(string tagToUse) => TagContains(tagToUse, "people > model") || TagContains(tagToUse, "people > porn") || TagContains(tagToUse, "people > actress") || TagContains(tagToUse, "people > actor") || TagContains(tagToUse, "people > singer");
 
     private bool IsOneOfTheImageTagsToExcludeCompletely(string tagText)
         => tagsToIgnoreCompletely.Tags.Contains(tagText);

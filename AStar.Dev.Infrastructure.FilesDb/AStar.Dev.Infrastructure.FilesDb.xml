@@ -163,9 +163,6 @@
                 Gets or sets all unique tags observed during scraping
             </summary>
         </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
-            <inheritdoc />
-        </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.FileClassifications">
             <summary>
                 Gets or sets the File Classifications
@@ -360,6 +357,66 @@
             <inheritdoc />
         </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddMissingSearchConfigFields.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddScrapedTag.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.IncludeInSearch.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddCategoryToTag.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddSearchCategoryIncludeInSearch">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddSearchCategoryIncludeInSearch.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddSearchCategoryIncludeInSearch.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddSearchCategoryIncludeInSearch.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Migrations.AddDownloadedFileClassifications">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddDownloadedFileClassifications.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddDownloadedFileClassifications.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Migrations.AddDownloadedFileClassifications.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Models.AuditableEntity">
