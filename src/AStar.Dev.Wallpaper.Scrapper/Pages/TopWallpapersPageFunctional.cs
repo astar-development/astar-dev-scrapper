@@ -5,17 +5,17 @@ namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
 public interface ITopWallpapersPageFunctional
 {
-    Task<IReadOnlyCollection<string>> GetImagePageLinks(IPage page);
-    Task<IResponse?> LoadTopWallpapersPageAsync(IPage page, int pageNumber);
-    Task<int> PageInfoAsync(IPage page);
+    Task<IReadOnlyCollection<string>> GetImagePageLinks();
+    Task<IResponse?> LoadTopWallpapersPageAsync(int pageNumber);
+    Task<int> PageInfoAsync();
 }
 
-public sealed class TopWallpapersPageFunctional(SearchConfiguration searchConfiguration) : ITopWallpapersPageFunctional
+public sealed class TopWallpapersPageFunctional(SearchConfiguration searchConfiguration, IPage page) : ITopWallpapersPageFunctional
 {
-    public async Task<IResponse?> LoadTopWallpapersPageAsync(IPage page, int pageNumber)
+    public async Task<IResponse?> LoadTopWallpapersPageAsync(int pageNumber)
         => _ = await page.GotoAsync($"{searchConfiguration.TopWallpapers}{pageNumber}");
 
-    public async Task<int> PageInfoAsync(IPage page)
+    public async Task<int> PageInfoAsync()
     {
         var text = await page.GetByText("Page ", new PageGetByTextOptions { Exact = false, }).First.TextContentAsync();
 
@@ -27,7 +27,7 @@ public sealed class TopWallpapersPageFunctional(SearchConfiguration searchConfig
         return Convert.ToInt32(pages);
     }
 
-    public async Task<IReadOnlyCollection<string>> GetImagePageLinks(IPage page)
+    public async Task<IReadOnlyCollection<string>> GetImagePageLinks()
     {
         List<string> wantedLinks = [];
         IReadOnlyList<ILocator> imagePreviews = await page.GetByRole(AriaRole.Link).AllAsync();
@@ -39,6 +39,6 @@ public sealed class TopWallpapersPageFunctional(SearchConfiguration searchConfig
             if (hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
         }
 
-        return wantedLinks.Take(24).ToList();
+        return [.. wantedLinks.Take(24)];
     }
 }

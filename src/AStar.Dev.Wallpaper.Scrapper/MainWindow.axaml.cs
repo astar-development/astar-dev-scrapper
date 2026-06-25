@@ -2,17 +2,16 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
-using Microsoft.Playwright;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using AStar.Dev.Wallpaper.Scrapper.Repositories;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
-using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using Serilog;
 using Serilog.Core;
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Wallpaper.Scrapper.Workflows;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 
@@ -28,11 +27,12 @@ public partial class MainWindow : Window
     private readonly TagsToIgnoreCompletely tagsToIgnoreCompletely;
     private readonly TagsTextToIgnore tagsTextToIgnore;
     private readonly IPlaywrightService playwrightService;
-    private readonly IImagePageResultFunctional imagePageResultFunctional;
+    private readonly SearchWorkflowFunctional imagePageServiceFunctional;
+    private readonly SearchWorkflowFunctional searchWorkflowFunctional;
     private CancellationTokenSource? cts;
-    private Logger scrapeLogger;
+    private readonly Logger scrapeLogger;
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory,IImagePageResultFunctional imagePageResultFunctional, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory,SearchWorkflowFunctional imagePageServiceFunctional, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.scrapeConfiguration = scrapeConfiguration;
@@ -44,7 +44,8 @@ public partial class MainWindow : Window
         this.tagsToIgnoreCompletely = tagsToIgnoreCompletely;
         this.tagsTextToIgnore = tagsTextToIgnore;
         this.playwrightService = playwrightService;
-        this.imagePageResultFunctional = imagePageResultFunctional;
+        this.imagePageServiceFunctional = imagePageServiceFunctional;
+        this.searchWorkflowFunctional = searchWorkflowFunctional;
         this.scrapeLogger = GetScrapeLoggerForDisplaySync();
         InitializeComponent();
     }
@@ -66,7 +67,8 @@ public partial class MainWindow : Window
             .Tap(_ => scrapeLogger.Information("Configuring Playwright..."))
             .MapAsync(_ => playwrightService.ConfigurePlaywright(scrapeLogger))
             .TapAsync(_ => scrapeLogger.Information("Starting scrape..."))
-            .BindAsync(_ => imagePageResultFunctional.GetImagePagesAsync(scrapeLogger))
+            .BindAsync(page => searchWorkflowFunctional.RunAsync(cts!.Token))
+            .TapAsync(_ => scrapeLogger.Information("Scrape completed..."))
             .EnsureAsync(() => ResetUI());
 
     private Result<CancellationToken, Exception> ResetCancellationTokenSource()
@@ -96,6 +98,7 @@ public partial class MainWindow : Window
         => Dispatcher.UIThread.InvokeAsync(() =>
             {
                 EditConfigurationButton.IsEnabled = true;
+                ScrapeSiteNewButton.IsEnabled = true;
                 CancelButton.IsEnabled = false;
                 cts?.Dispose();
                 cts = null;

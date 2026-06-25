@@ -16,6 +16,8 @@ using Serilog.Exceptions;
 using ScrapeConfigModel = AStar.Dev.Wallpaper.Scrapper.Models.ScrapeConfiguration;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
+using Microsoft.Playwright;
+using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 
@@ -45,6 +47,7 @@ public partial class App : Application
                 .Include(e => e.UserConfiguration)
                 .Include(e => e.SearchConfiguration).ThenInclude(s => s.SearchCategories)
                 .Include(e => e.ScrapeDirectories)
+                .OrderBy(e => e.Id)
                 .First()
                 .ToAppModel())
             .AddSingleton(sp => new LoggerConfiguration()
@@ -74,8 +77,12 @@ public partial class App : Application
             .AddTransient<DatabaseInitializationService>()
             .AddTransient<ScrapeConfigurationViewModel>()
             .AddTransient<TopWallpapersWorkflowFunctional>()
+            .AddTransient<IPage>(sp => sp.GetRequiredService<IPlaywrightService>().ConfigurePlaywright(sp.GetRequiredService<Logger>()).GetAwaiter().GetResult())
             .AddTransient<ScrapeConfigurationView>()
             .AddTransient<IPlaywrightService, PlaywrightService>()
+            .AddTransient<IImagePageServiceFunctional, ImagePageServiceFunctional>()
+            .AddTransient<SearchWorkflowFunctional>()
+            .AddTransient<SearchResultsPageFunctional>()
             .AddTransient<Func<ScrapeConfigurationView>>(sp => () => sp.GetRequiredService<ScrapeConfigurationView>())
             .AddTransient<MainWindow>();
 
