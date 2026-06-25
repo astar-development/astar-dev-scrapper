@@ -74,7 +74,7 @@ public sealed class SearchResultsPage(IPage page, Logger logger)
             if(hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
         }
 
-        return wantedLinks.Take(24).ToList();
+        return [.. wantedLinks.Take(24)];
     }
 
     private async Task<(int pageCount, int imageCount, string subDirectoryName)> GetPageInfoAsync()

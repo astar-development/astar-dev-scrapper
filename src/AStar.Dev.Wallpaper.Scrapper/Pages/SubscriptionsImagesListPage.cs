@@ -42,7 +42,7 @@ public sealed class SubscriptionsImagesListPage(IPage page, SearchConfiguration 
             if(hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
         }
 
-        return wantedLinks.Take(24).ToList();
+        return [.. wantedLinks.Take(24)];
     }
 
     public async Task Clear()

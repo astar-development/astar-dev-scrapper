@@ -36,6 +36,6 @@ public sealed class TopWallpapersPage(IPage page, SearchConfiguration searchConf
             if(hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
         }
 
-        return wantedLinks.Take(24).ToList();
+        return [.. wantedLinks.Take(24)];
     }
 }
