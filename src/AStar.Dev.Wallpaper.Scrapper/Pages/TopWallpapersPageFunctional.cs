@@ -1,4 +1,5 @@
 ﻿using AStar.Dev.Wallpaper.Scrapper.Models;
+using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
@@ -10,13 +11,19 @@ public interface ITopWallpapersPageFunctional
     Task<int> PageInfoAsync();
 }
 
-public sealed class TopWallpapersPageFunctional(SearchConfiguration searchConfiguration, IPage page) : ITopWallpapersPageFunctional
+public sealed class TopWallpapersPageFunctional(SearchConfiguration searchConfiguration, IPlaywrightService playwrightService) : ITopWallpapersPageFunctional
 {
+    private IPage page = null!;
+
     public async Task<IResponse?> LoadTopWallpapersPageAsync(int pageNumber)
-        => _ = await page.GotoAsync($"{searchConfiguration.TopWallpapers}{pageNumber}");
+    {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
+        return _ = await page.GotoAsync($"{searchConfiguration.TopWallpapers}{pageNumber}");
+    }
 
     public async Task<int> PageInfoAsync()
     {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
         var text = await page.GetByText("Page ", new PageGetByTextOptions { Exact = false, }).First.TextContentAsync();
 
         if (text is null) return 0;
@@ -29,6 +36,7 @@ public sealed class TopWallpapersPageFunctional(SearchConfiguration searchConfig
 
     public async Task<IReadOnlyCollection<string>> GetImagePageLinks()
     {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
         List<string> wantedLinks = [];
         IReadOnlyList<ILocator> imagePreviews = await page.GetByRole(AriaRole.Link).AllAsync();
 

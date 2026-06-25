@@ -77,7 +77,6 @@ public partial class App : Application
             .AddTransient<DatabaseInitializationService>()
             .AddTransient<ScrapeConfigurationViewModel>()
             .AddTransient<TopWallpapersWorkflowFunctional>()
-            .AddTransient<IPage>(sp => sp.GetRequiredService<IPlaywrightService>().ConfigurePlaywright(sp.GetRequiredService<Logger>()).GetAwaiter().GetResult())
             .AddTransient<ScrapeConfigurationView>()
             .AddTransient<IPlaywrightService, PlaywrightService>()
             .AddTransient<IImagePageServiceFunctional, ImagePageServiceFunctional>()

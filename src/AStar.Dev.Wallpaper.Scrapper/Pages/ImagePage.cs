@@ -1,14 +1,18 @@
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Repositories;
+using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public sealed class ImagePage(IPage page, ScrapeConfiguration scrapeConfiguration, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IScrapedTagRepository scrapedTagRepository)
+public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IScrapedTagRepository scrapedTagRepository)
 {
+    private IPage page = null!;
+    
     public async Task<ImagePageResult> GetImageFromPage(string link)
     {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
         _ = await page.GotoAsync(link);
 
         IReadOnlyList<ILocator> tagLocators   = await page.Locator(".tagname").AllAsync();

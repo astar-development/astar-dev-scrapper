@@ -5,13 +5,23 @@ using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public class PlaywrightService(ScrapeConfiguration scrapeConfiguration) : IPlaywrightService
+public class PlaywrightService(ScrapeConfiguration scrapeConfiguration, Logger logger) : IPlaywrightService, IAsyncDisposable
 {
-    public async Task<IPage> ConfigurePlaywright(Logger logger)
-    {
-        using IPlaywright playwright = await Playwright.CreateAsync();
+    private IPlaywright? playwright;
+    private IBrowser? browser;
+    private IBrowserContext? context;
+    private IPage? page;
 
-        IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+    public async Task<IPage> ConfigurePlaywrightAsync()
+    {
+        if (page is not null)
+        {
+            return page;
+        }
+
+        playwright ??= await Playwright.CreateAsync();
+
+        browser ??= await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
             Headless = false,
             SlowMo = scrapeConfiguration.SearchConfiguration.SlowMotionDelay,
@@ -19,7 +29,7 @@ public class PlaywrightService(ScrapeConfiguration scrapeConfiguration) : IPlayw
             Args = ["--disable-blink-features=AutomationControlled"],
         });
 
-        IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
+        context ??= await browser.NewContextAsync(new BrowserNewContextOptions
         {
             BaseURL = scrapeConfiguration.SearchConfiguration.BaseUrl,
             ViewportSize = new ViewportSize { Width = 2440, Height = 1200 },
@@ -29,10 +39,37 @@ public class PlaywrightService(ScrapeConfiguration scrapeConfiguration) : IPlayw
 
         await ApplyCookiesAsync(context, logger);
 
-        IPage page = await context.NewPageAsync();
+        page = await context.NewPageAsync();
         page.SetDefaultTimeout(60_000);
 
         return page;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (page is not null)
+        {
+            await page.CloseAsync();
+            page = null;
+        }
+
+        if (context is not null)
+        {
+            await context.CloseAsync();
+            context = null;
+        }
+
+        if (browser is not null)
+        {
+            await browser.CloseAsync();
+            browser = null;
+        }
+
+        if (playwright is not null)
+        {
+            playwright.Dispose();
+            playwright = null;
+        }
     }
 
     private static async Task ApplyCookiesAsync(IBrowserContext context, Logger logger)

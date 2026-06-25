@@ -1,10 +1,13 @@
 ﻿using AStar.Dev.Wallpaper.Scrapper.Models;
+using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public sealed class SubscriptionsImagesListPage(IPage page, SearchConfiguration searchConfiguration)
+public sealed class SubscriptionsImagesListPage(IPlaywrightService playwrightService, SearchConfiguration searchConfiguration)
 {
+    private IPage page = null!;
+    
     private ILocator ImagePreviews => page.GetByRole(AriaRole.Link);
 
     private ILocator NewSubscriptionWallpapersHeader => page.GetByText("New Subscription Wallpapers", new PageGetByTextOptions { Exact = false, });
@@ -14,6 +17,7 @@ public sealed class SubscriptionsImagesListPage(IPage page, SearchConfiguration 
 
     public async Task<(int pageCount, string subDirectoryName)> PageInfoAsync()
     {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
         var text = await NewSubscriptionWallpapersHeader.TextContentAsync();
 
         if(text is null) return (0, string.Empty);
@@ -32,6 +36,7 @@ public sealed class SubscriptionsImagesListPage(IPage page, SearchConfiguration 
 
     public async Task<IReadOnlyCollection<string>> GetImagePageLinks()
     {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
         List<string>            wantedLinks   = [];
         IReadOnlyList<ILocator> imagePreviews = await ImagePreviews.AllAsync();
 
