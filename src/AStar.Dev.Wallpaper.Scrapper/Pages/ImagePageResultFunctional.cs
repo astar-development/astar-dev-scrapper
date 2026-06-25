@@ -1,7 +1,7 @@
 
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.FilesDb.Data;
-using AStar.Dev.Infrastructure.FilesDb.Models;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog.Core;
 
@@ -18,13 +18,11 @@ public class ImagePageResultFunctional(IDbContextFactory<FilesContext> dbContext
     public async Task<Result<Unit, string>> GetImagePagesAsync(Logger logger)
     {
         using var ctx = dbContextFactory.CreateDbContext();
-        await ctx.AddAsync(new ScrapedTag
-        {
-            Id = ScrapedTagId.CreateNew(),
-            Value = $"test-{ScrapedTagId.CreateNew()}"
-        });
-        await ctx.SaveChangesAsync();
+        var scrapeConfiguration = ctx.ScrapeConfiguration.GetScrapeConfigurations().ToAppModel();
+        
+        logger.Information("BaseDirectory: {BaseDirectory}", scrapeConfiguration.ScrapeDirectories.BaseDirectory);
         logger.Information("Image pages retrieved.");
+
         return Unit.Value;
     }
 }
