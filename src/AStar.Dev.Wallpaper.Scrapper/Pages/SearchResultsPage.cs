@@ -1,10 +1,13 @@
-﻿using Microsoft.Playwright;
+﻿using AStar.Dev.Wallpaper.Scrapper.Services;
+using Microsoft.Playwright;
 using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public sealed class SearchResultsPage(IPage page, Logger logger)
+public sealed class SearchResultsPage(IPlaywrightService playwrightService, Logger logger)
 {
+    private IPage page = null!;
+    
     private ILocator NewSubscriptionWallpapersHeader => page.GetByText("New Subscription Wallpapers", new PageGetByTextOptions { Exact = false, });
 
     private ILocator WallpaperSearchHeader => page.GetByText("Wallpapers found for", new PageGetByTextOptions { Exact = false, });
@@ -17,6 +20,7 @@ public sealed class SearchResultsPage(IPage page, Logger logger)
     {
         try
         {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
             return await GotoSearchPageAsync(searchString, pageNumber);
         }
         catch(Exception exception)
@@ -31,6 +35,7 @@ public sealed class SearchResultsPage(IPage page, Logger logger)
     {
         try
         {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
             return await GetPageInfoAsync();
         }
         catch(Exception exception)
@@ -45,6 +50,7 @@ public sealed class SearchResultsPage(IPage page, Logger logger)
     {
         try
         {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
             return await GetTheImagePageLinksAsync();
         }
         catch(Exception exception)

@@ -1,15 +1,17 @@
 using System.Diagnostics;
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
-public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchResultsPageFunctional, Logger logger)
+public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchResultsPageFunctional, IDbContextFactory<FilesContext> dbContextFactory, Logger logger)
 {
     private ImagePageService    imagePageService = null!;
     private SearchConfiguration searchConfiguration = null!;
@@ -20,6 +22,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
     {
         try
         {
+            searchConfiguration = dbContextFactory.CreateDbContext().ScrapeConfiguration.GetScrapeConfigurations().ToAppModel().SearchConfiguration;
             List<Category> searchCategories = FilterSearchCategories([.. searchConfiguration.SearchCategories]);
             await ProcessSearchCategories([.. searchConfiguration.SearchCategories], ct);
 
@@ -74,12 +77,12 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
     {
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        // logger.Debug("About to visit the specific {Category} pages now...", searchCategory.Name);
+        logger.Debug("About to visit the specific {Category} pages now...", searchCategory.Name);
 
         for(var currentPageNumber = searchConfiguration.StartingPageNumber; currentPageNumber <= searchConfiguration.TotalPages; currentPageNumber++)
         {
             await Task.Delay(TimeSpan.FromSeconds(2), ct);
-            // logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, searchConfiguration.TotalPages, searchCategory.Name);
+            logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, searchConfiguration.TotalPages, searchCategory.Name);
             searchConfiguration = searchConfiguration with { StartingPageNumber = currentPageNumber };
             searchCategory.LastPageVisited          = currentPageNumber;
             await configurationSaver.SaveUpdatedConfigurationAsync();
@@ -90,7 +93,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
         }
 
         stopwatch.Stop();
-       // logger.Information("Completed visiting the {Category}. Total time: {CategoryVisitDuration}", searchCategory.Name, stopwatch.Elapsed);
+        logger.Information("Completed visiting the {Category}. Total time: {CategoryVisitDuration}", searchCategory.Name, stopwatch.Elapsed);
     }
 
     private ScrapeDirectories UpdateSubDirectoryIfRequired(string subDirectoryName)
