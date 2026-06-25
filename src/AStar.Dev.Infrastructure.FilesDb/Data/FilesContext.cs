@@ -60,9 +60,6 @@ public sealed class FilesContext : DbContext
     /// </summary>
     public DbSet<SearchConfiguration> SearchConfigurations { get; set; } = null!;
 
-    /// <inheritdoc />
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => _ = optionsBuilder.UseSqlite("Data Source=/home/jbarden/Documents/Scrapper/files.db");
-
     /// <summary>
     ///     Gets or sets all unique tags observed during scraping
     /// </summary>
@@ -77,6 +74,9 @@ public sealed class FilesContext : DbContext
     ///     Gets or sets the classifications applied to files at download time
     /// </summary>
     public DbSet<DownloadedFileClassification> DownloadedFileClassifications { get; set; } = null!;
+
+    /// <inheritdoc />
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => _ = optionsBuilder.UseSqlite("Data Source=/home/jbarden/Documents/Scrapper/files.db");
 
     /// <summary>
     ///     The overridden OnModelCreating method

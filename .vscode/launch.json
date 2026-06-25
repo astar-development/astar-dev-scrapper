@@ -8,7 +8,7 @@
             "name": "C#: AStar.Dev.Wallpaper.Scrapper Debug",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/AStar.Dev.Wallpaper.Scrapper/AStar.Dev.Wallpaper.Scrapper.csproj"
+            "projectPath": "${workspaceFolder}/src/AStar.Dev.Wallpaper.Scrapper/AStar.Dev.Wallpaper.Scrapper.csproj"
         }
 
     ]

@@ -104,6 +104,18 @@
             <summary>
             </summary>
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Data.ClassificationQueries">
+            <summary>
+                Provides methods for querying file classifications.
+            </summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.ClassificationQueries.GetScrapeConfigurations(Microsoft.EntityFrameworkCore.DbSet{AStar.Dev.Infrastructure.FilesDb.Models.ScrapeConfigurationEntity})">
+            <summary>
+              Retrieves the scrape configuration from the database, including related entities such as connection strings, user configuration, search configuration with its categories, and scrape directories. This method ensures that all necessary configuration details are loaded in a single query, facilitating efficient access to the scraper's settings.
+            </summary>
+            <param name="configurations">The set of scrape configurations.</param>
+            <returns>The first scrape configuration entity.</returns>
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext">
             <summary>
                 The <see cref="T:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext" /> class
@@ -155,9 +167,6 @@
                Gets or sets the search configuration table.
             </summary>
         </member>
-        <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
-            <inheritdoc />
-        </member>
         <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.ScrapedTags">
             <summary>
                 Gets or sets all unique tags observed during scraping
@@ -172,6 +181,9 @@
             <summary>
                 Gets or sets the classifications applied to files at download time
             </summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
+            <inheritdoc />
         </member>
         <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.FilesContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <summary>
