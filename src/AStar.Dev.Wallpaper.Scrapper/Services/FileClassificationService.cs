@@ -82,4 +82,16 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
 
         return created;
     }
+
+    internal async Task<object> ExportClassificationsAsync(CancellationToken token)
+    {
+        await Task.Delay(1000, token);
+        return new { Message = "Export completed" };
+    }
+
+    internal async Task<object> ImportClassificationsAsync(CancellationToken token)
+    {
+        await Task.Delay(1000, token);
+        return new { Message = "Import completed" };
+    }
 }

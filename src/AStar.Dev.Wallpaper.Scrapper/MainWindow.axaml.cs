@@ -70,6 +70,38 @@ public partial class MainWindow : Window
             .TapAsync(_ => scrapeLogger.Information("Scrape completed..."))
             .EnsureAsync(() => ResetUI());
 
+    private async void OnExportClicked(object? sender, RoutedEventArgs e)
+        => _ = await ResetCancellationTokenSource()
+            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+                onSuccess: DisableControlsAndClearStatus,
+                onFailure: ex =>
+                {
+                    scrapeLogger.Error(ex, "Failed to reset cancellation token source");
+                    UpdateStatus($"Error: {ex.Message}");
+                    return ex.Message;
+                }
+            )
+            .Tap(_ => scrapeLogger.Information("Exporting classifications..."))
+            .MapAsync(_ => fileClassificationService.ExportClassificationsAsync(cts!.Token))
+            .TapAsync(_ => scrapeLogger.Information("Export completed..."))
+            .EnsureAsync(() => ResetUI());
+
+    private async void OnImportClicked(object? sender, RoutedEventArgs e)
+    => _ = await ResetCancellationTokenSource()
+            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+                onSuccess: DisableControlsAndClearStatus,
+                onFailure: ex =>
+                {
+                    scrapeLogger.Error(ex, "Failed to reset cancellation token source");
+                    UpdateStatus($"Error: {ex.Message}");
+                    return ex.Message;
+                }
+            )
+            .Tap(_ => scrapeLogger.Information("Importing classifications..."))
+            .MapAsync(_ => fileClassificationService.ImportClassificationsAsync(cts!.Token))
+            .TapAsync(_ => scrapeLogger.Information("Import completed..."))
+            .EnsureAsync(() => ResetUI());
+
     private Result<CancellationToken, Exception> ResetCancellationTokenSource()
     {
         cts = new CancellationTokenSource();
@@ -81,6 +113,8 @@ public partial class MainWindow : Window
     {
         EditConfigurationButton.IsEnabled = false;
         ScrapeSiteNewButton.IsEnabled = false;
+        ExportButton.IsEnabled = false;
+        ImportButton.IsEnabled = false;
         CancelButton.IsEnabled = true;
         StatusLabel.Text = string.Empty;
         
@@ -98,6 +132,8 @@ public partial class MainWindow : Window
             {
                 EditConfigurationButton.IsEnabled = true;
                 ScrapeSiteNewButton.IsEnabled = true;
+                ExportButton.IsEnabled = true;
+                ImportButton.IsEnabled = true;
                 CancelButton.IsEnabled = false;
                 cts?.Dispose();
                 cts = null;
