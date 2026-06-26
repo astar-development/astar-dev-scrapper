@@ -85,6 +85,7 @@ public sealed class FilesContext : DbContext
     /// </param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.UseSqliteFriendlyConversions();
         _ = modelBuilder.UseCollation("SQL_Latin1_General_CP1_CI_AS");
         _ = modelBuilder.HasDefaultSchema(Constants.SchemaName);
         _ = modelBuilder.ApplyConfigurationsFromAssembly(typeof(FilesContext).Assembly);

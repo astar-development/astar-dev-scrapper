@@ -7,7 +7,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 public sealed class SubscriptionsImagesListPage(IPlaywrightService playwrightService, SearchConfiguration searchConfiguration)
 {
     private IPage page = null!;
-    
+
     private ILocator ImagePreviews => page.GetByRole(AriaRole.Link);
 
     private ILocator NewSubscriptionWallpapersHeader => page.GetByText("New Subscription Wallpapers", new PageGetByTextOptions { Exact = false, });

@@ -12,6 +12,10 @@ using Serilog;
 using Serilog.Core;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
+using System.IO.Abstractions;
+using FileClassificationDto = AStar.Dev.Wallpaper.Scrapper.DTOs.FileClassification;
+using FileClassificationDomain = AStar.Dev.Infrastructure.FilesDb.Models.FileClassification;
+using AStar.Dev.Utilities;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 
@@ -26,13 +30,15 @@ public partial class MainWindow : Window
     private readonly ConfigurationSaver configurationSaver;
     private readonly TagsToIgnoreCompletely tagsToIgnoreCompletely;
     private readonly TagsTextToIgnore tagsTextToIgnore;
+    private readonly IImportExportService importExportService;
     private readonly IPlaywrightService playwrightService;
     private readonly SearchWorkflowFunctional imagePageServiceFunctional;
     private readonly SearchWorkflowFunctional searchWorkflowFunctional;
+    private readonly IFileSystem fileSystem;
     private CancellationTokenSource? cts;
     private readonly Logger scrapeLogger;
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory,SearchWorkflowFunctional imagePageServiceFunctional, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory,SearchWorkflowFunctional imagePageServiceFunctional, IFileSystem fileSystem, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IImportExportService importExportService)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.scrapeConfiguration = scrapeConfiguration;
@@ -43,9 +49,11 @@ public partial class MainWindow : Window
         this.configurationSaver = configurationSaver;
         this.tagsToIgnoreCompletely = tagsToIgnoreCompletely;
         this.tagsTextToIgnore = tagsTextToIgnore;
+        this.importExportService = importExportService;
         this.playwrightService = playwrightService;
         this.imagePageServiceFunctional = imagePageServiceFunctional;
         this.searchWorkflowFunctional = searchWorkflowFunctional;
+        this.fileSystem = fileSystem;
         this.scrapeLogger = GetScrapeLoggerForDisplaySync();
         InitializeComponent();
     }
@@ -83,6 +91,7 @@ public partial class MainWindow : Window
             )
             .Tap(_ => scrapeLogger.Information("Exporting classifications..."))
             .MapAsync(_ => fileClassificationService.ExportClassificationsAsync(cts!.Token))
+            .Tap(importExportService.ExportFileClassificationsToFile) 
             .TapAsync(_ => scrapeLogger.Information("Export completed..."))
             .EnsureAsync(() => ResetUI());
 
@@ -93,19 +102,19 @@ public partial class MainWindow : Window
                 onFailure: ex =>
                 {
                     scrapeLogger.Error(ex, "Failed to reset cancellation token source");
-                    UpdateStatus($"Error: {ex.Message}");
                     return ex.Message;
                 }
             )
             .Tap(_ => scrapeLogger.Information("Importing classifications..."))
-            .MapAsync(_ => fileClassificationService.ImportClassificationsAsync(cts!.Token))
+            .Bind(_ => importExportService.ImportFileClassificationsFromFile())
+            .MapAsync(classifications => fileClassificationService.ImportClassificationsAsync(classifications, cts!.Token))
             .TapAsync(_ => scrapeLogger.Information("Import completed..."))
             .EnsureAsync(() => ResetUI());
 
     private Result<CancellationToken, Exception> ResetCancellationTokenSource()
     {
         cts = new CancellationTokenSource();
-        
+    
         return cts.Token;
     }
 
@@ -117,15 +126,16 @@ public partial class MainWindow : Window
         ImportButton.IsEnabled = false;
         CancelButton.IsEnabled = true;
         StatusLabel.Text = string.Empty;
-        
+    
         return ct;
     }
 
-    private Logger GetScrapeLoggerForDisplaySync() => new LoggerConfiguration()
-                        .WriteTo.Logger(logger)
-                        .WriteTo.Sink(new StatusLogSink(UpdateStatus))
-                        .MinimumLevel.Information()
-                        .CreateLogger();
+    private Logger GetScrapeLoggerForDisplaySync()
+        => new LoggerConfiguration()
+                .WriteTo.Logger(logger)
+                .WriteTo.Sink(new StatusLogSink(UpdateStatus))
+                .MinimumLevel.Information()
+                .CreateLogger();
 
     private void ResetUI()
         => Dispatcher.UIThread.InvokeAsync(() =>

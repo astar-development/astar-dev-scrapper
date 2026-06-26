@@ -1,0 +1,197 @@
+using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Wallpaper.Scrapper;
+using AStar.Dev.Wallpaper.Scrapper.Services;
+using Serilog;
+using System.IO.Abstractions;
+using FileClassificationDomain = AStar.Dev.Infrastructure.FilesDb.Models.FileClassification;
+
+namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Services;
+
+public sealed class GivenAnImportExportService
+{
+    private static readonly string ScrapperDirectory = Path.GetDirectoryName(ApplicationMetadata.FileClassificationsExportFilePath)!;
+
+    private const string CelebrityClassificationName = "Test Celebrity";
+    private const string NormalClassificationName    = "Test Normal";
+
+    private const string ValidClassificationsJson = """
+        [
+          {
+            "createdAt": "2026-06-20T10:11:12",
+            "updatedAt": "2026-06-20T13:14:15",
+            "id": 1,
+            "name": "Test Celebrity",
+            "celebrity": true,
+            "includeInSearch": true,
+            "fileNameParts": [
+              {
+                "createdAt": "0001-01-01T00:00:00",
+                "updatedAt": "0001-01-01T00:00:00",
+                "id": 1,
+                "text": "Test Celebrity",
+                "includeInSearch": true
+              }
+            ]
+          },
+          {
+            "createdAt": "2026-06-20T10:11:12",
+            "updatedAt": "2026-06-20T13:14:15",
+            "id": 2,
+            "name": "Test Normal",
+            "celebrity": false,
+            "includeInSearch": true,
+            "fileNameParts": [
+              {
+                "createdAt": "0001-01-01T00:00:00",
+                "updatedAt": "0001-01-01T00:00:00",
+                "id": 2,
+                "text": "Test Normal",
+                "includeInSearch": true
+              }
+            ]
+          }
+        ]
+        """;
+
+    private readonly MockFileSystem mockFileSystem;
+    private readonly ILogger mockLogger;
+    private readonly IImportExportService sut;
+
+    public GivenAnImportExportService()
+    {
+        mockFileSystem = new MockFileSystem();
+        mockLogger     = Substitute.For<ILogger>();
+        sut            = new ImportExportService(mockFileSystem, mockLogger);
+    }
+
+    [Fact]
+    public void when_importing_and_file_does_not_exist_then_failure_result_is_returned() =>
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Fail<List<FileClassificationDomain>, string>>();
+
+    [Fact]
+    public void when_importing_and_file_does_not_exist_then_logger_receives_error_call()
+    {
+        sut.ImportFileClassificationsFromFile();
+
+        mockLogger.Received(1).Error(Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    [Fact]
+    public void when_importing_and_file_contains_null_json_then_failure_result_is_returned()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
+        mockFileSystem.File.WriteAllText(ApplicationMetadata.FileClassificationsExportFilePath, "null");
+
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Fail<List<FileClassificationDomain>, string>>();
+    }
+
+    [Fact]
+    public void when_importing_and_file_contains_null_json_then_logger_receives_error_call()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
+        mockFileSystem.File.WriteAllText(ApplicationMetadata.FileClassificationsExportFilePath, "null");
+
+        sut.ImportFileClassificationsFromFile();
+
+        mockLogger.Received(1).Error(Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    [Fact]
+    public void when_importing_valid_classifications_then_result_is_ok()
+    {
+        SetupValidImportFile();
+
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Ok<List<FileClassificationDomain>, string>>();
+    }
+
+    [Fact]
+    public void when_importing_valid_classifications_then_correct_count_is_returned()
+    {
+        SetupValidImportFile();
+
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Ok<List<FileClassificationDomain>, string>>()
+           .Value.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void when_importing_valid_classifications_then_celebrity_classification_name_is_mapped()
+    {
+        SetupValidImportFile();
+
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Ok<List<FileClassificationDomain>, string>>()
+           .Value[0].Name.ShouldBe(CelebrityClassificationName);
+    }
+
+    [Fact]
+    public void when_importing_valid_classifications_then_normal_classification_name_is_mapped()
+    {
+        SetupValidImportFile();
+
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Ok<List<FileClassificationDomain>, string>>()
+           .Value[1].Name.ShouldBe(NormalClassificationName);
+    }
+
+    [Fact]
+    public void when_exporting_classifications_then_file_is_written_to_expected_path()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
+
+        sut.ExportFileClassificationsToFile(CreateDomainClassifications());
+
+        mockFileSystem.File.Exists(ApplicationMetadata.FileClassificationsExportFilePath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void when_exporting_classifications_then_logger_receives_information_call()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
+
+        sut.ExportFileClassificationsToFile(CreateDomainClassifications());
+
+        mockLogger.Received(1).Information(Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    [Fact]
+    public void when_file_system_throws_during_export_then_exception_is_rethrown()
+    {
+        var throwingFileSystem = Substitute.For<IFileSystem>();
+        throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
+                               .Throw(new IOException("Disk full"));
+        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+
+        var act = () => throwingSut.ExportFileClassificationsToFile([]);
+
+        act.ShouldThrow<IOException>();
+    }
+
+    [Fact]
+    public void when_file_system_throws_during_export_then_logger_receives_error_call()
+    {
+        var throwingFileSystem = Substitute.For<IFileSystem>();
+        throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
+                               .Throw(new IOException("Disk full"));
+        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+
+        Should.Throw<IOException>(() => throwingSut.ExportFileClassificationsToFile([]));
+
+        mockLogger.Received(1).Error(Arg.Any<Exception>(), Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    private void SetupValidImportFile()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
+        mockFileSystem.File.WriteAllText(ApplicationMetadata.FileClassificationsExportFilePath, ValidClassificationsJson);
+    }
+
+    private static List<FileClassificationDomain> CreateDomainClassifications() =>
+    [
+        new() { Id = 1, Name = CelebrityClassificationName, Celebrity = true,  IncludeInSearch = true },
+        new() { Id = 2, Name = NormalClassificationName,    Celebrity = false, IncludeInSearch = true }
+    ];
+}

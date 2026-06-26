@@ -35,10 +35,10 @@ public static class ChromeCookieExtractor
 
             using var cmd = conn.CreateCommand();
             cmd.CommandText = """
-                SELECT host_key, name, encrypted_value, path, expires_utc, is_secure, is_httponly
-                FROM cookies
-                WHERE host_key LIKE $pattern
-                """;
+            SELECT host_key, name, encrypted_value, path, expires_utc, is_secure, is_httponly
+            FROM cookies
+            WHERE host_key LIKE $pattern
+            """;
             cmd.Parameters.AddWithValue("$pattern", $"%{domain.TrimStart('.')}%");
 
             using var reader = cmd.ExecuteReader();

@@ -18,6 +18,8 @@ using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using Microsoft.Playwright;
 using Serilog.Core;
+using Testably.Abstractions;
+using System.IO.Abstractions;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 
@@ -82,6 +84,8 @@ public partial class App : Application
             .AddTransient<IImagePageServiceFunctional, ImagePageServiceFunctional>()
             .AddTransient<SearchWorkflowFunctional>()
             .AddTransient<SearchResultsPageFunctional>()
+            .AddTransient<IImportExportService, ImportExportService>()
+            .AddTransient<IFileSystem, RealFileSystem>()
             .AddTransient<Func<ScrapeConfigurationView>>(sp => () => sp.GetRequiredService<ScrapeConfigurationView>())
             .AddTransient<MainWindow>();
 

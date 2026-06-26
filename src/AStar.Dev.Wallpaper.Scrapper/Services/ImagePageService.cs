@@ -76,6 +76,6 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
         }
 
         await fileDetailRepository.AddAsync(fileDetail);
-        await fileClassificationService.ClassifyAsync(fileDetail, categoryId, result.Tags);
+        await fileClassificationService.ClassifyAsync(fileDetail, categoryId, result.Tags, ct);
     }
 }
