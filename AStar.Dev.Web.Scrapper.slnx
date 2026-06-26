@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="test/AStar.Dev.FunctionalParadigm.Tests.Unit/AStar.Dev.FunctionalParadigm.Tests.Unit.csproj" />
+  <Project Path="test/AStar.Dev.Wallpaper.Scrapper.Tests.Unit/AStar.Dev.Wallpaper.Scrapper.Tests.Unit.csproj" />
   <Project Path="src/AStar.Dev.FunctionalParadigm/AStar.Dev.FunctionalParadigm.csproj" />
   <Project Path="src/AStar.Dev.Guard.Clauses/AStar.Dev.Guard.Clauses.csproj" />
   <Project Path="src/AStar.Dev.Infrastructure.FilesDb/AStar.Dev.Infrastructure.FilesDb.csproj" />

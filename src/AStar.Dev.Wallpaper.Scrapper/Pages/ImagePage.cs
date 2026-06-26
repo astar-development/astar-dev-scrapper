@@ -9,7 +9,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IScrapedTagRepository scrapedTagRepository)
 {
     private IPage page = null!;
-    
+
     public async Task<ImagePageResult> GetImageFromPage(string link)
     {
         page ??= await playwrightService.ConfigurePlaywrightAsync();
@@ -114,7 +114,7 @@ public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfig
         {
             if (IsWantedText(tagText) && !filePrefix.Contains(tagText))
             {
-                
+            
                 if (!directoryName.Contains(tagText) && !filePrefix.Contains(tagText, StringComparison.CurrentCultureIgnoreCase))
                 {
                     filePrefixUpdated = string.Join("-", filePrefix, tagText);

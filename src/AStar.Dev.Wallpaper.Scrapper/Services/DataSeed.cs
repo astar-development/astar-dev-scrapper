@@ -61,7 +61,7 @@ public static class DataSeed
             if (dbContext.FileClassifications.Any()) return;
 
             logger.Information("Seeding file classifications from {CsvPath}...", csvPath);
-        
+    
             var lines = await File.ReadAllLinesAsync(csvPath);
             var rows = lines.Skip(1)
                 .Where(line => !string.IsNullOrWhiteSpace(line))

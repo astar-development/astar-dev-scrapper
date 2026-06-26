@@ -7,7 +7,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 public sealed class TopWallpapersPage(IPlaywrightService playwrightService, SearchConfiguration searchConfiguration)
 {
     private IPage page = null!;
-    
+
     private ILocator PageCount => page.GetByText("Page ", new PageGetByTextOptions { Exact = false, });
 
     private ILocator ImagePreviews => page.GetByRole(AriaRole.Link);

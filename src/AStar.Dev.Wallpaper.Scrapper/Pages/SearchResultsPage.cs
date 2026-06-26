@@ -7,7 +7,7 @@ namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 public sealed class SearchResultsPage(IPlaywrightService playwrightService, Logger logger)
 {
     private IPage page = null!;
-    
+
     private ILocator NewSubscriptionWallpapersHeader => page.GetByText("New Subscription Wallpapers", new PageGetByTextOptions { Exact = false, });
 
     private ILocator WallpaperSearchHeader => page.GetByText("Wallpapers found for", new PageGetByTextOptions { Exact = false, });

@@ -227,6 +227,72 @@
                 The original list of files for further filtering.
             </returns>
         </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Data.ModelBuilderExtensions">
+            <summary>
+              The <see cref="T:AStar.Dev.Infrastructure.FilesDb.Data.ModelBuilderExtensions"></see> class provides extension methods for configuring the model builder in Entity Framework Core.
+            </summary>
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.FilesDb.Data.ModelBuilderExtensions.UseSqliteFriendlyConversions(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+                Configures the model builder to use SQLite-friendly conversions for specific entity types.
+            </summary>
+            <param name="mb"></param>
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters">
+            <summary>
+              The <see cref="T:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters"></see> class provides a set of value converters for handling specific data types in SQLite databases, ensuring compatibility and proper storage of these types. These converters facilitate the conversion of complex data types to simpler representations that can be stored in SQLite, and vice versa, allowing for seamless integration with Entity Framework Core.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters.DateTimeOffsetToTicks">
+            <summary>
+             Gets a value converter that converts <see cref="T:System.DateTimeOffset" /> values to their corresponding UTC ticks representation for storage in SQLite, and vice versa. This converter ensures that <see cref="T:System.DateTimeOffset" /> values are stored in a format compatible with SQLite's INTEGER type, allowing for accurate retrieval and conversion back to <see cref="T:System.DateTimeOffset" /> when reading from the database.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters.NullableDateTimeOffsetToTicks">
+            <summary>
+              Gets a value converter that converts nullable <see cref="T:System.DateTimeOffset" /> values to their corresponding UTC ticks representation for storage in SQLite, and vice versa. This converter ensures that nullable <see cref="T:System.DateTimeOffset" /> values are stored in a format compatible with SQLite's INTEGER type, allowing for accurate retrieval and conversion back to nullable <see cref="T:System.DateTimeOffset" /> when reading from the database.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters.TimeSpanToTicks">
+            <summary>
+             Gets a value converter that converts <see cref="T:System.TimeSpan" /> values to their corresponding ticks representation for storage in SQLite, and vice versa. This converter ensures that <see cref="T:System.TimeSpan" /> values are stored in a format compatible with SQLite's INTEGER type, allowing for accurate retrieval and conversion back to <see cref="T:System.TimeSpan" /> when reading from the database.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters.NullableTimeSpanToTicks">
+            <summary>
+             Gets a value converter that converts nullable <see cref="T:System.TimeSpan" /> values to their corresponding ticks representation for storage in SQLite, and vice versa. This converter ensures that nullable <see cref="T:System.TimeSpan" /> values are stored in a format compatible with SQLite's INTEGER type, allowing for accurate retrieval and conversion back to nullable <see cref="T:System.TimeSpan" /> when reading from the database.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters.GuidToBytes">
+            <summary>
+            Gets a value converter that converts <see cref="T:System.Guid" /> values to their corresponding byte array representation for storage in SQLite, and vice versa. This converter ensures that <see cref="T:System.Guid" /> values are stored in a format compatible with SQLite's BLOB type, allowing for accurate retrieval and conversion back to <see cref="T:System.Guid" /> when reading from the database.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters.NullableGuidToBytes">
+            <summary>
+            Gets a value converter that converts nullable <see cref="T:System.Guid" /> values to their corresponding byte array representation for storage in SQLite, and vice versa. This converter ensures that nullable <see cref="T:System.Guid" /> values are stored in a format compatible with SQLite's BLOB type, allowing for accurate retrieval and conversion back to nullable <see cref="T:System.Guid" /> when reading from the database.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters.DecimalToCents">
+            <summary>
+             Gets a value converter that converts <see cref="T:System.Decimal" /> values to their corresponding long representation in cents for storage in SQLite, and vice versa. This converter ensures that <see cref="T:System.Decimal" /> values are stored in a format compatible with SQLite's INTEGER type, allowing for accurate retrieval and conversion back to <see cref="T:System.Decimal" /> when reading from the database.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters.NullableDecimalToCents">
+            <summary>
+            Gets a value converter that converts nullable <see cref="T:System.Decimal" /> values to their corresponding long representation in cents for storage in SQLite, and vice versa. This converter ensures that nullable <see cref="T:System.Decimal" /> values are stored in a format compatible with SQLite's INTEGER type, allowing for accurate retrieval and conversion back to nullable <see cref="T:System.Decimal" /> when reading from the database.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters.OptionStringToNullableString">
+            <summary>
+              Gets a value converter that converts <see cref="T:AStar.Dev.FunctionalParadigm.Option`1" /> values to their corresponding nullable representation for storage in SQLite, and vice versa. This converter ensures that <see cref="T:AStar.Dev.FunctionalParadigm.Option`1" /> values are stored in a format compatible with SQLite's nullable types, allowing for accurate retrieval and conversion back to <see cref="T:AStar.Dev.FunctionalParadigm.Option`1" /> when reading from the database.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.FilesDb.Data.SqliteTypeConverters.OptionDateTimeOffsetToNullableTicks">
+            <summary>
+             Gets a value converter that converts <see cref="T:AStar.Dev.FunctionalParadigm.Option`1" /> values to their corresponding nullable ticks representation for storage in SQLite, and vice versa. This converter ensures that <see cref="T:AStar.Dev.FunctionalParadigm.Option`1" /> values are stored in a format compatible with SQLite's INTEGER type, allowing for accurate retrieval and conversion back to <see cref="T:AStar.Dev.FunctionalParadigm.Option`1" /> when reading from the database.
+            </summary>
+        </member>
         <member name="T:AStar.Dev.Infrastructure.FilesDb.EnumerableExtensions">
             <summary>
             </summary>
