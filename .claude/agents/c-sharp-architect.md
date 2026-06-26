@@ -1,7 +1,7 @@
 ---
 name: c-sharp-architect
 description: Senior C# / .NET 10 architect for the AStar.Dev mono-repo. Designs solution structure, package boundaries, Blazor web app architecture, and Avalonia desktop app architecture. Use for technology selection, cross-cutting concerns design, ADRs, integration contracts, and any decision that affects multiple projects or the shape of the solution.
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, Write
 model: sonnet
 color: red
 ---
