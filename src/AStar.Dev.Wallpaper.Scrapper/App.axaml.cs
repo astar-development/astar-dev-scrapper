@@ -73,6 +73,7 @@ public partial class App : Application
             .AddTransient<IScrapedTagRepository, ScrapedTagRepository>()
             .AddTransient<IFileDetailRepository, FileDetailRepository>()
             .AddTransient<FileClassificationService>()
+            .AddTransient<IScrapedTagService, ScrapedTagService>()
             .AddTransient<IImagePageResultFunctional, ImagePageResultFunctional>()
             .AddTransient<ConfigurationSaverFunctional>()
             .AddTransient<ConfigurationSaver>()

@@ -10,14 +10,14 @@ namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Services;
 
 public sealed class GivenAnImportExportService
 {
-    private static readonly string ScrapperDirectory     = Path.GetDirectoryName(ApplicationMetadata.FileClassificationsExportFilePath)!;
-    private static readonly string ScrapperTagsDirectory = Path.GetDirectoryName(ApplicationMetadata.ScrapedTagsExportFilePath)!;
+    private static readonly string scrapperDirectory     = Path.GetDirectoryName(ApplicationMetadata.FileClassificationsExportFilePath)!;
+    private static readonly string scrapperTagsDirectory = Path.GetDirectoryName(ApplicationMetadata.ScrapedTagsExportFilePath)!;
 
     private const string CelebrityClassificationName = "Test Celebrity";
     private const string NormalClassificationName    = "Test Normal";
 
     private const string ActionTagValue    = "Action";
-    private const string ActionTagCategory = "Genre";
+    private const string GenreCategory = "Genre";
     private const string ComedyTagValue    = "Comedy";
 
     private const string ValidClassificationsJson = """
@@ -101,7 +101,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_importing_and_file_contains_null_json_then_failure_result_is_returned()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapperDirectory);
         mockFileSystem.File.WriteAllText(ApplicationMetadata.FileClassificationsExportFilePath, "null");
 
         sut.ImportFileClassificationsFromFile()
@@ -111,7 +111,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_importing_and_file_contains_null_json_then_logger_receives_error_call()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapperDirectory);
         mockFileSystem.File.WriteAllText(ApplicationMetadata.FileClassificationsExportFilePath, "null");
 
         sut.ImportFileClassificationsFromFile();
@@ -161,7 +161,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_exporting_classifications_then_file_is_written_to_expected_path()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapperDirectory);
 
         sut.ExportFileClassificationsToFile(CreateDomainClassifications());
 
@@ -171,7 +171,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_exporting_classifications_then_logger_receives_information_call()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapperDirectory);
 
         sut.ExportFileClassificationsToFile(CreateDomainClassifications());
 
@@ -220,7 +220,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_importing_tags_and_file_contains_null_json_then_failure_result_is_returned()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapperTagsDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapperTagsDirectory);
         mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapedTagsExportFilePath, "null");
 
         sut.ImportScrapedTagsFromFile()
@@ -230,7 +230,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_importing_tags_and_file_contains_null_json_then_logger_receives_error_call()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapperTagsDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapperTagsDirectory);
         mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapedTagsExportFilePath, "null");
 
         sut.ImportScrapedTagsFromFile();
@@ -274,7 +274,7 @@ public sealed class GivenAnImportExportService
 
         sut.ImportScrapedTagsFromFile()
            .ShouldBeOfType<Ok<List<ScrapedTagDomain>, string>>()
-           .Value[0].Category.ShouldBe(ActionTagCategory);
+           .Value[0].Category.ShouldBe(GenreCategory);
     }
 
     [Fact]
@@ -298,9 +298,19 @@ public sealed class GivenAnImportExportService
     }
 
     [Fact]
+    public void when_importing_valid_tags_then_second_tag_include_in_search_is_mapped()
+    {
+        SetupValidTagsImportFile();
+
+        sut.ImportScrapedTagsFromFile()
+           .ShouldBeOfType<Ok<List<ScrapedTagDomain>, string>>()
+           .Value[1].IncludeInSearch.ShouldBeFalse();
+    }
+
+    [Fact]
     public void when_exporting_tags_then_file_is_written_to_expected_path()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapperTagsDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapperTagsDirectory);
 
         sut.ExportScrapedTagsToFile(CreateDomainTags());
 
@@ -310,7 +320,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_exporting_tags_then_logger_receives_information_call()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapperTagsDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapperTagsDirectory);
 
         sut.ExportScrapedTagsToFile(CreateDomainTags());
 
@@ -345,13 +355,13 @@ public sealed class GivenAnImportExportService
 
     private void SetupValidImportFile()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapperDirectory);
         mockFileSystem.File.WriteAllText(ApplicationMetadata.FileClassificationsExportFilePath, ValidClassificationsJson);
     }
 
     private void SetupValidTagsImportFile()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapperTagsDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapperTagsDirectory);
         mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapedTagsExportFilePath, ValidTagsJson);
     }
 
@@ -363,7 +373,7 @@ public sealed class GivenAnImportExportService
 
     private static List<ScrapedTagDomain> CreateDomainTags() =>
     [
-        new() { Value = ActionTagValue, Category = ActionTagCategory, IncludeInSearch = true  },
-        new() { Value = ComedyTagValue, Category = ActionTagCategory, IncludeInSearch = false }
+        new() { Value = ActionTagValue, Category = GenreCategory, IncludeInSearch = true  },
+        new() { Value = ComedyTagValue, Category = GenreCategory, IncludeInSearch = false }
     ];
 }

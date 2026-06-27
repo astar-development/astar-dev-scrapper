@@ -13,7 +13,7 @@ public sealed class GivenAScrapedTagService
     public async Task when_exporting_then_repository_get_all_is_called()
     {
         var repo = Substitute.For<IScrapedTagRepository>();
-        repo.GetAllAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<List<ScrapedTagDomain>>([]));
+        repo.GetAllAsync(Arg.Any<CancellationToken>()).Returns([]);
         var sut  = new ScrapedTagService(repo);
 
         await sut.ExportScrapedTagsAsync(CancellationToken.None);
@@ -47,7 +47,7 @@ public sealed class GivenAScrapedTagService
     }
 
     [Fact]
-    public async Task when_importing_existing_tag_then_include_in_search_is_updated()
+    public async Task when_importing_a_tag_with_include_in_search_false_then_upsert_is_called_with_false_value()
     {
         var repo = Substitute.For<IScrapedTagRepository>();
         var sut  = new ScrapedTagService(repo);

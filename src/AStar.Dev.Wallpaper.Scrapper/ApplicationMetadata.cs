@@ -11,5 +11,6 @@ public static class ApplicationMetadata
 
     public static string ApplicationFolder => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!.CombinePath("..", "..", "..");
 
-    public static string FileClassificationsExportFilePath => Path.Combine(SpecialDirectories.MyDocuments, "Scrapper", "FileClassifications.json");
+    public static string FileClassificationsExportFilePath => SpecialDirectories.MyDocuments.CombinePath("Scrapper", "FileClassifications.json");
+    public static string ScrapedTagsExportFilePath         => SpecialDirectories.MyDocuments.CombinePath("Scrapper", "ScrapedTags.json");
 }
