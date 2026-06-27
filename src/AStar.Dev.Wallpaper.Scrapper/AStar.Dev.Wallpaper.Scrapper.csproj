@@ -30,15 +30,15 @@
         <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
         <PackageReference Include="Serilog.Sinks.Seq" Version="9.1.0" />
-        <PackageReference Include="SkiaSharp" Version="3.119.3-preview.1.1" />
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.3-preview.1.1" />
-        <PackageReference Include="Avalonia" Version="12.0.0" />
-        <PackageReference Include="Avalonia.Desktop" Version="12.0.0" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.0" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.0" />
+        <PackageReference Include="SkiaSharp" Version="3.119.4" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
+        <PackageReference Include="Avalonia" Version="12.0.5" />
+        <PackageReference Include="Avalonia.Desktop" Version="12.0.5" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.5" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.5" />
         <PackageReference Include="Testably.Abstractions" Version="10.2.0" />
-        <!-- Override Avalonia's transitive Tmds.DBus.Protocol 0.90.3 (GHSA-xrw6-gwf8-vvr9) with a safe version -->
-        <PackageReference Include="Tmds.DBus.Protocol" Version="0.93.0" />
+        <!-- Override Avalonia's transitive Tmds.DBus.Protocol to fix GHSA-xrw6-gwf8-vvr9; 0.92.0 is what Avalonia 12.0.5 ships with and is API-compatible -->
+        <PackageReference Include="Tmds.DBus.Protocol" Version="0.92.0" />
     </ItemGroup>
 
     <ItemGroup>
