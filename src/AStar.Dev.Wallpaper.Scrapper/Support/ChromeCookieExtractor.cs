@@ -151,7 +151,7 @@ public static class ChromeCookieExtractor
         try
         {
             var status  = await File.ReadAllTextAsync("/proc/self/status");
-            var uidLine = status.Split('\n').FirstOrDefault(l => l.StartsWith("Uid:"));
+            var uidLine = status.Split('\n').FirstOrDefault(l => l.StartsWith("Uid:", StringComparison.Ordinal));
             if(uidLine is not null)
             {
                 var uid      = uidLine.Split('\t', StringSplitOptions.RemoveEmptyEntries)[1];

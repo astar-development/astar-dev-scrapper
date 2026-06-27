@@ -90,7 +90,7 @@ public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfig
            && !TagContains(tagToUse, "actress");
 
     private static bool TagContains(string tagToUse, string contains)
-        => tagToUse.Contains(contains, StringComparison.CurrentCultureIgnoreCase);
+        => tagToUse.Contains(contains, StringComparison.OrdinalIgnoreCase);
 
     private string UpdateFilePrefixForVehicles(string tagToUse, string filePrefix)
     {
@@ -103,7 +103,7 @@ public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfig
 
     private bool IsWantedFilePrefix(string tagToUse, string filePrefix)
         => IsWantedText(tagToUse) && !filePrefix.Contains(tagToUse) &&
-           !tagToUse.Equals("car", StringComparison.CurrentCultureIgnoreCase) &&
+           !tagToUse.Equals("car", StringComparison.OrdinalIgnoreCase) &&
            !TagContains(tagToUse, "cars");
 
     private (string filePrefix, List<string> directoryName) UpdateFilePrefixForModels(string tagToUse, string tagText, string filePrefix, List<string> directoryName)
@@ -115,7 +115,7 @@ public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfig
             if (IsWantedText(tagText) && !filePrefix.Contains(tagText))
             {
             
-                if (!directoryName.Contains(tagText) && !filePrefix.Contains(tagText, StringComparison.CurrentCultureIgnoreCase))
+                if (!directoryName.Contains(tagText) && !filePrefix.Contains(tagText, StringComparison.OrdinalIgnoreCase))
                 {
                     filePrefixUpdated = string.Join("-", filePrefix, tagText);
                     directoryName.Add(tagText);
@@ -132,5 +132,5 @@ public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfig
         => tagsToIgnoreCompletely.Tags.Contains(tagText);
 
     private bool IsWantedText(string tagText)
-        => !tagsTextToIgnore.Tags.Contains(tagText) && !tagText.StartsWith("model", StringComparison.CurrentCultureIgnoreCase);
+        => !tagsTextToIgnore.Tags.Contains(tagText) && !tagText.StartsWith("model", StringComparison.OrdinalIgnoreCase);
 }

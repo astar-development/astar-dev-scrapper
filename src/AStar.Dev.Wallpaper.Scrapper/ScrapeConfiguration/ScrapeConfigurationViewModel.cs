@@ -116,7 +116,11 @@ public class ScrapeConfigurationViewModel : ViewModelBase, IAsyncDisposable
         }
     }
 
-    public async ValueTask DisposeAsync() => await _context.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        await _context.DisposeAsync();
+        GC.SuppressFinalize(this);
+    }
 
     private void MapFromEntity(ScrapeConfigurationEntity entity)
     {

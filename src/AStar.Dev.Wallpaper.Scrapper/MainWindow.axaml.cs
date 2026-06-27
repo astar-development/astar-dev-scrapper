@@ -19,7 +19,7 @@ using AStar.Dev.Utilities;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 
-public partial class MainWindow : Window
+public partial class MainWindow : Window, IDisposable
 {
     private readonly Func<ScrapeConfigurationView> scrapeConfigViewFactory;
     private readonly ScrapeConfiguration scrapeConfiguration;
@@ -27,6 +27,7 @@ public partial class MainWindow : Window
     private readonly IScrapedTagRepository scrapedTagRepository;
     private readonly IFileDetailRepository fileDetailRepository;
     private readonly FileClassificationService fileClassificationService;
+    private readonly IScrapedTagService scrapedTagService;
     private readonly ConfigurationSaver configurationSaver;
     private readonly TagsToIgnoreCompletely tagsToIgnoreCompletely;
     private readonly TagsTextToIgnore tagsTextToIgnore;
@@ -38,7 +39,7 @@ public partial class MainWindow : Window
     private CancellationTokenSource? cts;
     private readonly Logger scrapeLogger;
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory,SearchWorkflowFunctional imagePageServiceFunctional, IFileSystem fileSystem, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IImportExportService importExportService)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, SearchWorkflowFunctional imagePageServiceFunctional, IFileSystem fileSystem, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, IScrapedTagService scrapedTagService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IImportExportService importExportService)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.scrapeConfiguration = scrapeConfiguration;
@@ -46,6 +47,7 @@ public partial class MainWindow : Window
         this.scrapedTagRepository = scrapedTagRepository;
         this.fileDetailRepository = fileDetailRepository;
         this.fileClassificationService = fileClassificationService;
+        this.scrapedTagService = scrapedTagService;
         this.configurationSaver = configurationSaver;
         this.tagsToIgnoreCompletely = tagsToIgnoreCompletely;
         this.tagsTextToIgnore = tagsTextToIgnore;
@@ -56,6 +58,7 @@ public partial class MainWindow : Window
         this.fileSystem = fileSystem;
         this.scrapeLogger = GetScrapeLoggerForDisplaySync();
         InitializeComponent();
+        Closed += (_, _) => cts?.Dispose();
     }
 
     private async void OnEditConfigurationClicked(object? sender, RoutedEventArgs e)
@@ -91,7 +94,7 @@ public partial class MainWindow : Window
             )
             .Tap(_ => scrapeLogger.Information("Exporting classifications..."))
             .MapAsync(_ => fileClassificationService.ExportClassificationsAsync(cts!.Token))
-            .Tap(importExportService.ExportFileClassificationsToFile) 
+            .Tap(importExportService.ExportFileClassificationsToFile)
             .TapAsync(_ => scrapeLogger.Information("Export completed..."))
             .EnsureAsync(() => ResetUI());
 
@@ -111,10 +114,43 @@ public partial class MainWindow : Window
             .TapAsync(_ => scrapeLogger.Information("Import completed..."))
             .EnsureAsync(() => ResetUI());
 
+    private async void OnExportTagsClicked(object? sender, RoutedEventArgs e)
+        => _ = await ResetCancellationTokenSource()
+            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+                onSuccess: DisableControlsAndClearStatus,
+                onFailure: ex =>
+                {
+                    scrapeLogger.Error(ex, "Failed to reset cancellation token source");
+                    UpdateStatus($"Error: {ex.Message}");
+                    return ex.Message;
+                }
+            )
+            .Tap(_ => scrapeLogger.Information("Exporting tags..."))
+            .MapAsync(_ => scrapedTagService.ExportScrapedTagsAsync(cts!.Token))
+            .Tap(importExportService.ExportScrapedTagsToFile)
+            .TapAsync(_ => scrapeLogger.Information("Tag export completed..."))
+            .EnsureAsync(() => ResetUI());
+
+    private async void OnImportTagsClicked(object? sender, RoutedEventArgs e)
+        => _ = await ResetCancellationTokenSource()
+            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+                onSuccess: DisableControlsAndClearStatus,
+                onFailure: ex =>
+                {
+                    scrapeLogger.Error(ex, "Failed to reset cancellation token source");
+                    return ex.Message;
+                }
+            )
+            .Tap(_ => scrapeLogger.Information("Importing tags..."))
+            .Bind(_ => importExportService.ImportScrapedTagsFromFile())
+            .MapAsync(tags => scrapedTagService.ImportScrapedTagsAsync(tags, cts!.Token))
+            .TapAsync(_ => scrapeLogger.Information("Tag import completed..."))
+            .EnsureAsync(() => ResetUI());
+
     private Result<CancellationToken, Exception> ResetCancellationTokenSource()
     {
         cts = new CancellationTokenSource();
-    
+
         return cts.Token;
     }
 
@@ -124,9 +160,11 @@ public partial class MainWindow : Window
         ScrapeSiteNewButton.IsEnabled = false;
         ExportButton.IsEnabled = false;
         ImportButton.IsEnabled = false;
+        ExportTagsButton.IsEnabled = false;
+        ImportTagsButton.IsEnabled = false;
         CancelButton.IsEnabled = true;
         StatusLabel.Text = string.Empty;
-    
+
         return ct;
     }
 
@@ -144,6 +182,8 @@ public partial class MainWindow : Window
                 ScrapeSiteNewButton.IsEnabled = true;
                 ExportButton.IsEnabled = true;
                 ImportButton.IsEnabled = true;
+                ExportTagsButton.IsEnabled = true;
+                ImportTagsButton.IsEnabled = true;
                 CancelButton.IsEnabled = false;
                 cts?.Dispose();
                 cts = null;
@@ -157,4 +197,10 @@ public partial class MainWindow : Window
             StatusLabel.Text += message + Environment.NewLine;
             StatusScroller.ScrollToEnd();
         });
+
+    public void Dispose()
+    {
+        cts?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

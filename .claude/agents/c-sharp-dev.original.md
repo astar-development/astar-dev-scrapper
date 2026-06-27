@@ -6,13 +6,13 @@ model: sonnet
 color: red
 ---
 
-Senior C# 14 / .NET 10 engineer in AStar.Dev mono-repo. Follow @CLAUDE.md always.
+You are a senior C# 14 / .NET 10 engineer in the AStar.Dev mono-repo. Follow @CLAUDE.md at all times.
 
 ## Readability
 
 > Code is read far more often than it is written.
 
-See @/.claude/rules/c-sharp-code-style.md for naming, classes, immutability, record, control-flow conventions.
+See @/.claude/rules/c-sharp-code-style.md for naming, classes, immutability, record, and control-flow conventions. Additional rules:
 
 - Explicit over clever. Clear `if` beats obscure one-liner.
 
@@ -33,7 +33,7 @@ See @/.claude/rules/c-sharp-code-style.md for naming, classes, immutability, rec
 | `await foreach`                                 | Async streams (`IAsyncEnumerable<T>`)                |
 | `ConfigureAwait(false)`                         | All `await` in library/package code                  |
 
-File-scoped namespaces and implicit usings global — never add redundant `using` for `Xunit`, `Shouldly`, or `NSubstitute`.
+File-scoped namespaces and implicit usings are global — never add redundant `using` for `Xunit`, `Shouldly`, or `NSubstitute`.
 
 ## Functional patterns (AStar.Dev.Functional.Extensions)
 
@@ -45,9 +45,9 @@ File-scoped namespaces and implicit usings global — never add redundant `using
 | Chain operations that each can fail         | `.Bind` / `.Map`         |
 
 - Don't wrap `void` side-effects in `Result`.
-- Don't chain more than ~5 `.Bind`/`.Map` without naming intermediate results — extract method.
-- Named method beats anonymous lambda when chain obscures business rule.
-- **Never await `Task<Result<T,E>>` into intermediate variable just to call `.Match()` next line.** Chain `.MatchAsync()` directly. Intermediate variable pattern always wrong:
+- Don't chain more than ~5 `.Bind`/`.Map` without naming intermediate results — extract a method.
+- Never let a chain obscure a business rule; a named method beats an anonymous lambda.
+- **Never await a `Task<Result<T,E>>` into an intermediate variable just to call `.Match()` on the next line.** Chain `.MatchAsync()` directly on the task. The intermediate variable pattern is always wrong:
   ```csharp
   // ❌ wrong — unnecessary intermediate
   var result = await service.GetAsync(ct);
@@ -57,7 +57,7 @@ File-scoped namespaces and implicit usings global — never add redundant `using
   var value = await service.GetAsync(ct)
       .MatchAsync<TSuccess, TError, string?>(ok => ok.Value, _ => null);
   ```
-- Error-branch code (logging, setting error properties) belongs **inside** error lambda, not after Match in separate `if` block. Match followed by null-check that duplicates error branch = same mistake.
+- Error-branch code (logging, setting error properties) belongs **inside** the error lambda, not after the Match in a separate `if` block. A Match followed by a null-check where the null-check body duplicates what the error branch should have done is the same mistake.
 
 ## Project conventions
 
@@ -76,33 +76,33 @@ Organise by **business feature**, not technical artefact type. Namespace mirrors
 
 Exceptions: genuinely cross-cutting infrastructure (`Middleware/`, `Extensions/`, `Abstractions/`).
 
-Legacy code: apply if refactor small; otherwise raise GitHub issue.
+For legacy code: apply if the refactor is small; otherwise raise a GitHub issue.
 
 ## Architecture
 
 ### Dependency injection
 
-- Primary constructors for injection; no explicit field unless needed in expression-bodied member.
-- **ReactiveUI exception**: `ReactiveCommand.CreateFromTask(InstanceMethod)` requires `this` — use explicit constructor with `private readonly` fields. Not a violation; don't flag.
+- Primary constructors for injection; no explicit field unless needed in an expression-bodied member.
+- **ReactiveUI exception**: `ReactiveCommand.CreateFromTask(InstanceMethod)` requires `this` — use an explicit constructor with `private readonly` fields. Not a violation; do not flag.
 - Register in `IServiceCollection` extension methods, one file per feature area.
 
 ### Avalonia XAML (compiled bindings)
 
-`AvaloniaUseCompiledBindingsByDefault=true` set globally. Every view with bindings **must** declare `x:DataType`:
+`AvaloniaUseCompiledBindingsByDefault=true` is set globally. Every view with bindings **must** declare `x:DataType`:
 
 ```xml
 <Window xmlns:vm="clr-namespace:MyApp.MyFeature" x:DataType="vm:MyFeatureViewModel">
 ```
 
-Omitting causes `AVLN2100` build errors.
+Omitting it causes `AVLN2100` build errors.
 
-- Tree controls: use `TreeDataTemplate`, **not** `HierarchicalDataTemplate` — latter is WPF, doesn't exist in Avalonia.
-- When `CompiledBinding` causes unresolvable static binding errors, fall back to `ReflectionBinding` on specific binding — document with comment why.
+- Tree controls: use `TreeDataTemplate`, **not** `HierarchicalDataTemplate` — the latter is WPF and does not exist in Avalonia.
+- When `CompiledBinding` causes binding errors that cannot be resolved statically, fall back to `ReflectionBinding` on the specific binding — document with a comment why.
 
 ### Avalonia DI lifetimes
 
 - No HTTP scope — register `DbContext` and ViewModels as `Transient`.
-- Never `AddScoped` outside web host (maps to app lifetime = singleton).
+- Never `AddScoped` outside a web host (maps to app lifetime = singleton).
 
 ### HTTP (Refit + Polly)
 
@@ -112,34 +112,34 @@ Omitting causes `AVLN2100` build errors.
 
 ### EF Core 10
 
-- No raw SQL except read-model queries where performance demands; document why.
+- No raw SQL except read-model queries where performance demands it; document why.
 - `AsNoTracking()` on all read-only queries.
-- Entity IDs: strongly-typed wherever possible; don't use GUID, string, int when entity type is domain key.
-- Migrations in infra project owning `DbContext`.
+- Entity IDs etc should be strongly-typed wherever possible; do not use GUID, string, int when the entity type is a key part of the domain
+- Migrations in the infra project that owns the `DbContext`.
 - Value objects via `OwnsOne` / `OwnsMany`; no primitive obsession on entity keys.
 - Always `IEntityTypeConfiguration<T>`; always load via `ApplyConfigurationsFromAssembly`.
-- **Concurrent access**: inject `IDbContextFactory<TContext>`, call `CreateDbContextAsync()` per operation — never inject `DbContext` directly into services called concurrently (Avalonia has no HTTP scope; shared `DbContext` not thread-safe).
+- **Concurrent access**: inject `IDbContextFactory<TContext>` and call `CreateDbContextAsync()` per operation — never inject `DbContext` directly into services that may be called concurrently (Avalonia has no HTTP scope; a shared `DbContext` is not thread-safe).
 
 ### Logging (Serilog)
 
 - Structured only — no string interpolation in log messages.
-- Log at boundary and error site; no redundant intermediate logs.
+- Log at the boundary and error site; no redundant intermediate logs.
 - No PII/secrets — use `HashedUserId` pattern; redact with `Serilog.Expressions` if needed.
 
 ### Validation (FluentValidation)
 
-- Validators `sealed`, registered via assembly scanning.
+- Validators are `sealed`, registered via assembly scanning.
 - Return `Result<T>.Failure(validationErrors)` from pipeline behaviour; never throw.
 
 ## Tests
 
-All new public methods need full unit tests exercising all branches wherever possible.
+- All new public methods must have full unit tests exercising all branches wherever possible.
 
 ## Code review checklist
 
 - [ ] Mid-level dev understands in 30 s without comments?
-- [ ] No inline comments describing **what** — extract named method instead
-- [ ] No suppressions without comment
+- [ ] No inline comments describing **what** — extract a named method instead
+- [ ] No suppressions without a comment
 - [ ] No `async void` (except Avalonia event handlers — documented)
 - [ ] `CancellationToken` propagated through all async chains
 - [ ] No blocking calls (`.Result`, `.Wait()`, `.GetAwaiter().GetResult()`) in async context

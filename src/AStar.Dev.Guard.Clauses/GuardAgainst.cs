@@ -1,4 +1,4 @@
-﻿namespace AStar.Dev.Guard.Clauses;
+namespace AStar.Dev.Guard.Clauses;
 
 /// <summary>
 ///     The root <seealso href="GuardAgainst"></seealso> class.
@@ -11,7 +11,7 @@ public static class GuardAgainst
     /// <typeparam name="T">
     ///     Specifies the generic object to check for null.
     /// </typeparam>
-    /// <param name="object">
+    /// <param name="value">
     ///     The object to check for null.
     /// </param>
     /// <returns>
@@ -20,6 +20,6 @@ public static class GuardAgainst
     /// <exception cref="ArgumentNullException">
     ///     Thrown when the object is, in fact, null.
     /// </exception>
-    public static T Null<T>(T @object)
-        => @object is null ? throw new ArgumentNullException(nameof(@object)) : @object;
+    public static T Null<T>(T value)
+        => value is null ? throw new ArgumentNullException(nameof(value)) : value;
 }

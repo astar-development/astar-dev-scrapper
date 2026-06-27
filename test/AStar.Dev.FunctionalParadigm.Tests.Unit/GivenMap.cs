@@ -8,7 +8,7 @@ public class GivenMap
     [Fact]
     public void when_selector_is_value_then_returns_expected_result()
     {
-        var result = Result<int, string>.Success(5);
+        var result = Result.Success<int, string>(5);
 
         var actual = result.Map(value => value * 3);
 
@@ -19,7 +19,7 @@ public class GivenMap
     [Fact]
     public void when_result_is_failure_then_returns_failure()
     {
-        var result = Result<int, string>.Failure("error");
+        var result = Result.Failure<int, string>("error");
 
         var actual = result.Map(value => value * 3);
 
