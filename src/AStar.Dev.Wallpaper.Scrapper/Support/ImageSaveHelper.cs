@@ -1,8 +1,8 @@
-﻿using AStar.Dev.Utilities;
+using AStar.Dev.Utilities;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
-internal class ImageSaveHelper
+internal sealed class ImageSaveHelper
 {
     public static async Task SaveImage(byte[] image, string imageNameWithPath)
     {

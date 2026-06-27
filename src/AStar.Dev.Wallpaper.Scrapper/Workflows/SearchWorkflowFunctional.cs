@@ -13,7 +13,6 @@ namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
 public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchResultsPageFunctional, IDbContextFactory<FilesContext> dbContextFactory, Logger logger)
 {
-    private ImagePageService    imagePageService = null!;
     private SearchConfiguration searchConfiguration = null!;
     private ScrapeDirectories   scrapeDirectories = null!;
     private ConfigurationSaver  configurationSaver = null!;
@@ -118,7 +117,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
         {
             var combinedSearchString = $"{searchConfiguration.SearchStringPrefix}{searchCategories[i].Id}{searchConfiguration.SearchStringSuffix}";
 
-            // if(combinedSearchString != searchConfiguration.SearchString) continue;
+            if(combinedSearchString != searchConfiguration.SearchString) continue;
 
             searchCategories = [.. searchCategories.Skip(i)];
             break;

@@ -1,3 +1,4 @@
+using System.Globalization;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Playwright;
 using Serilog.Core;
@@ -89,14 +90,14 @@ public sealed class SearchResultsPageFunctional(IPlaywrightService playwrightSer
 
         if(text is null) return (0, 0, string.Empty);
 
-        var firstSpaceIndex  = text.IndexOf(" ", StringComparison.Ordinal);
+        var firstSpaceIndex  = text.IndexOf(' ');
         var hashIndex        = text.IndexOf("for ", StringComparison.Ordinal) + 3;
         var subDirectoryName = string.Empty;
 
         if(hashIndex > 0) subDirectoryName = text[(hashIndex + 1)..].Replace(" ", "-").Replace("#", string.Empty);
 
         var searchResults = text.Replace(",", string.Empty)[..firstSpaceIndex];
-        var imageCount    = decimal.Parse(searchResults);
+        var imageCount    = decimal.Parse(searchResults, CultureInfo.InvariantCulture);
 
         return (Convert.ToInt32(Math.Ceiling(imageCount / 24)), (int)imageCount, subDirectoryName);
     }

@@ -18,6 +18,7 @@ using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using Microsoft.Playwright;
 using Serilog.Core;
+using System.Globalization;
 using Testably.Abstractions;
 using System.IO.Abstractions;
 
@@ -54,8 +55,8 @@ public partial class App : Application
                 .ToAppModel())
             .AddSingleton(sp => new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.Console()
-                .WriteTo.Seq("http://localhost:5341")
+                .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
+                .WriteTo.Seq("http://localhost:5341", formatProvider: CultureInfo.InvariantCulture)
                 .Enrich.WithExceptionDetails()
                 .Enrich.FromLogContext()
                 .ReadFrom.Configuration(sp.GetRequiredService<IConfiguration>())
@@ -73,6 +74,7 @@ public partial class App : Application
             .AddTransient<IScrapedTagRepository, ScrapedTagRepository>()
             .AddTransient<IFileDetailRepository, FileDetailRepository>()
             .AddTransient<FileClassificationService>()
+            .AddTransient<IScrapedTagService, ScrapedTagService>()
             .AddTransient<IImagePageResultFunctional, ImagePageResultFunctional>()
             .AddTransient<ConfigurationSaverFunctional>()
             .AddTransient<ConfigurationSaver>()
