@@ -1,18 +1,22 @@
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Wallpaper.Scrapper;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Serilog;
 using System.IO.Abstractions;
+using System.Text.Json;
 using FileClassificationDomain = AStar.Dev.Infrastructure.FilesDb.Models.FileClassification;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Services;
 
 public sealed class GivenAnImportExportService
 {
-    private static readonly string ScrapperDirectory = Path.GetDirectoryName(ApplicationMetadata.FileClassificationsExportFilePath)!;
+    private static readonly string ScrapperDirectory           = Path.GetDirectoryName(ApplicationMetadata.FileClassificationsExportFilePath)!;
+    private static readonly string ScrapeConfigScrapperDirectory = Path.GetDirectoryName(ApplicationMetadata.ScrapeConfigurationExportFilePath)!;
 
     private const string CelebrityClassificationName = "Test Celebrity";
     private const string NormalClassificationName    = "Test Normal";
+    private const string ValidPassword               = "super-secret-password";
 
     private const string ValidClassificationsJson = """
         [
@@ -51,6 +55,34 @@ public sealed class GivenAnImportExportService
             ]
           }
         ]
+        """;
+
+    private const string ValidScrapeConfigJson = """
+        {
+          "connectionStrings": { "sqlite": "Data Source=test.db" },
+          "userConfiguration": { "loginEmailAddress": "test@example.com", "username": "testuser", "password": "REDACTED", "sessionCookie": "REDACTED" },
+          "searchConfiguration": {
+            "baseUrl": "https://example.com",
+            "apiKey": "REDACTED",
+            "searchCategories": [{ "id": "cat1", "name": "Category 1", "lastKnownImageCount": 0, "lastPageVisited": 0, "totalPages": 10, "includeInSearch": true }],
+            "searchString": "test",
+            "topWallpapers": "",
+            "searchStringPrefix": "",
+            "searchStringSuffix": "",
+            "subscriptions": "",
+            "imagePauseInSeconds": 1,
+            "startingPageNumber": 1,
+            "totalPages": 10,
+            "subscriptionsStartingPageNumber": 0,
+            "subscriptionsTotalPages": 0,
+            "topWallpapersTotalPages": 0,
+            "topWallpapersStartingPageNumber": 0,
+            "loginUrl": "",
+            "useHeadless": true,
+            "slowMotionDelay": null
+          },
+          "scrapeDirectories": { "rootDirectory": "/tmp/scrape", "baseSaveDirectory": "saves", "baseDirectory": "base", "baseDirectoryFamous": "famous", "subDirectoryName": "sub" }
+        }
         """;
 
     private readonly MockFileSystem mockFileSystem;
@@ -183,10 +215,138 @@ public sealed class GivenAnImportExportService
         mockLogger.Received(1).Error(Arg.Any<Exception>(), Arg.Any<string>(), Arg.Any<string>());
     }
 
+    [Fact]
+    public void when_importing_scrape_config_and_file_does_not_exist_then_failure_result_is_returned() =>
+        sut.ImportScrapeConfigurationFromFile()
+           .ShouldBeOfType<Fail<ScrapeConfigurationEntity, string>>();
+
+    [Fact]
+    public void when_importing_scrape_config_and_file_does_not_exist_then_logger_receives_error_call()
+    {
+        sut.ImportScrapeConfigurationFromFile();
+
+        mockLogger.Received(1).Error(Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    [Fact]
+    public void when_importing_scrape_config_and_file_contains_null_json_then_failure_result_is_returned()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+        mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath, "null");
+
+        sut.ImportScrapeConfigurationFromFile()
+           .ShouldBeOfType<Fail<ScrapeConfigurationEntity, string>>();
+    }
+
+    [Fact]
+    public void when_importing_scrape_config_and_file_contains_null_json_then_logger_receives_error_call()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+        mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath, "null");
+
+        sut.ImportScrapeConfigurationFromFile();
+
+        mockLogger.Received(1).Error(Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    [Fact]
+    public void when_importing_valid_scrape_config_then_result_is_ok()
+    {
+        SetupValidScrapeConfigImportFile();
+
+        sut.ImportScrapeConfigurationFromFile()
+           .ShouldBeOfType<Ok<ScrapeConfigurationEntity, string>>();
+    }
+
+    [Fact]
+    public void when_importing_valid_scrape_config_then_correct_connection_string_is_mapped()
+    {
+        SetupValidScrapeConfigImportFile();
+
+        sut.ImportScrapeConfigurationFromFile()
+           .ShouldBeOfType<Ok<ScrapeConfigurationEntity, string>>()
+           .Value.ConnectionStrings.Sqlite.ShouldBe("Data Source=test.db");
+    }
+
+    [Fact]
+    public void when_importing_valid_scrape_config_then_password_field_is_preserved_from_db()
+    {
+        SetupValidScrapeConfigImportFile();
+
+        sut.ImportScrapeConfigurationFromFile()
+           .ShouldBeOfType<Ok<ScrapeConfigurationEntity, string>>()
+           .Value.UserConfiguration.Password.ShouldBe(ApplicationMetadata.Redacted);
+    }
+
+    [Fact]
+    public void when_exporting_scrape_config_then_file_is_written_to_expected_path()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+
+        sut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
+
+        mockFileSystem.File.Exists(ApplicationMetadata.ScrapeConfigurationExportFilePath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void when_exporting_scrape_config_then_logger_receives_information_call()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+
+        sut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
+
+        mockLogger.Received(1).Information(Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    [Fact]
+    public void when_exporting_scrape_config_then_password_is_redacted_in_exported_file()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+
+        sut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
+
+        var json = mockFileSystem.File.ReadAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath);
+        using var doc = JsonDocument.Parse(json);
+        doc.RootElement.GetProperty("userConfiguration").GetProperty("password").GetString()
+           .ShouldBe(ApplicationMetadata.Redacted);
+    }
+
+    [Fact]
+    public void when_file_system_throws_during_scrape_config_export_then_exception_is_rethrown()
+    {
+        var throwingFileSystem = Substitute.For<IFileSystem>();
+        throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
+                               .Throw(new IOException("Disk full"));
+        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+
+        var act = () => throwingSut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
+
+        act.ShouldThrow<IOException>();
+    }
+
+    [Fact]
+    public void when_file_system_throws_during_scrape_config_export_then_logger_receives_error_call()
+    {
+        var throwingFileSystem = Substitute.For<IFileSystem>();
+        throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
+                               .Throw(new IOException("Disk full"));
+        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+
+        Should.Throw<IOException>(() => throwingSut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData()));
+
+        mockLogger.Received(1).Error(Arg.Any<Exception>(), Arg.Any<string>(), Arg.Any<string>());
+    }
+
     private void SetupValidImportFile()
     {
         mockFileSystem.Directory.CreateDirectory(ScrapperDirectory);
         mockFileSystem.File.WriteAllText(ApplicationMetadata.FileClassificationsExportFilePath, ValidClassificationsJson);
+    }
+
+    private void SetupValidScrapeConfigImportFile()
+    {
+        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+        mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath, ValidScrapeConfigJson);
     }
 
     private static List<FileClassificationDomain> CreateDomainClassifications() =>
@@ -194,4 +354,23 @@ public sealed class GivenAnImportExportService
         new() { Id = 1, Name = CelebrityClassificationName, Celebrity = true,  IncludeInSearch = true },
         new() { Id = 2, Name = NormalClassificationName,    Celebrity = false, IncludeInSearch = true }
     ];
+
+    private static ScrapeConfigurationEntity CreateScrapeConfigurationEntityWithSensitiveData() => new()
+    {
+        ConnectionStrings = new ConnectionStrings { Sqlite = "Data Source=production.db" },
+        UserConfiguration = new UserConfiguration
+        {
+            LoginEmailAddress = "user@example.com",
+            Username          = "testuser",
+            Password          = ValidPassword,
+            SessionCookie     = "actual-session-cookie"
+        },
+        SearchConfiguration = new SearchConfiguration
+        {
+            BaseUrl          = "https://example.com",
+            ApiKey           = "actual-api-key",
+            SearchCategories = []
+        },
+        ScrapeDirectories = new ScrapeDirectories { RootDirectory = "/tmp/scrape" }
+    };
 }
