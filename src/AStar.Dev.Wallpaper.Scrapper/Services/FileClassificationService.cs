@@ -103,25 +103,26 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
     {
         if (imageTags.Count == 0) return;
 
-        var lowerImageTags = imageTags.Select(t => t.ToLowerInvariant()).ToList();
-        var tags = await context.ScrapedTags
-            .Where(t => t.IncludeInSearch && lowerImageTags.Contains(t.Value.ToLower()))
+        var tagSet = new HashSet<string>(imageTags.Select(t => t.ToLowerInvariant()), StringComparer.OrdinalIgnoreCase);
+        var allIncludedTags = await context.ScrapedTags
+            .Where(t => t.IncludeInSearch)
             .ToListAsync(token);
 
-        foreach (var tag in tags)
+        foreach (var tag in allIncludedTags.Where(t => tagSet.Contains(t.Value.ToLowerInvariant())))
             matched.Add(await FindOrCreateClassificationAsync(context, tag.Value));
     }
 
     private static async Task<FileClassification> FindOrCreateClassificationAsync(FilesContext context, string name)
     {
+        var normalizedName = name.ToLowerInvariant();
         var tracked = context.ChangeTracker.Entries<FileClassification>()
-            .FirstOrDefault(e => e.Entity.Name.Equals(name, StringComparison.OrdinalIgnoreCase))?.Entity;
+            .FirstOrDefault(e => e.Entity.Name.Equals(normalizedName, StringComparison.OrdinalIgnoreCase))?.Entity;
         if (tracked is not null) return tracked;
 
-        var existing = await context.FileClassifications.FirstOrDefaultAsync(fc => fc.Name.ToLower() == name.ToLower());
+        var existing = await context.FileClassifications.FirstOrDefaultAsync(fc => fc.Name == normalizedName);
         if (existing is not null) return existing;
 
-        var created = new FileClassification { Name = name };
+        var created = new FileClassification { Name = normalizedName };
         context.FileClassifications.Add(created);
 
         return created;

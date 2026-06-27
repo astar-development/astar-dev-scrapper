@@ -8,7 +8,7 @@ public class GivenMapAsync
     [Fact]
     public async Task when_selector_is_task_then_returns_expected_result()
     {
-        var result = Result<int, string>.Success(5);
+        var result = Result.Success<int, string>(5);
 
         var actual = await result.MapAsync(value => Task.FromResult(value * 2));
 
@@ -19,7 +19,7 @@ public class GivenMapAsync
     [Fact]
     public async Task when_selector_is_value_task_then_returns_expected_result()
     {
-        var result = Result<int, string>.Success(5);
+        var result = Result.Success<int, string>(5);
 
         var actual = await result.MapAsync(value => ValueTask.FromResult(value * 2));
 
@@ -30,7 +30,7 @@ public class GivenMapAsync
     [Fact]
     public async Task when_result_is_failure_then_returns_failure()
     {
-        var result = Result<int, string>.Failure("error");
+        var result = Result.Failure<int, string>("error");
 
         var actual = await result.MapAsync(value => ValueTask.FromResult(value * 2));
 

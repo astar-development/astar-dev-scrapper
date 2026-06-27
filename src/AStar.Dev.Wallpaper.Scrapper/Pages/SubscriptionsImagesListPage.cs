@@ -1,4 +1,5 @@
-﻿using AStar.Dev.Wallpaper.Scrapper.Models;
+﻿using System.Globalization;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Playwright;
 
@@ -22,14 +23,14 @@ public sealed class SubscriptionsImagesListPage(IPlaywrightService playwrightSer
 
         if(text is null) return (0, string.Empty);
 
-        var firstSpaceIndex  = text.IndexOf(" ",   StringComparison.Ordinal);
+        var firstSpaceIndex  = text.IndexOf(' ');
         var hashIndex        = text.IndexOf("New", StringComparison.Ordinal);
         var subDirectoryName = string.Empty;
 
         if(hashIndex > 0) subDirectoryName = text[hashIndex..].Replace(" ", "-").Replace("#", string.Empty);
 
         var searchResults = text.Replace(",", string.Empty)[..firstSpaceIndex];
-        var imageCount    = decimal.Parse(searchResults) / 24;
+        var imageCount    = decimal.Parse(searchResults, CultureInfo.InvariantCulture) / 24;
 
         return (Convert.ToInt32(Math.Ceiling(imageCount)), subDirectoryName);
     }

@@ -19,7 +19,7 @@ using AStar.Dev.Utilities;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 
-public partial class MainWindow : Window
+public partial class MainWindow : Window, IDisposable
 {
     private readonly Func<ScrapeConfigurationView> scrapeConfigViewFactory;
     private readonly ScrapeConfiguration scrapeConfiguration;
@@ -58,6 +58,7 @@ public partial class MainWindow : Window
         this.fileSystem = fileSystem;
         this.scrapeLogger = GetScrapeLoggerForDisplaySync();
         InitializeComponent();
+        Closed += (_, _) => cts?.Dispose();
     }
 
     private async void OnEditConfigurationClicked(object? sender, RoutedEventArgs e)
@@ -196,4 +197,10 @@ public partial class MainWindow : Window
             StatusLabel.Text += message + Environment.NewLine;
             StatusScroller.ScrollToEnd();
         });
+
+    public void Dispose()
+    {
+        cts?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

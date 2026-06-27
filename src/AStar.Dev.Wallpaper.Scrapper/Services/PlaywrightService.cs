@@ -70,6 +70,8 @@ public class PlaywrightService(ScrapeConfiguration scrapeConfiguration, Logger l
             playwright.Dispose();
             playwright = null;
         }
+
+        GC.SuppressFinalize(this);
     }
 
     private static async Task ApplyCookiesAsync(IBrowserContext context, Logger logger)

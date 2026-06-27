@@ -1,16 +1,17 @@
-﻿namespace AStar.Dev.FunctionalParadigm;
+namespace AStar.Dev.FunctionalParadigm;
 
-public abstract record Result<TResult, TError>
+/// <summary>
+///     Factory methods for creating instances of <see cref="Result{TResult,TError}" />.
+/// </summary>
+public static class Result
 {
-    public static Result<TResult, TError> Success(TResult value) => new Ok<TResult, TError>(value);
+    /// <summary>
+    ///     Creates a success <see cref="Result{TResult,TError}" /> wrapping the specified value.
+    /// </summary>
+    public static Result<TResult, TError> Success<TResult, TError>(TResult value) => new Ok<TResult, TError>(value);
 
-    public static Result<TResult, TError> Failure(TError error) => new Fail<TResult, TError>(error);
-
-    public static implicit operator Result<TResult, TError>(TResult value) => Success(value);
-
-    public static implicit operator Result<TResult, TError>(TError error) => Failure(error);
+    /// <summary>
+    ///     Creates a failure <see cref="Result{TResult,TError}" /> wrapping the specified error.
+    /// </summary>
+    public static Result<TResult, TError> Failure<TResult, TError>(TError error) => new Fail<TResult, TError>(error);
 }
-
-public record Ok<TResult, TError>(TResult Value) : Result<TResult, TError>;
-
-public record Fail<TResult, TError>(TError Error) : Result<TResult, TError>;

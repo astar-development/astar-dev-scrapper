@@ -1,4 +1,5 @@
-﻿using AStar.Dev.Wallpaper.Scrapper.Models;
+﻿using System.Globalization;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Playwright;
 
@@ -24,7 +25,7 @@ public sealed class TopWallpapersPage(IPlaywrightService playwrightService, Sear
         var firstSlashIndex = text.IndexOf('/') + 1;
         var pages           = text[firstSlashIndex..].Trim();
 
-        return Convert.ToInt32(pages);
+        return int.Parse(pages, CultureInfo.InvariantCulture);
     }
 
     public async Task<IReadOnlyCollection<string>> GetImagePageLinks()

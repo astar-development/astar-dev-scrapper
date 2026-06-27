@@ -8,7 +8,7 @@ public class GivenMatchAsync
     [Fact]
     public async Task when_on_success_is_async_then_returns_expected_value()
     {
-        var result = Result<int, string>.Success(3);
+        var result = Result.Success<int, string>(3);
 
         var actual = await result.MatchAsync(
             onSuccess: value => ValueTask.FromResult(value + 1),
@@ -20,7 +20,7 @@ public class GivenMatchAsync
     [Fact]
     public async Task when_on_failure_is_async_then_returns_expected_value()
     {
-        var result = Result<int, string>.Failure("error");
+        var result = Result.Failure<int, string>("error");
 
         var actual = await result.MatchAsync(
             onSuccess: _ => 1,
@@ -32,8 +32,8 @@ public class GivenMatchAsync
     [Fact]
     public async Task when_on_success_and_on_failure_are_both_async_then_returns_expected_values()
     {
-        var success = Result<int, string>.Success(4);
-        var failure = Result<int, string>.Failure("error");
+        var success = Result.Success<int, string>(4);
+        var failure = Result.Failure<int, string>("error");
 
         var actualSuccess = await success.MatchAsync(
             onSuccess: value => ValueTask.FromResult(value + 2),
