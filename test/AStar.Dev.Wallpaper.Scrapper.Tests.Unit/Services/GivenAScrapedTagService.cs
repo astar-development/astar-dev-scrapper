@@ -6,8 +6,8 @@ namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Services;
 
 public sealed class GivenAScrapedTagService
 {
-    private const string ActionTagValue    = "Action";
-    private const string ActionTagCategory = "Genre";
+    private const string ActionTagValue = "Action";
+    private const string GenreCategory  = "Genre";
 
     [Fact]
     public async Task when_exporting_then_repository_get_all_is_called()
@@ -25,8 +25,8 @@ public sealed class GivenAScrapedTagService
     public async Task when_exporting_then_returned_tags_are_passed_through()
     {
         var repo     = Substitute.For<IScrapedTagRepository>();
-        var expected = new List<ScrapedTagDomain> { new() { Value = ActionTagValue, Category = ActionTagCategory, IncludeInSearch = true } };
-        repo.GetAllAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(expected));
+        var expected = new List<ScrapedTagDomain> { new() { Value = ActionTagValue, Category = GenreCategory, IncludeInSearch = true } };
+        repo.GetAllAsync(Arg.Any<CancellationToken>()).Returns(expected);
         var sut      = new ScrapedTagService(repo);
 
         var result = await sut.ExportScrapedTagsAsync(CancellationToken.None);
@@ -39,7 +39,7 @@ public sealed class GivenAScrapedTagService
     {
         var repo = Substitute.For<IScrapedTagRepository>();
         var sut  = new ScrapedTagService(repo);
-        var tags = new List<ScrapedTagDomain> { new() { Value = ActionTagValue, Category = ActionTagCategory, IncludeInSearch = true } };
+        var tags = new List<ScrapedTagDomain> { new() { Value = ActionTagValue, Category = GenreCategory, IncludeInSearch = true } };
 
         await sut.ImportScrapedTagsAsync(tags, CancellationToken.None);
 
@@ -51,7 +51,7 @@ public sealed class GivenAScrapedTagService
     {
         var repo = Substitute.For<IScrapedTagRepository>();
         var sut  = new ScrapedTagService(repo);
-        var tags = new List<ScrapedTagDomain> { new() { Value = ActionTagValue, Category = ActionTagCategory, IncludeInSearch = false } };
+        var tags = new List<ScrapedTagDomain> { new() { Value = ActionTagValue, Category = GenreCategory, IncludeInSearch = false } };
 
         await sut.ImportScrapedTagsAsync(tags, CancellationToken.None);
 

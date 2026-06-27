@@ -298,6 +298,16 @@ public sealed class GivenAnImportExportService
     }
 
     [Fact]
+    public void when_importing_valid_tags_then_second_tag_category_is_mapped()
+    {
+        SetupValidTagsImportFile();
+
+        sut.ImportScrapedTagsFromFile()
+           .ShouldBeOfType<Ok<List<ScrapedTagDomain>, string>>()
+           .Value[1].Category.ShouldBe(GenreCategory);
+    }
+
+    [Fact]
     public void when_importing_valid_tags_then_second_tag_include_in_search_is_mapped()
     {
         SetupValidTagsImportFile();
