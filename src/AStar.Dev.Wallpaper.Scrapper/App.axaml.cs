@@ -43,7 +43,7 @@ public partial class App : Application
         builder.Configuration.AddUserSecrets<App>(optional: true, reloadOnChange: true);
 
         builder.Services
-            .Configure<ScrapeConfigModel>(builder.Configuration.GetSection(nameof(ScrapeConfigModel)))
+            .Configure<ScrapeConfigModel>(builder.Configuration.GetSection("ScrapeConfiguration"))
             .AddSingleton(sp => sp.GetRequiredService<IDbContextFactory<FilesContext>>()
                 .CreateDbContext().ScrapeConfiguration
                 .Include(e => e.ConnectionStrings)
@@ -63,7 +63,7 @@ public partial class App : Application
                 .CreateLogger())
             .AddSingleton<Serilog.ILogger>(sp => sp.GetRequiredService<Serilog.Core.Logger>())
             .AddDbContextFactory<FilesContext>(options =>
-                options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite")))
+                options.UseSqlite(builder.Configuration["scrapeConfiguration:connectionStrings:sqlite"]))
             .AddSingleton(sp => {
                 using var ctx = sp.GetRequiredService<IDbContextFactory<FilesContext>>().CreateDbContext();
                 return TagsFactory.LoadTagsToIgnoreCompletely(ctx);
