@@ -1,4 +1,5 @@
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using Serilog;
@@ -49,6 +50,21 @@ public sealed class ImportExportService(IFileSystem fileSystem, ILogger logger) 
         return classifications.ToDomain();
     }
 
+    public void ExportScrapeConfigurationToFile(ScrapeConfigurationEntity entity)
+    {
+        try
+        {
+            var json = entity.ToDto().ToJson();
+            fileSystem.File.WriteAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath, json);
+            logger.Information("Scrape configuration exported to {FilePath}", ApplicationMetadata.ScrapeConfigurationExportFilePath);
+        }
+        catch(Exception ex)
+        {
+            logger.Error(ex, "Failed to export scrape configuration to file: {FilePath}", ApplicationMetadata.ScrapeConfigurationExportFilePath);
+            throw;
+        }
+    }
+
     public void ExportScrapedTagsToFile(List<ScrapedTagDomain> tags)
     {
         try
@@ -62,6 +78,28 @@ public sealed class ImportExportService(IFileSystem fileSystem, ILogger logger) 
             logger.Error(ex, "Failed to export tags to file: {FilePath}", ApplicationMetadata.ScrapedTagsExportFilePath);
             throw;
         }
+    }
+
+    public Result<ScrapeConfigurationEntity, string> ImportScrapeConfigurationFromFile()
+    {
+        if(!fileSystem.File.Exists(ApplicationMetadata.ScrapeConfigurationExportFilePath))
+        {
+            logger.Error("File not found: {FilePath}", ApplicationMetadata.ScrapeConfigurationExportFilePath);
+
+            return $"Error: File not found - {ApplicationMetadata.ScrapeConfigurationExportFilePath}";
+        }
+
+        var json = fileSystem.File.ReadAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath);
+        var dto = json.FromJson<ScrapeConfigurationDto>(AStar.Dev.Utilities.Constants.WebDeserialisationSettings);
+
+        if(dto is null)
+        {
+            logger.Error("Failed to deserialize scrape configuration from file: {FilePath}", ApplicationMetadata.ScrapeConfigurationExportFilePath);
+
+            return $"Error: Failed to deserialize scrape configuration from file - {ApplicationMetadata.ScrapeConfigurationExportFilePath}";
+        }
+
+        return dto.ToDomain();
     }
 
     public Result<List<ScrapedTagDomain>, string> ImportScrapedTagsFromFile()

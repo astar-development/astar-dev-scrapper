@@ -36,10 +36,11 @@ public partial class MainWindow : Window, IDisposable
     private readonly SearchWorkflowFunctional imagePageServiceFunctional;
     private readonly SearchWorkflowFunctional searchWorkflowFunctional;
     private readonly IFileSystem fileSystem;
+    private readonly ScrapeConfigurationService scrapeConfigurationService;
     private CancellationTokenSource? cts;
     private readonly Logger scrapeLogger;
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, SearchWorkflowFunctional imagePageServiceFunctional, IFileSystem fileSystem, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, IScrapedTagService scrapedTagService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IImportExportService importExportService)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, SearchWorkflowFunctional imagePageServiceFunctional, IFileSystem fileSystem, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, IScrapedTagService scrapedTagService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IImportExportService importExportService, ScrapeConfigurationService scrapeConfigurationService)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.scrapeConfiguration = scrapeConfiguration;
@@ -56,6 +57,7 @@ public partial class MainWindow : Window, IDisposable
         this.imagePageServiceFunctional = imagePageServiceFunctional;
         this.searchWorkflowFunctional = searchWorkflowFunctional;
         this.fileSystem = fileSystem;
+        this.scrapeConfigurationService = scrapeConfigurationService;
         this.scrapeLogger = GetScrapeLoggerForDisplaySync();
         InitializeComponent();
         Closed += (_, _) => cts?.Dispose();
@@ -114,6 +116,39 @@ public partial class MainWindow : Window, IDisposable
             .TapAsync(_ => scrapeLogger.Information("Import completed..."))
             .EnsureAsync(() => ResetUI());
 
+    private async void OnExportScrapeConfigClicked(object? sender, RoutedEventArgs e)
+        => _ = await ResetCancellationTokenSource()
+            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+                onSuccess: DisableControlsAndClearStatus,
+                onFailure: ex =>
+                {
+                    scrapeLogger.Error(ex, "Failed to reset cancellation token source");
+                    UpdateStatus($"Error: {ex.Message}");
+                    return ex.Message;
+                }
+            )
+            .Tap(_ => scrapeLogger.Information("Exporting scrape configuration..."))
+            .MapAsync(_ => scrapeConfigurationService.ExportScrapeConfigurationAsync(cts!.Token))
+            .Tap(importExportService.ExportScrapeConfigurationToFile)
+            .TapAsync(_ => scrapeLogger.Information("Scrape configuration export completed..."))
+            .EnsureAsync(() => ResetUI());
+
+    private async void OnImportScrapeConfigClicked(object? sender, RoutedEventArgs e)
+        => _ = await ResetCancellationTokenSource()
+            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+                onSuccess: DisableControlsAndClearStatus,
+                onFailure: ex =>
+                {
+                    scrapeLogger.Error(ex, "Failed to reset cancellation token source");
+                    return ex.Message;
+                }
+            )
+            .Tap(_ => scrapeLogger.Information("Importing scrape configuration..."))
+            .Bind(_ => importExportService.ImportScrapeConfigurationFromFile())
+            .MapAsync(entity => scrapeConfigurationService.ImportScrapeConfigurationAsync(entity, cts!.Token))
+            .TapAsync(_ => scrapeLogger.Information("Scrape configuration import completed..."))
+            .EnsureAsync(() => ResetUI());
+
     private async void OnExportTagsClicked(object? sender, RoutedEventArgs e)
         => _ = await ResetCancellationTokenSource()
             .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
@@ -160,6 +195,8 @@ public partial class MainWindow : Window, IDisposable
         ScrapeSiteNewButton.IsEnabled = false;
         ExportButton.IsEnabled = false;
         ImportButton.IsEnabled = false;
+        ExportScrapeConfigButton.IsEnabled = false;
+        ImportScrapeConfigButton.IsEnabled = false;
         ExportTagsButton.IsEnabled = false;
         ImportTagsButton.IsEnabled = false;
         CancelButton.IsEnabled = true;
@@ -182,6 +219,8 @@ public partial class MainWindow : Window, IDisposable
                 ScrapeSiteNewButton.IsEnabled = true;
                 ExportButton.IsEnabled = true;
                 ImportButton.IsEnabled = true;
+                ExportScrapeConfigButton.IsEnabled = true;
+                ImportScrapeConfigButton.IsEnabled = true;
                 ExportTagsButton.IsEnabled = true;
                 ImportTagsButton.IsEnabled = true;
                 CancelButton.IsEnabled = false;
