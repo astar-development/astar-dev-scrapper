@@ -10,6 +10,8 @@
             <Button x:Name="ScrapeSiteNewButton" Content="Scrape Site New" Click="OnScrapeSiteFunctionalClicked" />
             <Button x:Name="ExportButton" Content="Export Classifications" Click="OnExportClicked" />
             <Button x:Name="ImportButton" Content="Import Classifications" Click="OnImportClicked" />
+            <Button x:Name="ExportScrapeConfigButton" Content="Export Config" Click="OnExportScrapeConfigClicked" />
+            <Button x:Name="ImportScrapeConfigButton" Content="Import Config" Click="OnImportScrapeConfigClicked" />
             <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClicked" IsEnabled="False" />
         </StackPanel>
         <ScrollViewer x:Name="StatusScroller" Margin="12,8">
