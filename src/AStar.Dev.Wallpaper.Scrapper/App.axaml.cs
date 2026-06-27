@@ -61,6 +61,7 @@ public partial class App : Application
                 .Enrich.FromLogContext()
                 .ReadFrom.Configuration(sp.GetRequiredService<IConfiguration>())
                 .CreateLogger())
+            .AddSingleton<Serilog.ILogger>(sp => sp.GetRequiredService<Serilog.Core.Logger>())
             .AddDbContextFactory<FilesContext>(options =>
                 options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite")))
             .AddSingleton(sp => {
