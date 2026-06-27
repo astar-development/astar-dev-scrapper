@@ -61,6 +61,10 @@ public sealed class ImportExportService(IFileSystem fileSystem, ILogger logger) 
         catch(Exception ex)
         {
             logger.Error(ex, "Failed to export scrape configuration to file: {FilePath}", ApplicationMetadata.ScrapeConfigurationExportFilePath);
+            throw;
+        }
+    }
+
     public void ExportScrapedTagsToFile(List<ScrapedTagDomain> tags)
     {
         try
@@ -96,6 +100,8 @@ public sealed class ImportExportService(IFileSystem fileSystem, ILogger logger) 
         }
 
         return dto.ToDomain();
+    }
+
     public Result<List<ScrapedTagDomain>, string> ImportScrapedTagsFromFile()
     {
         if(!fileSystem.File.Exists(ApplicationMetadata.ScrapedTagsExportFilePath))

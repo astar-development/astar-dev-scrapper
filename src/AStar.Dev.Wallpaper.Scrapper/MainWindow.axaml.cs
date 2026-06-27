@@ -40,7 +40,7 @@ public partial class MainWindow : Window, IDisposable
     private CancellationTokenSource? cts;
     private readonly Logger scrapeLogger;
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, SearchWorkflowFunctional imagePageServiceFunctional, IFileSystem fileSystem, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IImportExportService importExportService, ScrapeConfigurationService scrapeConfigurationService)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, SearchWorkflowFunctional imagePageServiceFunctional, IFileSystem fileSystem, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, Logger logger, IScrapedTagRepository scrapedTagRepository, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, IScrapedTagService scrapedTagService, ConfigurationSaver configurationSaver, TagsToIgnoreCompletely tagsToIgnoreCompletely, TagsTextToIgnore tagsTextToIgnore, IImportExportService importExportService, ScrapeConfigurationService scrapeConfigurationService)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.scrapeConfiguration = scrapeConfiguration;
@@ -117,7 +117,6 @@ public partial class MainWindow : Window, IDisposable
             .EnsureAsync(() => ResetUI());
 
     private async void OnExportScrapeConfigClicked(object? sender, RoutedEventArgs e)
-    private async void OnExportTagsClicked(object? sender, RoutedEventArgs e)
         => _ = await ResetCancellationTokenSource()
             .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
                 onSuccess: DisableControlsAndClearStatus,
@@ -135,6 +134,32 @@ public partial class MainWindow : Window, IDisposable
             .EnsureAsync(() => ResetUI());
 
     private async void OnImportScrapeConfigClicked(object? sender, RoutedEventArgs e)
+        => _ = await ResetCancellationTokenSource()
+            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+                onSuccess: DisableControlsAndClearStatus,
+                onFailure: ex =>
+                {
+                    scrapeLogger.Error(ex, "Failed to reset cancellation token source");
+                    return ex.Message;
+                }
+            )
+            .Tap(_ => scrapeLogger.Information("Importing scrape configuration..."))
+            .Bind(_ => importExportService.ImportScrapeConfigurationFromFile())
+            .MapAsync(entity => scrapeConfigurationService.ImportScrapeConfigurationAsync(entity, cts!.Token))
+            .TapAsync(_ => scrapeLogger.Information("Scrape configuration import completed..."))
+            .EnsureAsync(() => ResetUI());
+
+    private async void OnExportTagsClicked(object? sender, RoutedEventArgs e)
+        => _ = await ResetCancellationTokenSource()
+            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+                onSuccess: DisableControlsAndClearStatus,
+                onFailure: ex =>
+                {
+                    scrapeLogger.Error(ex, "Failed to reset cancellation token source");
+                    UpdateStatus($"Error: {ex.Message}");
+                    return ex.Message;
+                }
+            )
             .Tap(_ => scrapeLogger.Information("Exporting tags..."))
             .MapAsync(_ => scrapedTagService.ExportScrapedTagsAsync(cts!.Token))
             .Tap(importExportService.ExportScrapedTagsToFile)
@@ -151,10 +176,6 @@ public partial class MainWindow : Window, IDisposable
                     return ex.Message;
                 }
             )
-            .Tap(_ => scrapeLogger.Information("Importing scrape configuration..."))
-            .Bind(_ => importExportService.ImportScrapeConfigurationFromFile())
-            .MapAsync(entity => scrapeConfigurationService.ImportScrapeConfigurationAsync(entity, cts!.Token))
-            .TapAsync(_ => scrapeLogger.Information("Scrape configuration import completed..."))
             .Tap(_ => scrapeLogger.Information("Importing tags..."))
             .Bind(_ => importExportService.ImportScrapedTagsFromFile())
             .MapAsync(tags => scrapedTagService.ImportScrapedTagsAsync(tags, cts!.Token))

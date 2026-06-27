@@ -12,18 +12,17 @@ namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Services;
 
 public sealed class GivenAnImportExportService
 {
-    private static readonly string ScrapperDirectory           = Path.GetDirectoryName(ApplicationMetadata.FileClassificationsExportFilePath)!;
-    private static readonly string ScrapeConfigScrapperDirectory = Path.GetDirectoryName(ApplicationMetadata.ScrapeConfigurationExportFilePath)!;
-    private static readonly string scrapperDirectory     = Path.GetDirectoryName(ApplicationMetadata.FileClassificationsExportFilePath)!;
-    private static readonly string scrapperTagsDirectory = Path.GetDirectoryName(ApplicationMetadata.ScrapedTagsExportFilePath)!;
+    private static readonly string scrapperDirectory           = Path.GetDirectoryName(ApplicationMetadata.FileClassificationsExportFilePath)!;
+    private static readonly string scrapeConfigScrapperDirectory = Path.GetDirectoryName(ApplicationMetadata.ScrapeConfigurationExportFilePath)!;
+    private static readonly string scrapperTagsDirectory       = Path.GetDirectoryName(ApplicationMetadata.ScrapedTagsExportFilePath)!;
 
     private const string CelebrityClassificationName = "Test Celebrity";
     private const string NormalClassificationName    = "Test Normal";
     private const string ValidPassword               = "super-secret-password";
 
-    private const string ActionTagValue    = "Action";
-    private const string GenreCategory = "Genre";
-    private const string ComedyTagValue    = "Comedy";
+    private const string ActionTagValue = "Action";
+    private const string GenreCategory  = "Genre";
+    private const string ComedyTagValue = "Comedy";
 
     private const string ValidClassificationsJson = """
         [
@@ -90,6 +89,8 @@ public sealed class GivenAnImportExportService
           },
           "scrapeDirectories": { "rootDirectory": "/tmp/scrape", "baseSaveDirectory": "saves", "baseDirectory": "base", "baseDirectoryFamous": "famous", "subDirectoryName": "sub" }
         }
+        """;
+
     private const string ValidTagsJson = """
         [
           {
@@ -244,14 +245,6 @@ public sealed class GivenAnImportExportService
     public void when_importing_scrape_config_and_file_does_not_exist_then_logger_receives_error_call()
     {
         sut.ImportScrapeConfigurationFromFile();
-    public void when_importing_tags_and_file_does_not_exist_then_failure_result_is_returned() =>
-        sut.ImportScrapedTagsFromFile()
-           .ShouldBeOfType<Fail<List<ScrapedTagDomain>, string>>();
-
-    [Fact]
-    public void when_importing_tags_and_file_does_not_exist_then_logger_receives_error_call()
-    {
-        sut.ImportScrapedTagsFromFile();
 
         mockLogger.Received(1).Error(Arg.Any<string>(), Arg.Any<string>());
     }
@@ -259,7 +252,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_importing_scrape_config_and_file_contains_null_json_then_failure_result_is_returned()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapeConfigScrapperDirectory);
         mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath, "null");
 
         sut.ImportScrapeConfigurationFromFile()
@@ -269,26 +262,10 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_importing_scrape_config_and_file_contains_null_json_then_logger_receives_error_call()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapeConfigScrapperDirectory);
         mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath, "null");
 
         sut.ImportScrapeConfigurationFromFile();
-    public void when_importing_tags_and_file_contains_null_json_then_failure_result_is_returned()
-    {
-        mockFileSystem.Directory.CreateDirectory(scrapperTagsDirectory);
-        mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapedTagsExportFilePath, "null");
-
-        sut.ImportScrapedTagsFromFile()
-           .ShouldBeOfType<Fail<List<ScrapedTagDomain>, string>>();
-    }
-
-    [Fact]
-    public void when_importing_tags_and_file_contains_null_json_then_logger_receives_error_call()
-    {
-        mockFileSystem.Directory.CreateDirectory(scrapperTagsDirectory);
-        mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapedTagsExportFilePath, "null");
-
-        sut.ImportScrapedTagsFromFile();
 
         mockLogger.Received(1).Error(Arg.Any<string>(), Arg.Any<string>());
     }
@@ -325,7 +302,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_exporting_scrape_config_then_file_is_written_to_expected_path()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapeConfigScrapperDirectory);
 
         sut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
 
@@ -335,7 +312,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_exporting_scrape_config_then_logger_receives_information_call()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapeConfigScrapperDirectory);
 
         sut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
 
@@ -345,7 +322,7 @@ public sealed class GivenAnImportExportService
     [Fact]
     public void when_exporting_scrape_config_then_password_is_redacted_in_exported_file()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapeConfigScrapperDirectory);
 
         sut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
 
@@ -357,6 +334,65 @@ public sealed class GivenAnImportExportService
 
     [Fact]
     public void when_file_system_throws_during_scrape_config_export_then_exception_is_rethrown()
+    {
+        var throwingFileSystem = Substitute.For<IFileSystem>();
+        throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
+                               .Throw(new IOException("Disk full"));
+        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+
+        var act = () => throwingSut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
+
+        act.ShouldThrow<IOException>();
+    }
+
+    [Fact]
+    public void when_file_system_throws_during_scrape_config_export_then_logger_receives_error_call()
+    {
+        var throwingFileSystem = Substitute.For<IFileSystem>();
+        throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
+                               .Throw(new IOException("Disk full"));
+        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+
+        Should.Throw<IOException>(() => throwingSut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData()));
+
+        mockLogger.Received(1).Error(Arg.Any<Exception>(), Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    [Fact]
+    public void when_importing_tags_and_file_does_not_exist_then_failure_result_is_returned() =>
+        sut.ImportScrapedTagsFromFile()
+           .ShouldBeOfType<Fail<List<ScrapedTagDomain>, string>>();
+
+    [Fact]
+    public void when_importing_tags_and_file_does_not_exist_then_logger_receives_error_call()
+    {
+        sut.ImportScrapedTagsFromFile();
+
+        mockLogger.Received(1).Error(Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    [Fact]
+    public void when_importing_tags_and_file_contains_null_json_then_failure_result_is_returned()
+    {
+        mockFileSystem.Directory.CreateDirectory(scrapperTagsDirectory);
+        mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapedTagsExportFilePath, "null");
+
+        sut.ImportScrapedTagsFromFile()
+           .ShouldBeOfType<Fail<List<ScrapedTagDomain>, string>>();
+    }
+
+    [Fact]
+    public void when_importing_tags_and_file_contains_null_json_then_logger_receives_error_call()
+    {
+        mockFileSystem.Directory.CreateDirectory(scrapperTagsDirectory);
+        mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapedTagsExportFilePath, "null");
+
+        sut.ImportScrapedTagsFromFile();
+
+        mockLogger.Received(1).Error(Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    [Fact]
     public void when_importing_valid_tags_then_result_is_ok()
     {
         SetupValidTagsImportFile();
@@ -463,14 +499,12 @@ public sealed class GivenAnImportExportService
                                .Throw(new IOException("Disk full"));
         var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
 
-        var act = () => throwingSut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
         var act = () => throwingSut.ExportScrapedTagsToFile([]);
 
         act.ShouldThrow<IOException>();
     }
 
     [Fact]
-    public void when_file_system_throws_during_scrape_config_export_then_logger_receives_error_call()
     public void when_file_system_throws_during_tag_export_then_logger_receives_error_call()
     {
         var throwingFileSystem = Substitute.For<IFileSystem>();
@@ -478,7 +512,6 @@ public sealed class GivenAnImportExportService
                                .Throw(new IOException("Disk full"));
         var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
 
-        Should.Throw<IOException>(() => throwingSut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData()));
         Should.Throw<IOException>(() => throwingSut.ExportScrapedTagsToFile([]));
 
         mockLogger.Received(1).Error(Arg.Any<Exception>(), Arg.Any<string>(), Arg.Any<string>());
@@ -492,8 +525,10 @@ public sealed class GivenAnImportExportService
 
     private void SetupValidScrapeConfigImportFile()
     {
-        mockFileSystem.Directory.CreateDirectory(ScrapeConfigScrapperDirectory);
+        mockFileSystem.Directory.CreateDirectory(scrapeConfigScrapperDirectory);
         mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath, ValidScrapeConfigJson);
+    }
+
     private void SetupValidTagsImportFile()
     {
         mockFileSystem.Directory.CreateDirectory(scrapperTagsDirectory);
@@ -524,6 +559,7 @@ public sealed class GivenAnImportExportService
         },
         ScrapeDirectories = new ScrapeDirectories { RootDirectory = "/tmp/scrape" }
     };
+
     private static List<ScrapedTagDomain> CreateDomainTags() =>
     [
         new() { Value = ActionTagValue, Category = GenreCategory, IncludeInSearch = true  },

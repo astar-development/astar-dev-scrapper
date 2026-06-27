@@ -46,7 +46,7 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
     [Fact]
     public async Task when_exporting_then_context_is_created()
     {
-        await sut.ExportScrapeConfigurationAsync(CancellationToken.None);
+        await sut.ExportScrapeConfigurationAsync(TestContext.Current.CancellationToken);
 
         await factory.Received(1).CreateDbContextAsync(Arg.Any<CancellationToken>());
     }
@@ -54,7 +54,7 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
     [Fact]
     public async Task when_importing_then_context_is_created()
     {
-        await sut.ImportScrapeConfigurationAsync(CreateImportEntity(), CancellationToken.None);
+        await sut.ImportScrapeConfigurationAsync(CreateImportEntity(), TestContext.Current.CancellationToken);
 
         await factory.Received(1).CreateDbContextAsync(Arg.Any<CancellationToken>());
     }
@@ -64,12 +64,12 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
     {
         var importEntity = CreateImportEntity(sqlite: "Data Source=updated.db");
 
-        await sut.ImportScrapeConfigurationAsync(importEntity, CancellationToken.None);
+        await sut.ImportScrapeConfigurationAsync(importEntity, TestContext.Current.CancellationToken);
 
         await using var verifyCtx = new FilesContext(options);
         var result = await verifyCtx.ScrapeConfiguration
             .Include(x => x.ConnectionStrings)
-            .FirstAsync();
+            .FirstAsync(TestContext.Current.CancellationToken);
         result.ConnectionStrings.Sqlite.ShouldBe("Data Source=updated.db");
     }
 
@@ -78,12 +78,12 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
     {
         var importEntity = CreateImportEntity(password: ApplicationMetadata.Redacted);
 
-        await sut.ImportScrapeConfigurationAsync(importEntity, CancellationToken.None);
+        await sut.ImportScrapeConfigurationAsync(importEntity, TestContext.Current.CancellationToken);
 
         await using var verifyCtx = new FilesContext(options);
         var result = await verifyCtx.ScrapeConfiguration
             .Include(x => x.UserConfiguration)
-            .FirstAsync();
+            .FirstAsync(TestContext.Current.CancellationToken);
         result.UserConfiguration.Password.ShouldBe(ExistingPassword);
     }
 
@@ -92,12 +92,12 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
     {
         var importEntity = CreateImportEntity(sessionCookie: ApplicationMetadata.Redacted);
 
-        await sut.ImportScrapeConfigurationAsync(importEntity, CancellationToken.None);
+        await sut.ImportScrapeConfigurationAsync(importEntity, TestContext.Current.CancellationToken);
 
         await using var verifyCtx = new FilesContext(options);
         var result = await verifyCtx.ScrapeConfiguration
             .Include(x => x.UserConfiguration)
-            .FirstAsync();
+            .FirstAsync(TestContext.Current.CancellationToken);
         result.UserConfiguration.SessionCookie.ShouldBe(ExistingSessionCookie);
     }
 
@@ -106,12 +106,12 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
     {
         var importEntity = CreateImportEntity(apiKey: ApplicationMetadata.Redacted);
 
-        await sut.ImportScrapeConfigurationAsync(importEntity, CancellationToken.None);
+        await sut.ImportScrapeConfigurationAsync(importEntity, TestContext.Current.CancellationToken);
 
         await using var verifyCtx = new FilesContext(options);
         var result = await verifyCtx.ScrapeConfiguration
             .Include(x => x.SearchConfiguration)
-            .FirstAsync();
+            .FirstAsync(TestContext.Current.CancellationToken);
         result.SearchConfiguration.ApiKey.ShouldBe(ExistingApiKey);
     }
 
@@ -124,13 +124,13 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
             new SearchCategories { Id = "new-cat",          Name = "Brand New Category", TotalPages = 5,  IncludeInSearch = true }
         ]);
 
-        await sut.ImportScrapeConfigurationAsync(importEntity, CancellationToken.None);
+        await sut.ImportScrapeConfigurationAsync(importEntity, TestContext.Current.CancellationToken);
 
         await using var verifyCtx = new FilesContext(options);
         var result = await verifyCtx.ScrapeConfiguration
             .Include(x => x.SearchConfiguration)
                 .ThenInclude(x => x.SearchCategories)
-            .FirstAsync();
+            .FirstAsync(TestContext.Current.CancellationToken);
         result.SearchConfiguration.SearchCategories.Count.ShouldBe(2);
     }
 
@@ -142,13 +142,13 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
             new SearchCategories { Id = "new-cat", Name = "New Category", TotalPages = 5, IncludeInSearch = true }
         ]);
 
-        await sut.ImportScrapeConfigurationAsync(importEntity, CancellationToken.None);
+        await sut.ImportScrapeConfigurationAsync(importEntity, TestContext.Current.CancellationToken);
 
         await using var verifyCtx = new FilesContext(options);
         var result = await verifyCtx.ScrapeConfiguration
             .Include(x => x.SearchConfiguration)
                 .ThenInclude(x => x.SearchCategories)
-            .FirstAsync();
+            .FirstAsync(TestContext.Current.CancellationToken);
         result.SearchConfiguration.SearchCategories.ShouldContain(c => c.Id == "new-cat");
     }
 
@@ -160,13 +160,13 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
             new SearchCategories { Id = ExistingCategoryId, Name = "Updated Category Name", TotalPages = 20, IncludeInSearch = true }
         ]);
 
-        await sut.ImportScrapeConfigurationAsync(importEntity, CancellationToken.None);
+        await sut.ImportScrapeConfigurationAsync(importEntity, TestContext.Current.CancellationToken);
 
         await using var verifyCtx = new FilesContext(options);
         var result = await verifyCtx.ScrapeConfiguration
             .Include(x => x.SearchConfiguration)
                 .ThenInclude(x => x.SearchCategories)
-            .FirstAsync();
+            .FirstAsync(TestContext.Current.CancellationToken);
         result.SearchConfiguration.SearchCategories.Count.ShouldBe(1);
         result.SearchConfiguration.SearchCategories[0].Name.ShouldBe("Updated Category Name");
     }
@@ -174,7 +174,7 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
     [Fact]
     public async Task when_exporting_returns_entity_with_connection_strings()
     {
-        var result = await sut.ExportScrapeConfigurationAsync(CancellationToken.None);
+        var result = await sut.ExportScrapeConfigurationAsync(TestContext.Current.CancellationToken);
 
         result.ConnectionStrings.ShouldNotBeNull();
         result.ConnectionStrings.Sqlite.ShouldBe(ExistingSqlite);
@@ -183,7 +183,7 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
     [Fact]
     public async Task when_exporting_returns_entity_with_user_configuration()
     {
-        var result = await sut.ExportScrapeConfigurationAsync(CancellationToken.None);
+        var result = await sut.ExportScrapeConfigurationAsync(TestContext.Current.CancellationToken);
 
         result.UserConfiguration.ShouldNotBeNull();
         result.UserConfiguration.Password.ShouldBe(ExistingPassword);
