@@ -24,6 +24,23 @@ ALWAYS use serena / graphify to aid understanding / you need to explore the code
 ALWAYS use TDD - use the c-sharp-qa subagent to write failing tests and COMMIT before using c-sharp-dev subagent to implement the production code. Ensure all tests (new and existing) pass before reporting success.
 ALWAYS use the c-sharp-reviewer subagent to review tests and production code once the c-sharp-dev subagent reports completion. ALWAYS fix the issues reported - use a new c-sharp-dev subagent to fix.
 
+## LESSONS LEARNED — DO NOT REPEAT THESE MISTAKES
+
+### Trust the user over code inference
+When the user states a runtime fact (e.g. "the database is X"), accept it. Do not override it with inferences from file timestamps, file sizes, or indirect code paths. The user knows their own secrets and runtime environment.
+
+### "REDACTED!" is a placeholder — never infer the real value
+Any value in `appsettings.json` (or any readable config file) that reads `"REDACTED!"`, `"<secret>"`, or similar is a placeholder. The real value is in user secrets. Never attempt to infer what the real value might be from circumstantial evidence. If the value matters, ask the user.
+
+### Runtime SQLite connection string
+The runtime DB path is set via user secrets `ConnectionStrings:Sqlite`. It resolves to `Data Source=/home/jbarden/Documents/Scrapper/files.db`. This is the one and only runtime database. `FilesDb.db` is NOT the runtime database.
+
+### Fix only what was asked — do not change scope
+Read the request literally. "Make the exports work" means fix the bug that causes empty output — it does NOT mean restructure buttons, merge handlers, or change UI layout. If in doubt, ask before changing anything beyond the stated scope.
+
+### Stop immediately when told to stop
+If the user says "DO NOT CHANGE ANYTHING", stop all tool calls immediately. Explain in text only. Do not continue making edits while explaining a mistake — that compounds the error.
+
 ## Architecture
 
 Targets **net10.0** across all projects. `TreatWarningsAsErrors` enabled in Debug and Release.

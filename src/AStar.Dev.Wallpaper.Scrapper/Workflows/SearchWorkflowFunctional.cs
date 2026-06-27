@@ -7,15 +7,15 @@ using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
+using Serilog;
 using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
-public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchResultsPageFunctional, IDbContextFactory<FilesContext> dbContextFactory, Logger logger)
+public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchResultsPageFunctional, IDbContextFactory<FilesContext> dbContextFactory, ConfigurationSaver configurationSaver, ImagePageService imagePageService, ILogger logger)
 {
     private SearchConfiguration searchConfiguration = null!;
     private ScrapeDirectories   scrapeDirectories = null!;
-    private ConfigurationSaver  configurationSaver = null!;
 
     public async Task<Result<Unit, string>> RunAsync(CancellationToken ct = default)
     {
@@ -47,26 +47,26 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
 
             if(pageDetails is { Ok: false, }) throw new InvalidOperationException("Could not get the image page after retry...");
 
-            // var (pageCount, imageCount, subDirectoryName) = await searchResultsPageFunctional.PageInfoAsync();
-            // UpdateSearchTotalPagesIfRequired(pageCount);
+            var (pageCount, imageCount, subDirectoryName) = await searchResultsPageFunctional.PageInfoAsync();
+            UpdateSearchTotalPagesIfRequired(pageCount);
 
-            // if(SearchCategoryHasBeenFullyVisited(combinedSearchString, searchCategory, imageCount))
-            // {
-            //     logger.Debug("{Category} category has been fully visited...", searchCategory.Name);
-            //     continue;
-            // }
+            if(SearchCategoryHasBeenFullyVisited(combinedSearchString, searchCategory, imageCount))
+            {
+                logger.Debug("{Category} category has been fully visited...", searchCategory.Name);
+                continue;
+            }
 
             var startingPage = searchCategory.LastPageVisited > 0 ? searchCategory.LastPageVisited : 1;
             searchConfiguration = searchConfiguration with { StartingPageNumber = startingPage };
 
             logger.Debug("Visiting {Category} from page {StartingPage} now...", searchCategory.Name, startingPage);
-//            scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
+            scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
 
-            // _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(scrapeDirectories.RootDirectory, scrapeDirectories.BaseDirectory, subDirectoryName));
+            _ = DirectoryHelper.CreateDirectoryIfRequired([Path.Combine(scrapeDirectories.RootDirectory, scrapeDirectories.BaseDirectory, subDirectoryName)]);
 
             await ProcessAllCategoryPages(searchCategory, combinedSearchString, ct);
 
-  //          searchCategory.LastKnownImageCount = imageCount;
+            searchCategory.LastKnownImageCount = imageCount;
             searchCategory.LastPageVisited     = 0;
             await configurationSaver.SaveUpdatedConfigurationAsync();
         }
@@ -85,10 +85,10 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
             searchConfiguration = searchConfiguration with { StartingPageNumber = currentPageNumber };
             searchCategory.LastPageVisited          = currentPageNumber;
             await configurationSaver.SaveUpdatedConfigurationAsync();
-            // _ = await searchResultsPageFunctional.LoadSearchPageAsync(combinedSearchString, currentPageNumber);
+            _ = await searchResultsPageFunctional.LoadSearchPageAsync(combinedSearchString, currentPageNumber);
 
-            //  IReadOnlyCollection<string> imagePageLinks = await searchResultsPageFunctional.ImagePageLinksAsync();
-            // await imagePageService.GetTheImagePagesAsync(imagePageLinks, searchCategory.Id, ct);
+            IReadOnlyCollection<string> imagePageLinks = await searchResultsPageFunctional.ImagePageLinksAsync();
+            await imagePageService.GetTheImagePagesAsync(imagePageLinks, searchCategory.Id, ct);
         }
 
         stopwatch.Stop();

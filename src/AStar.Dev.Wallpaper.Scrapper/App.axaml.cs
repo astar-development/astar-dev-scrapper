@@ -90,6 +90,8 @@ public partial class App : Application
             .AddTransient<IImportExportService, ImportExportService>()
             .AddTransient<IFileSystem, RealFileSystem>()
             .AddTransient<ScrapeConfigurationService>()
+            .AddTransient<ImagePageService>()
+            .AddTransient<ImagePage>()
             .AddTransient<Func<ScrapeConfigurationView>>(sp => () => sp.GetRequiredService<ScrapeConfigurationView>())
             .AddTransient<MainWindow>();
 
