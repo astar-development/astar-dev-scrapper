@@ -76,11 +76,7 @@ public sealed class FilesContext : DbContext
     public DbSet<DownloadedFileClassification> DownloadedFileClassifications { get; set; } = null!;
 
     /// <inheritdoc />
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if(!optionsBuilder.IsConfigured)
-            _ = optionsBuilder.UseSqlite("Data Source=/home/jbarden/Documents/Scrapper/files.db");
-    }
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => _ = optionsBuilder.UseSqlite("Data Source=/home/jbarden/Documents/Scrapper/files.db");
 
     /// <summary>
     ///     The overridden OnModelCreating method
