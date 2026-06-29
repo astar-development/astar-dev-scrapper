@@ -1,3 +1,4 @@
+using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Repositories;
@@ -10,13 +11,13 @@ public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfig
 {
     private IPage page = null!;
 
-    public async Task<ImagePageResult> GetImageFromPage(string link)
+    public async Task<ImagePageResult> GetImageFromPage(string link, string categoryName)
     {
         page ??= await playwrightService.ConfigurePlaywrightAsync();
         _ = await page.GotoAsync(link);
 
         IReadOnlyList<ILocator> tagLocators   = await page.Locator(".tagname").AllAsync();
-        var                     directoryName = scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory;
+        var                     directoryName = scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory.CombinePath(categoryName);
         var (directoryNameUpdated, filePrefix, skip, imageTags) = await ProcessTheImageTags(tagLocators, [directoryName]);
 
         if(skip) return new ImagePageResult(null, directoryNameUpdated, filePrefix, skip, imageTags);
@@ -118,7 +119,7 @@ public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfig
                 if (!directoryName.Contains(tagText) && !filePrefix.Contains(tagText, StringComparison.OrdinalIgnoreCase))
                 {
                     filePrefixUpdated = string.Join("-", filePrefix, tagText);
-                    directoryName.Add(tagText);
+                    //directoryName.Add(tagText);
                 }
             }
         }
