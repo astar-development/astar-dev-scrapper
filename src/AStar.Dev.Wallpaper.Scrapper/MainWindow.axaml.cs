@@ -79,7 +79,7 @@ public partial class MainWindow : Window, IDisposable
             )
             .Tap(_ => scrapeLogger.Information("Configuring Playwright..."))
             .Tap(_ => scrapeLogger.Information("Starting scrape..."))
-            .BindAsync(page => searchWorkflowFunctional.RunAsync(cts!.Token))
+            .BindAsync(page => searchWorkflowFunctional.RunAsync(scrapeLogger, cts!.Token))
             .TapAsync(_ => scrapeLogger.Information("Scrape completed..."))
             .EnsureAsync(() => ResetUI());
 
