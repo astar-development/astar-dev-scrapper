@@ -3,7 +3,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 /// <summary>
 /// Represents a search category with its associated metadata, including the category's unique identifier, name, last known image count, last page visited, and total pages available. This information is crucial for managing and tracking the scraping process for each category, allowing for efficient navigation through search results and ensuring that the scraper can resume from the last visited page in case of interruptions. The LastKnownImageCount helps in determining if there are new images to scrape since the last run, while LastPageVisited and TotalPages assist in navigating through paginated search results effectively.
 /// </summary>
-public class SearchCategories
+public class SearchCategories : AuditableEntity
 {
     /// <summary>
     /// The foreign key back to the parent search configuration.

@@ -5,7 +5,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 /// <summary>
 ///     The <see href="ModelToIgnore"></see> class
 /// </summary>
-public sealed class ModelToIgnore
+public sealed class ModelToIgnore : AuditableEntity
 {
     /// <summary>
     ///     Gets or sets The ID of the <see href="ModelToIgnore"></see>. I know, shocking...

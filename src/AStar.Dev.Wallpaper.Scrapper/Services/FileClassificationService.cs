@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public sealed class FileClassificationService(IDbContextFactory<FilesContext> contextFactory)
+public sealed class FileClassificationService(IDbContextFactory<FilesContext> contextFactory, TimeProvider timeProvider)
 {
     public async Task ClassifyAsync(FileDetail fileDetail, string categoryId, IReadOnlyList<string> imageTags, CancellationToken token)
     {
@@ -58,13 +58,13 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
             {
                 existing.IncludeInSearch = classification.IncludeInSearch;
 
-                // Update FileNameParts
                 var existingParts = existing.FileNameParts.ToList();
                 foreach (var part in classification.FileNameParts)
                 {
                     if (!existingParts.Any(ep => ep.Text.Equals(part.Text, StringComparison.OrdinalIgnoreCase)))
                     {
                         existing.FileNameParts.Add(new FileNamePart { Text = part.Text });
+                        existing.UpdatedAt = timeProvider.GetUtcNow();
                     }
                 }
             }

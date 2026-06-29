@@ -3,7 +3,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 /// <summary>
 ///     Records the classification applied to a file at download time.
 /// </summary>
-public class DownloadedFileClassification
+public class DownloadedFileClassification : AuditableEntity
 {
     /// <summary>Gets or sets the primary key.</summary>
     public int Id { get; set; }

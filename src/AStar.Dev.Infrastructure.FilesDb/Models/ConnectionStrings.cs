@@ -3,7 +3,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 /// <summary>
 /// Represents the connection strings required for the scraper to connect to various databases or services. This class is essential for configuring the scraper's access to necessary resources, such as a SQLite database for storing scraped data or a logging service for recording the scraping process. The ConnectionStrings property allows for flexible configuration of different connection strings, enabling the scraper to adapt to various environments and requirements without hardcoding sensitive information directly into the codebase. Proper management of connection strings is crucial for ensuring secure and efficient operation of the scraper, as it may need to connect to multiple services or databases during its execution.
 /// </summary>
-public class ConnectionStrings
+public class ConnectionStrings : AuditableEntity
 {
     /// <summary>
     /// The internal primary key for the ConnectionStrings table.

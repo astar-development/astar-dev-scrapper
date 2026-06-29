@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using AStar.Dev.Infrastructure.FilesDb.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AStar.Dev.Infrastructure.FilesDb.Migrations
 {
     [DbContext(typeof(FilesContext))]
-    partial class FilesContextModelSnapshot : ModelSnapshot
+    [Migration("20260627224550_ChangeToDateTimeOffset")]
+    partial class ChangeToDateTimeOffset
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,18 +30,12 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("ScrapeConfigurationEntityId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Sqlite")
                         .IsRequired()
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -77,16 +74,10 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("FileClassificationId")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("FileDetailId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -396,12 +387,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(300)
@@ -417,12 +402,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -447,9 +426,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("RootDirectory")
                         .IsRequired()
                         .HasColumnType("nvarchar(256)");
@@ -460,9 +436,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                     b.Property<string>("SubDirectoryName")
                         .IsRequired()
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -481,14 +454,8 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IncludeInSearch")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
                         .IsRequired()
@@ -511,9 +478,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(128)");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IncludeInSearch")
                         .HasColumnType("INTEGER");
 
@@ -529,9 +493,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
 
                     b.Property<int>("TotalPages")
                         .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("SearchConfigurationId", "Id");
 
@@ -551,9 +512,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                     b.Property<string>("BaseUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
 
                     b.Property<int>("ImagePauseInSeconds")
                         .HasColumnType("int");
@@ -606,9 +564,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                     b.Property<int>("TotalPages")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("UseHeadless")
                         .HasColumnType("bit");
 
@@ -625,14 +580,8 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IgnoreImage")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
                         .IsRequired()
@@ -650,9 +599,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("LoginEmailAddress")
                         .IsRequired()
                         .HasColumnType("nvarchar(256)");
@@ -667,9 +613,6 @@ namespace AStar.Dev.Infrastructure.FilesDb.Migrations
                     b.Property<string>("SessionCookie")
                         .IsRequired()
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Username")
                         .IsRequired()

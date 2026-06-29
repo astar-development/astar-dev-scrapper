@@ -3,7 +3,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 /// <summary>
 /// Represents user configuration details, including login email address, username, password, and session cookie. This information is essential for authenticating the scraper with the target website, allowing it to access user-specific content and perform actions that require authentication. The LoginEmailAddress and Username are used for identifying the user account, while the Password is necessary for logging in. The SessionCookie can be used to maintain an authenticated session without needing to log in repeatedly, improving the efficiency of the scraping process and reducing the likelihood of triggering anti-bot measures on the target website.
 /// </summary>
-public class UserConfiguration
+public class UserConfiguration : AuditableEntity
 {
     /// <summary>
     /// The internal primary key for the UserConfiguration table.

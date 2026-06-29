@@ -3,7 +3,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 /// <summary>
 /// Represents the search configuration for the scraping process, including the base URL, API key, search categories, search string, top wallpapers, search string prefix and suffix, subscriptions, image pause duration, starting page numbers, and total pages for search results, subscriptions, and top wallpapers. This configuration is essential for guiding the scraper on how to navigate the target website, what criteria to use for searching and categorizing images, and how to manage pagination effectively. The properties in this class allow for flexible and dynamic configuration of the scraping process, enabling users to customize their scraping sessions according to their specific needs and preferences.
 /// </summary>
-public class SearchConfiguration
+public class SearchConfiguration : AuditableEntity
 {
     /// <summary>
     /// The internal primary key for the SearchConfiguration table.

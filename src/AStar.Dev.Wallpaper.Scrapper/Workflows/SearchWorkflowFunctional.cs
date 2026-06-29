@@ -21,7 +21,9 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
     {
         try
         {
-            searchConfiguration = dbContextFactory.CreateDbContext().ScrapeConfiguration.GetScrapeConfigurations().ToAppModel().SearchConfiguration;
+            ScrapeConfiguration scrapeConfiguration = dbContextFactory.CreateDbContext().ScrapeConfiguration.GetScrapeConfigurations().ToAppModel();
+            searchConfiguration = scrapeConfiguration.SearchConfiguration;
+            scrapeDirectories = scrapeConfiguration.ScrapeDirectories;
             List<Category> searchCategories = FilterSearchCategories([.. searchConfiguration.SearchCategories]);
             await ProcessSearchCategories([.. searchConfiguration.SearchCategories], ct);
 
