@@ -8,7 +8,6 @@ using AStar.Dev.Wallpaper.Scrapper.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using Serilog;
-using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
@@ -18,7 +17,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
     private SearchConfiguration searchConfiguration = null!;
     private ScrapeDirectories   scrapeDirectories = null!;
 
-    public async Task<Result<Unit, string>> RunAsync(Logger scrapeLogger, CancellationToken ct = default)
+    public async Task<Result<Unit, string>> RunAsync(ILogger scrapeLogger, CancellationToken ct = default)
     {
         try
         {
@@ -36,7 +35,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
         }
     }
 
-    private async Task ProcessSearchCategories(List<Category> searchCategories, Logger scrapeLogger, CancellationToken ct)
+    private async Task ProcessSearchCategories(List<Category> searchCategories, ILogger scrapeLogger, CancellationToken ct)
     {
         foreach(Category searchCategory in searchCategories)
         {
@@ -74,7 +73,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
         }
     }
 
-    private async Task ProcessAllCategoryPages(Category searchCategory, string combinedSearchString, Logger scrapeLogger, CancellationToken ct)
+    private async Task ProcessAllCategoryPages(Category searchCategory, string combinedSearchString, ILogger scrapeLogger, CancellationToken ct)
     {
         var stopwatch = new Stopwatch();
         stopwatch.Start();

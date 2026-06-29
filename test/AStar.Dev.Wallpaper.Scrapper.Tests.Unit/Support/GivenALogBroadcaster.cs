@@ -52,4 +52,18 @@ public sealed class GivenALogBroadcaster
 
         received.ShouldBeNull();
     }
+
+    [Fact]
+    public void when_subscriber_is_removed_then_it_no_longer_receives_messages()
+    {
+        var sut = new LogBroadcaster();
+        string? received = null;
+        Action<string> handler = msg => received = msg;
+        sut.MessageLogged += handler;
+        sut.MessageLogged -= handler;
+
+        sut.Broadcast(TestMessage);
+
+        received.ShouldBeNull();
+    }
 }
