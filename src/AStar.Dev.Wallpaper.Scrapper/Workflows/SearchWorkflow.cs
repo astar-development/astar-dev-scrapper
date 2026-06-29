@@ -87,7 +87,7 @@ public sealed class SearchWorkflow(
             _ = await searchResultsPage.LoadSearchPageAsync(combinedSearchString, currentPageNumber);
 
             IReadOnlyCollection<string> imagePageLinks = await searchResultsPage.ImagePageLinksAsync();
-            await imagePageService.GetTheImagePagesAsync(imagePageLinks, searchCategory.Id, ct);
+            await imagePageService.GetTheImagePagesAsync(imagePageLinks, searchCategory.Id, searchCategory.Name, ct);
         }
 
         stopwatch.Stop();

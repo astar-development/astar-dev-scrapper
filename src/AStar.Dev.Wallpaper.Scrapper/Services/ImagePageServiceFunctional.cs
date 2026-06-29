@@ -27,7 +27,7 @@ public sealed class ImagePageServiceFunctional(IDbContextFactory<FilesContext> d
         using var ctx = dbContextFactory.CreateDbContext();
         var scrapeConfiguration = ctx.ScrapeConfiguration.GetScrapeConfigurations().ToAppModel();
 
-        await searchWorkflowFunctional.RunAsync(token)
+        await searchWorkflowFunctional.RunAsync(logger, token)
             .Tap(_ => logger.Information("Image pages retrieved."))
             .Tap(_ => logger.Information("Scrape completed..."));
 

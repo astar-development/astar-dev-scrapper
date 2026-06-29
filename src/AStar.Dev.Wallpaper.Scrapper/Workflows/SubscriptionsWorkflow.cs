@@ -60,7 +60,7 @@ public sealed class SubscriptionsWorkflow(
             _ = await subscriptionsImagesListPage.LoadSubscriptionResultsPageAsync(currentPageNumber);
             IReadOnlyCollection<string> imagePageLinks = await subscriptionsImagesListPage.GetImagePageLinks();
 
-            await imagePageService.GetTheImagePagesAsync(imagePageLinks, ct: ct);
+            await imagePageService.GetTheImagePagesAsync(imagePageLinks, "", subDirectoryName, ct: ct);
         }
 
         if(pageCount > 0)

@@ -14,10 +14,11 @@ namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
 public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchResultsPageFunctional, IDbContextFactory<FilesContext> dbContextFactory, ConfigurationSaver configurationSaver, ImagePageService imagePageService, ILogger logger)
 {
+    private Infrastructure.FilesDb.Models.ScrapeConfigurationEntity scrapeConfiguration = null!;
     private SearchConfiguration searchConfiguration = null!;
     private ScrapeDirectories   scrapeDirectories = null!;
 
-    public async Task<Result<Unit, string>> RunAsync(CancellationToken ct = default)
+    public async Task<Result<Unit, string>> RunAsync(ILogger scrapeLogger, CancellationToken ct = default)
     {
         try
         {
@@ -25,18 +26,18 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
             searchConfiguration = scrapeConfiguration.SearchConfiguration;
             scrapeDirectories = scrapeConfiguration.ScrapeDirectories;
             List<Category> searchCategories = FilterSearchCategories([.. searchConfiguration.SearchCategories]);
-            await ProcessSearchCategories([.. searchConfiguration.SearchCategories], ct);
+            await ProcessSearchCategories([.. searchConfiguration.SearchCategories], scrapeLogger, ct);
 
             return Unit.Value;
         }
         catch(Exception exception) when (exception is not OperationCanceledException)
         {
-            logger.Error(exception.GetBaseException().Message);
+            scrapeLogger.Error(exception.GetBaseException().Message);
             throw;
         }
     }
 
-    private async Task ProcessSearchCategories(List<Category> searchCategories, CancellationToken ct)
+    private async Task ProcessSearchCategories(List<Category> searchCategories, ILogger scrapeLogger, CancellationToken ct)
     {
         foreach(Category searchCategory in searchCategories)
         {
@@ -66,7 +67,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
 
             _ = DirectoryHelper.CreateDirectoryIfRequired([Path.Combine(scrapeDirectories.RootDirectory, scrapeDirectories.BaseDirectory, subDirectoryName)]);
 
-            await ProcessAllCategoryPages(searchCategory, combinedSearchString, ct);
+            await ProcessAllCategoryPages(searchCategory, combinedSearchString, scrapeLogger, ct);
 
             searchCategory.LastKnownImageCount = imageCount;
             searchCategory.LastPageVisited     = 0;
@@ -74,16 +75,16 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
         }
     }
 
-    private async Task ProcessAllCategoryPages(Category searchCategory, string combinedSearchString, CancellationToken ct)
+    private async Task ProcessAllCategoryPages(Category searchCategory, string combinedSearchString, ILogger scrapeLogger, CancellationToken ct)
     {
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        logger.Debug("About to visit the specific {Category} pages now...", searchCategory.Name);
+        scrapeLogger.Debug("About to visit the specific {Category} pages now...", searchCategory.Name);
 
         for(var currentPageNumber = searchConfiguration.StartingPageNumber; currentPageNumber <= searchConfiguration.TotalPages; currentPageNumber++)
         {
             await Task.Delay(TimeSpan.FromSeconds(2), ct);
-            logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, searchConfiguration.TotalPages, searchCategory.Name);
+            scrapeLogger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, searchConfiguration.TotalPages, searchCategory.Name);
             searchConfiguration = searchConfiguration with { StartingPageNumber = currentPageNumber };
             searchCategory.LastPageVisited          = currentPageNumber;
             await configurationSaver.SaveUpdatedConfigurationAsync();
@@ -94,12 +95,14 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
         }
 
         stopwatch.Stop();
-        logger.Information("Completed visiting the {Category}. Total time: {CategoryVisitDuration}", searchCategory.Name, stopwatch.Elapsed);
+        scrapeLogger.Information("Completed visiting the {Category}. Total time: {CategoryVisitDuration}", searchCategory.Name, stopwatch.Elapsed);
     }
 
     private ScrapeDirectories UpdateSubDirectoryIfRequired(string subDirectoryName)
     {
-        if(subDirectoryName.Length > 0) scrapeDirectories = scrapeDirectories with { SubDirectoryName = subDirectoryName };
+        if(scrapeDirectories is null) scrapeDirectories = new ScrapeDirectories(scrapeConfiguration.ScrapeDirectories.RootDirectory, scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory, scrapeConfiguration.ScrapeDirectories.BaseDirectory, scrapeConfiguration.ScrapeDirectories.BaseDirectoryFamous, subDirectoryName);
+        else if(subDirectoryName.Length > 0) scrapeDirectories = scrapeDirectories with { SubDirectoryName = subDirectoryName };
+        
         return scrapeDirectories;
     }
 

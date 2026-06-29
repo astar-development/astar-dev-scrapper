@@ -8,13 +8,13 @@ public static class ScrapeConfigurationEntityExtensions
         => new(
             new ConnectionStrings(entity.ConnectionStrings.Sqlite),
             ToUserConfiguration(entity),
-            TSearchConfiguration(entity),
+            ToSearchConfiguration(entity),
             ToScrapeDirectoriesAppModel(entity));
 
     private static UserConfiguration ToUserConfiguration(ScrapeConfigurationEntity entity) 
         => new(entity.UserConfiguration.LoginEmailAddress, entity.UserConfiguration.Username, entity.UserConfiguration.Password, entity.UserConfiguration.SessionCookie);
 
-    private static SearchConfiguration TSearchConfiguration(ScrapeConfigurationEntity entity)
+    private static SearchConfiguration ToSearchConfiguration(ScrapeConfigurationEntity entity)
         => new(
                     entity.SearchConfiguration.BaseUrl,
                     entity.SearchConfiguration.ApiKey,

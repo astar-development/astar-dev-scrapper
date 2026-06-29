@@ -53,14 +53,19 @@ public partial class App : Application
                 .OrderBy(e => e.Id)
                 .First()
                 .ToAppModel())
-            .AddSingleton(sp => new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
-                .WriteTo.Seq("http://localhost:5341", formatProvider: CultureInfo.InvariantCulture)
-                .Enrich.WithExceptionDetails()
-                .Enrich.FromLogContext()
-                .ReadFrom.Configuration(sp.GetRequiredService<IConfiguration>())
-                .CreateLogger())
+            .AddSingleton<LogBroadcaster>()
+            .AddSingleton(sp => {
+                var broadcaster = sp.GetRequiredService<LogBroadcaster>();
+                return new LoggerConfiguration()
+                    .MinimumLevel.Debug()
+                    .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
+                    .WriteTo.Seq("http://localhost:5341", formatProvider: CultureInfo.InvariantCulture)
+                    .WriteTo.Sink(new StatusLogSink(broadcaster.Broadcast), Serilog.Events.LogEventLevel.Information)
+                    .Enrich.WithExceptionDetails()
+                    .Enrich.FromLogContext()
+                    .ReadFrom.Configuration(sp.GetRequiredService<IConfiguration>())
+                    .CreateLogger();
+            })
             .AddSingleton<Serilog.ILogger>(sp => sp.GetRequiredService<Serilog.Core.Logger>())
             .AddDbContextFactory<FilesContext>(options =>
                 options.UseSqlite(builder.Configuration["scrapeConfiguration:connectionStrings:sqlite"]))
