@@ -97,6 +97,7 @@ public partial class App : Application
             .AddTransient<ScrapeConfigurationService>()
             .AddTransient<ImagePageService>()
             .AddTransient<ImagePage>()
+            .AddTransient<TimeProvider>(_=> TimeProvider.System)
             .AddTransient<Func<ScrapeConfigurationView>>(sp => () => sp.GetRequiredService<ScrapeConfigurationView>())
             .AddTransient<MainWindow>();
 

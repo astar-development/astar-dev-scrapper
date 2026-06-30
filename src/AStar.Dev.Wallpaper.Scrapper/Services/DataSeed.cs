@@ -95,7 +95,7 @@ public static class DataSeed
 
     private static async Task UpdateIncompleteSearchConfigurationAsync(ScrapeConfiguration scrapeConfiguration, Logger logger, FilesContext dbContext)
     {
-        var existing = await dbContext.SearchConfigurations.SingleAsync();
+        var existing = dbContext.SearchConfigurations.OrderByDescending(x=>x.Id).First();
         if (!string.IsNullOrEmpty(existing.SearchStringPrefix)) return;
 
         logger.Information("Updating incomplete SearchConfiguration with missing fields...");
