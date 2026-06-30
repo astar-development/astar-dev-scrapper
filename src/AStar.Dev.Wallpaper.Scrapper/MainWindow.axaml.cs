@@ -165,14 +165,16 @@ public partial class MainWindow : Window, IDisposable
 
     private static Bitmap CreatePlaceholderBitmap()
     {
-        using var surface = SKSurface.Create(new SKImageInfo(500, 500));
+        using var surface = SKSurface.Create(new SKImageInfo(500, 500, SKColorType.Rgba8888, SKAlphaType.Premul));
         var canvas = surface.Canvas;
-        canvas.Clear(new SKColor(60, 60, 60));
+        canvas.Clear(SKColors.Transparent);
+
+        using var bgPaint = new SKPaint { Color = new SKColor(60, 60, 60), IsAntialias = true };
+        canvas.DrawRoundRect(new SKRoundRect(new SKRect(0, 0, 500, 500), 20), bgPaint);
 
         using var font = new SKFont(SKTypeface.Default, 28);
-        using var paint = new SKPaint { Color = SKColors.LightGray, IsAntialias = true };
-
-        canvas.DrawText("No image downloaded", 250, 260, SKTextAlign.Center, font, paint);
+        using var textPaint = new SKPaint { Color = SKColors.LightGray, IsAntialias = true };
+        canvas.DrawText("No image downloaded", 250, 260, SKTextAlign.Center, font, textPaint);
 
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
