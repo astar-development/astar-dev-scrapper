@@ -9,7 +9,6 @@
             <MenuItem Header="File">
                 <MenuItem Header="Edit Configuration" Click="OnEditConfigurationClicked" />
                 <MenuItem Header="Edit Classifications" Click="OnEditClassificationsClicked" />
-                <MenuItem Header="Export/Import Configuration" Click="OnExportImportConfigurationClicked" />
                 <MenuItem Header="Edit Tags" Click="OnEditTagsClicked" />
                 <MenuItem Header="Reset Database" Click="OnResetDatabaseClicked" />
             </MenuItem>

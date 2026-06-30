@@ -9,6 +9,7 @@ using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using AStar.Dev.Wallpaper.Scrapper.Dialogs;
 using Serilog;
+using AStar.Dev.Wallpaper.Scrapper.Services;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 
@@ -23,7 +24,7 @@ public partial class MainWindow : Window, IDisposable
     private readonly IDatabaseResetService databaseResetService;
     private CancellationTokenSource? cts;
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, Func<ClassificationsView> classificationsViewFactory, Func<ConfigurationImportExportView> configurationImportExportViewFactory, Func<TagsView> tagsViewFactory, SearchWorkflowFunctional searchWorkflowFunctional, ILogger logger, LogBroadcaster logBroadcaster, IDatabaseResetService databaseResetService)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, Func<ClassificationsView> classificationsViewFactory, Func<TagsView> tagsViewFactory, SearchWorkflowFunctional searchWorkflowFunctional, ILogger logger, LogBroadcaster logBroadcaster, IDatabaseResetService databaseResetService)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.classificationsViewFactory = classificationsViewFactory;
