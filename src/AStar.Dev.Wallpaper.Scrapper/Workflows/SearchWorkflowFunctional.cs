@@ -52,9 +52,9 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
             var (pageCount, imageCount, subDirectoryName) = await searchResultsPageFunctional.PageInfoAsync();
             UpdateSearchTotalPagesIfRequired(pageCount);
 
-            if(SearchCategoryHasBeenFullyVisited(combinedSearchString, searchCategory, imageCount))
+            if(searchCategory.IsUpToDate(imageCount, pageCount))
             {
-                logger.Debug("{Category} category has been fully visited...", searchCategory.Name);
+                logger.Information("{Category} is up to date (same image/page count), skipping...", searchCategory.Name);
                 continue;
             }
 
@@ -69,6 +69,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
             await ProcessAllCategoryPages(searchCategory, combinedSearchString, scrapeLogger, ct);
 
             searchCategory.LastKnownImageCount = imageCount;
+            searchCategory.TotalPages          = pageCount;
             searchCategory.LastPageVisited     = 0;
             await configurationSaver.SaveUpdatedConfigurationAsync();
         }
@@ -101,7 +102,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
     {
         if(scrapeDirectories is null) scrapeDirectories = new ScrapeDirectories(scrapeConfiguration.ScrapeDirectories.RootDirectory, scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory, scrapeConfiguration.ScrapeDirectories.BaseDirectory, scrapeConfiguration.ScrapeDirectories.BaseDirectoryFamous, subDirectoryName);
         else if(subDirectoryName.Length > 0) scrapeDirectories = scrapeDirectories with { SubDirectoryName = subDirectoryName };
-        
+
         return scrapeDirectories;
     }
 
@@ -111,9 +112,6 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
         searchConfiguration = searchConfiguration with { StartingPageNumber = 1, SearchString = combinedSearchString };
         return searchConfiguration;
     }
-
-    private bool SearchCategoryHasBeenFullyVisited(string combinedSearchString, Category searchCategory, int imageCount)
-        => searchConfiguration.SearchString == combinedSearchString && searchCategory.LastKnownImageCount == imageCount;
 
     private List<Category> FilterSearchCategories(List<Category> searchCategories)
     {
