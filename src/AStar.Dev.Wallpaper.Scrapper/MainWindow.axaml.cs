@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using SkiaSharp;
 using AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using AStar.Dev.Wallpaper.Scrapper.Classifications;
@@ -21,10 +23,11 @@ public partial class MainWindow : Window, IDisposable
     private readonly ILogger logger;
     private readonly SearchWorkflowFunctional searchWorkflowFunctional;
     private readonly LogBroadcaster logBroadcaster;
+    private readonly ImageBroadcaster imageBroadcaster;
     private readonly IDatabaseResetService databaseResetService;
     private CancellationTokenSource? cts;
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, Func<ClassificationsView> classificationsViewFactory, Func<TagsView> tagsViewFactory, SearchWorkflowFunctional searchWorkflowFunctional, ILogger logger, LogBroadcaster logBroadcaster, IDatabaseResetService databaseResetService)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, Func<ClassificationsView> classificationsViewFactory, Func<TagsView> tagsViewFactory, SearchWorkflowFunctional searchWorkflowFunctional, ILogger logger, LogBroadcaster logBroadcaster, ImageBroadcaster imageBroadcaster, IDatabaseResetService databaseResetService)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.classificationsViewFactory = classificationsViewFactory;
@@ -32,9 +35,12 @@ public partial class MainWindow : Window, IDisposable
         this.logger = logger;
         this.searchWorkflowFunctional = searchWorkflowFunctional;
         this.logBroadcaster = logBroadcaster;
+        this.imageBroadcaster = imageBroadcaster;
         this.databaseResetService = databaseResetService;
         logBroadcaster.MessageLogged += UpdateStatus;
+        imageBroadcaster.ImageSaved += UpdateThumbnail;
         InitializeComponent();
+        ThumbnailImage.Source = CreatePlaceholderBitmap();
         Closed += (_, _) => cts?.Dispose();
     }
 
@@ -144,9 +150,41 @@ public partial class MainWindow : Window, IDisposable
             StatusScroller.ScrollToEnd();
         });
 
+    private void UpdateThumbnail(string imagePath)
+        => Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            try
+            {
+                ThumbnailImage.Source = new Bitmap(imagePath);
+            }
+            catch (Exception ex)
+            {
+                logger.Warning(ex, "Failed to load thumbnail for {imagePath}", imagePath);
+            }
+        });
+
+    private static Bitmap CreatePlaceholderBitmap()
+    {
+        using var surface = SKSurface.Create(new SKImageInfo(500, 500));
+        var canvas = surface.Canvas;
+        canvas.Clear(new SKColor(60, 60, 60));
+
+        using var font = new SKFont(SKTypeface.Default, 28);
+        using var paint = new SKPaint { Color = SKColors.LightGray, IsAntialias = true };
+
+        canvas.DrawText("No image downloaded", 250, 260, SKTextAlign.Center, font, paint);
+
+        using var image = surface.Snapshot();
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var ms = new MemoryStream(data.ToArray());
+
+        return new Bitmap(ms);
+    }
+
     public void Dispose()
     {
         logBroadcaster.MessageLogged -= UpdateStatus;
+        imageBroadcaster.ImageSaved -= UpdateThumbnail;
         cts?.Dispose();
         GC.SuppressFinalize(this);
     }

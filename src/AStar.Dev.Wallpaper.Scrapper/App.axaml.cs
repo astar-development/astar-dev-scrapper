@@ -15,7 +15,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Exceptions;
-using ScrapeConfigModel = AStar.Dev.Wallpaper.Scrapper.Models.ScrapeConfiguration;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using System.Globalization;
@@ -43,7 +42,6 @@ public partial class App : Application
         builder.Configuration.AddUserSecrets<App>(optional: true, reloadOnChange: true);
 
         builder.Services
-            .Configure<ScrapeConfigModel>(builder.Configuration.GetSection("ScrapeConfiguration"))
             .AddSingleton(sp =>
             {
                 using var ctx = sp.GetRequiredService<IDbContextFactory<FilesContext>>().CreateDbContext();
@@ -58,6 +56,7 @@ public partial class App : Application
                     .ToAppModel();
             })
             .AddSingleton<LogBroadcaster>()
+            .AddSingleton<ImageBroadcaster>()
             .AddSingleton(sp => {
                 var broadcaster = sp.GetRequiredService<LogBroadcaster>();
                 return new LoggerConfiguration()
