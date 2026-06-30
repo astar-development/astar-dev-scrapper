@@ -1,3 +1,4 @@
+using System.Globalization;
 using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using Microsoft.EntityFrameworkCore;
@@ -119,7 +120,8 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
 
     private async Task<FileClassification> FindOrCreateClassificationAsync(FilesContext context, string name)
     {
-        var normalizedName = name.ToLowerInvariant();
+        var textInfo = new CultureInfo("en-GB", false).TextInfo;
+        var normalizedName = textInfo.ToTitleCase(name ?? "");
         var tracked = context.ChangeTracker.Entries<FileClassification>()
             .FirstOrDefault(e => e.Entity.Name.Equals(normalizedName, StringComparison.OrdinalIgnoreCase))?.Entity;
         if (tracked is not null) return tracked;

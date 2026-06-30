@@ -96,7 +96,7 @@ public partial class App : Application
             .AddTransient<ScrapeConfigurationView>()
             .AddTransient<ClassificationsView>()
             .AddTransient<TagsView>()
-            .AddTransient<IPlaywrightService, PlaywrightService>()
+            .AddSingleton<IPlaywrightService, PlaywrightService>()
             .AddTransient<IImagePageServiceFunctional, ImagePageServiceFunctional>()
             .AddTransient<SearchWorkflowFunctional>()
             .AddTransient<SearchResultsPageFunctional>()

@@ -61,8 +61,6 @@ public sealed class SearchWorkflow(
             logger.Debug("Visiting {Category} from page {StartingPage} now...", searchCategory.Name, startingPage);
             _scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
 
-            // _ = DirectoryHelper.CreateDirectoryIfRequired(Path.Combine(_scrapeDirectories.RootDirectory, _scrapeDirectories.BaseDirectory, subDirectoryName));
-
             await ProcessAllCategoryPages(searchCategory, combinedSearchString, ct);
 
             searchCategory.LastKnownImageCount = imageCount;
