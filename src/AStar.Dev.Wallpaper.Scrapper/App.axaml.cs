@@ -50,7 +50,7 @@ public partial class App : Application
                 .Include(e => e.UserConfiguration)
                 .Include(e => e.SearchConfiguration).ThenInclude(s => s.SearchCategories)
                 .Include(e => e.ScrapeDirectories)
-                .OrderBy(e => e.Id)
+                .OrderByDescending(e => e.Id)
                 .First()
                 .ToAppModel())
             .AddSingleton<LogBroadcaster>()

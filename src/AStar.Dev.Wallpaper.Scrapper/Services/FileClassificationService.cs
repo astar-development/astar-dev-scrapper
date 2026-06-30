@@ -94,7 +94,8 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
 
         var searchConfig = await context.SearchConfigurations
             .Include(sc => sc.SearchCategories)
-            .SingleAsync(token);
+            .OrderByDescending(sc => sc.Id)
+            .FirstAsync(token);
 
         var category = searchConfig.SearchCategories.FirstOrDefault(c => c.Id == categoryId && c.IncludeInSearch);
         if (category is null) return;
