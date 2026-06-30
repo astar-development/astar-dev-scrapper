@@ -11,6 +11,7 @@
                 <MenuItem Header="Edit Classifications" Click="OnEditClassificationsClicked" />
                 <MenuItem Header="Export/Import Configuration" Click="OnExportImportConfigurationClicked" />
                 <MenuItem Header="Edit Tags" Click="OnEditTagsClicked" />
+                <MenuItem Header="Reset Database" Click="OnResetDatabaseClicked" />
             </MenuItem>
         </Menu>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="12,4,12,0" Spacing="8">

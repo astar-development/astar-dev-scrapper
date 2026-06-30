@@ -10,6 +10,7 @@ using AStar.Dev.Wallpaper.Scrapper.ConfigurationImportExport;
 using AStar.Dev.Wallpaper.Scrapper.Tags;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
+using AStar.Dev.Wallpaper.Scrapper.Dialogs;
 using Serilog;
 using System.IO.Abstractions;
 
@@ -24,9 +25,10 @@ public partial class MainWindow : Window, IDisposable
     private readonly ILogger logger;
     private readonly SearchWorkflowFunctional searchWorkflowFunctional;
     private readonly LogBroadcaster logBroadcaster;
+    private readonly IDatabaseResetService databaseResetService;
     private CancellationTokenSource? cts;
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, Func<ClassificationsView> classificationsViewFactory, Func<ConfigurationImportExportView> configurationImportExportViewFactory, Func<TagsView> tagsViewFactory, SearchWorkflowFunctional searchWorkflowFunctional, ILogger logger,LogBroadcaster logBroadcaster)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, Func<ClassificationsView> classificationsViewFactory, Func<ConfigurationImportExportView> configurationImportExportViewFactory, Func<TagsView> tagsViewFactory, SearchWorkflowFunctional searchWorkflowFunctional, ILogger logger, LogBroadcaster logBroadcaster, IDatabaseResetService databaseResetService)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.classificationsViewFactory = classificationsViewFactory;
@@ -35,6 +37,7 @@ public partial class MainWindow : Window, IDisposable
         this.logger = logger;
         this.searchWorkflowFunctional = searchWorkflowFunctional;
         this.logBroadcaster = logBroadcaster;
+        this.databaseResetService = databaseResetService;
         logBroadcaster.MessageLogged += UpdateStatus;
         InitializeComponent();
         Closed += (_, _) => cts?.Dispose();
@@ -51,6 +54,26 @@ public partial class MainWindow : Window, IDisposable
 
     private async void OnEditTagsClicked(object? sender, RoutedEventArgs e)
         => await tagsViewFactory().ShowDialog(this);
+
+    private async void OnResetDatabaseClicked(object? sender, RoutedEventArgs e)
+    {
+        var dialog = new ConfirmationDialog("This will delete all downloaded files and reset search category progress. Continue?");
+        var confirmed = await dialog.ShowDialog<bool>(this);
+
+        if (!confirmed)
+            return;
+
+        try
+        {
+            await databaseResetService.ResetAsync();
+            UpdateStatus("Database reset completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "Database reset failed");
+            UpdateStatus($"Database reset failed: {ex.Message}");
+        }
+    }
 
     private async void OnScrapeSiteFunctionalClicked(object? sender, RoutedEventArgs e)
         => _ = await ResetCancellationTokenSource()
