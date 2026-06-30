@@ -49,6 +49,8 @@ public class ScrapeConfigurationViewModel : ViewModelBase, IAsyncDisposable
     public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
     public string StatusMessage { get => _statusMessage; private set => SetProperty(ref _statusMessage, value); }
 
+    internal void UpdateStatus(string message) => StatusMessage = message;
+
     public string Sqlite { get => _sqlite; set => SetProperty(ref _sqlite, value); }
 
     public string LoginEmailAddress { get => _loginEmailAddress; set => SetProperty(ref _loginEmailAddress, value); }

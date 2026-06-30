@@ -3,7 +3,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Wallpaper.Scrapper.Classifications;
-using AStar.Dev.Wallpaper.Scrapper.ConfigurationImportExport;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Repositories;
 using AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
@@ -92,7 +91,6 @@ public partial class App : Application
             .AddTransient<TopWallpapersWorkflowFunctional>()
             .AddTransient<ScrapeConfigurationView>()
             .AddTransient<ClassificationsView>()
-            .AddTransient<ConfigurationImportExportView>()
             .AddTransient<TagsView>()
             .AddTransient<IPlaywrightService, PlaywrightService>()
             .AddTransient<IImagePageServiceFunctional, ImagePageServiceFunctional>()
@@ -106,7 +104,6 @@ public partial class App : Application
             .AddTransient<TimeProvider>(_ => TimeProvider.System)
             .AddTransient<Func<ScrapeConfigurationView>>(sp => () => sp.GetRequiredService<ScrapeConfigurationView>())
             .AddTransient<Func<ClassificationsView>>(sp => () => sp.GetRequiredService<ClassificationsView>())
-            .AddTransient<Func<ConfigurationImportExportView>>(sp => () => sp.GetRequiredService<ConfigurationImportExportView>())
             .AddTransient<Func<TagsView>>(sp => () => sp.GetRequiredService<TagsView>())
             .AddTransient<MainWindow>();
 
