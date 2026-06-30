@@ -21,27 +21,19 @@ public partial class MainWindow : Window, IDisposable
     private readonly Func<ClassificationsView> classificationsViewFactory;
     private readonly Func<ConfigurationImportExportView> configurationImportExportViewFactory;
     private readonly Func<TagsView> tagsViewFactory;
-    private readonly ScrapeConfiguration scrapeConfiguration;
     private readonly ILogger logger;
-    private readonly ConfigurationSaver configurationSaver;
-    private readonly IPlaywrightService playwrightService;
     private readonly SearchWorkflowFunctional searchWorkflowFunctional;
-    private readonly IFileSystem fileSystem;
     private readonly LogBroadcaster logBroadcaster;
     private CancellationTokenSource? cts;
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, Func<ClassificationsView> classificationsViewFactory, Func<ConfigurationImportExportView> configurationImportExportViewFactory, Func<TagsView> tagsViewFactory, IFileSystem fileSystem, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, ILogger logger, ConfigurationSaver configurationSaver, LogBroadcaster logBroadcaster)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, Func<ClassificationsView> classificationsViewFactory, Func<ConfigurationImportExportView> configurationImportExportViewFactory, Func<TagsView> tagsViewFactory, SearchWorkflowFunctional searchWorkflowFunctional, ILogger logger,LogBroadcaster logBroadcaster)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.classificationsViewFactory = classificationsViewFactory;
         this.configurationImportExportViewFactory = configurationImportExportViewFactory;
         this.tagsViewFactory = tagsViewFactory;
-        this.scrapeConfiguration = scrapeConfiguration;
         this.logger = logger;
-        this.configurationSaver = configurationSaver;
-        this.playwrightService = playwrightService;
         this.searchWorkflowFunctional = searchWorkflowFunctional;
-        this.fileSystem = fileSystem;
         this.logBroadcaster = logBroadcaster;
         logBroadcaster.MessageLogged += UpdateStatus;
         InitializeComponent();
