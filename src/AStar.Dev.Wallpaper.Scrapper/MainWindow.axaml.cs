@@ -2,16 +2,12 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
-using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Support;
-using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Classifications;
-using AStar.Dev.Wallpaper.Scrapper.ConfigurationImportExport;
 using AStar.Dev.Wallpaper.Scrapper.Tags;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using Serilog;
-using System.IO.Abstractions;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 
@@ -19,29 +15,19 @@ public partial class MainWindow : Window, IDisposable
 {
     private readonly Func<ScrapeConfigurationView> scrapeConfigViewFactory;
     private readonly Func<ClassificationsView> classificationsViewFactory;
-    private readonly Func<ConfigurationImportExportView> configurationImportExportViewFactory;
     private readonly Func<TagsView> tagsViewFactory;
-    private readonly ScrapeConfiguration scrapeConfiguration;
     private readonly ILogger logger;
-    private readonly ConfigurationSaver configurationSaver;
-    private readonly IPlaywrightService playwrightService;
     private readonly SearchWorkflowFunctional searchWorkflowFunctional;
-    private readonly IFileSystem fileSystem;
     private readonly LogBroadcaster logBroadcaster;
-    private CancellationTokenSource? cts;
+    private CancellationTokenSource cts = new();
 
-    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, Func<ClassificationsView> classificationsViewFactory, Func<ConfigurationImportExportView> configurationImportExportViewFactory, Func<TagsView> tagsViewFactory, IFileSystem fileSystem, IPlaywrightService playwrightService, ScrapeConfiguration scrapeConfiguration, SearchWorkflowFunctional searchWorkflowFunctional, ILogger logger, ConfigurationSaver configurationSaver, LogBroadcaster logBroadcaster)
+    public MainWindow(Func<ScrapeConfigurationView> scrapeConfigViewFactory, Func<ClassificationsView> classificationsViewFactory, Func<TagsView> tagsViewFactory, SearchWorkflowFunctional searchWorkflowFunctional, ILogger logger, LogBroadcaster logBroadcaster)
     {
         this.scrapeConfigViewFactory = scrapeConfigViewFactory;
         this.classificationsViewFactory = classificationsViewFactory;
-        this.configurationImportExportViewFactory = configurationImportExportViewFactory;
         this.tagsViewFactory = tagsViewFactory;
-        this.scrapeConfiguration = scrapeConfiguration;
         this.logger = logger;
-        this.configurationSaver = configurationSaver;
-        this.playwrightService = playwrightService;
         this.searchWorkflowFunctional = searchWorkflowFunctional;
-        this.fileSystem = fileSystem;
         this.logBroadcaster = logBroadcaster;
         logBroadcaster.MessageLogged += UpdateStatus;
         InitializeComponent();
@@ -53,9 +39,6 @@ public partial class MainWindow : Window, IDisposable
 
     private async void OnEditClassificationsClicked(object? sender, RoutedEventArgs e)
         => await classificationsViewFactory().ShowDialog(this);
-
-    private async void OnExportImportConfigurationClicked(object? sender, RoutedEventArgs e)
-        => await configurationImportExportViewFactory().ShowDialog(this);
 
     private async void OnEditTagsClicked(object? sender, RoutedEventArgs e)
         => await tagsViewFactory().ShowDialog(this);
@@ -99,7 +82,7 @@ public partial class MainWindow : Window, IDisposable
                 ScrapeSiteNewButton.IsEnabled = true;
                 CancelButton.IsEnabled = false;
                 cts?.Dispose();
-                cts = null;
+                cts = new();
             });
 
     private void OnCancelClicked(object? sender, RoutedEventArgs e) => cts?.Cancel();
