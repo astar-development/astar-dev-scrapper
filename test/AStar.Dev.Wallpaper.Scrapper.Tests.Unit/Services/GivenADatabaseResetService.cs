@@ -1,15 +1,22 @@
 using AStar.Dev.Wallpaper.Scrapper.Repositories;
 using AStar.Dev.Wallpaper.Scrapper.Services;
+using System.IO.Abstractions;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Services;
 
 public sealed class GivenADatabaseResetService
 {
+    private const string SaveDirectory = "/some/save/dir";
+    private const string NonExistentDirectory = "/nonexistent/path";
+
     private readonly IDatabaseResetRepository repo = Substitute.For<IDatabaseResetRepository>();
+    private readonly MockFileSystem fileSystem = new MockFileSystem();
     private readonly DatabaseResetService sut;
 
-    public GivenADatabaseResetService() =>
-        sut = new DatabaseResetService(repo);
+    public GivenADatabaseResetService()
+    {
+        sut = new DatabaseResetService(repo, fileSystem);
+    }
 
     [Fact]
     public async Task when_resetting_then_reset_search_categories_is_called()
@@ -50,5 +57,32 @@ public sealed class GivenADatabaseResetService
         await Should.ThrowAsync<InvalidOperationException>(() => sut.ResetAsync(CancellationToken.None));
 
         await repo.DidNotReceive().DeleteAllFilesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_deleting_save_directory_then_get_base_save_directory_is_called()
+    {
+        await sut.DeleteSaveDirectoryAsync(CancellationToken.None);
+
+        await repo.Received(1).GetBaseSaveDirectoryAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_deleting_save_directory_and_directory_exists_then_directory_is_deleted()
+    {
+        repo.GetBaseSaveDirectoryAsync(Arg.Any<CancellationToken>()).Returns(SaveDirectory);
+        fileSystem.Directory.CreateDirectory(SaveDirectory);
+
+        await sut.DeleteSaveDirectoryAsync(CancellationToken.None);
+
+        fileSystem.Directory.Exists(SaveDirectory).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task when_deleting_save_directory_and_directory_does_not_exist_then_succeeds()
+    {
+        repo.GetBaseSaveDirectoryAsync(Arg.Any<CancellationToken>()).Returns(NonExistentDirectory);
+
+        await Should.NotThrowAsync(() => sut.DeleteSaveDirectoryAsync(CancellationToken.None));
     }
 }
