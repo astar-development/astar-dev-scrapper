@@ -43,7 +43,11 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
         await Task.Delay(TimeSpan.FromSeconds(delay), ct);
 
         var result = await imagePage.GetImageFromPage(pageLink, name);
-        if(result.Skip || result.ImageUrl is null) return;
+        if(result.Skip || result.ImageUrl is null)
+        {
+            logger.Information($"Skipping: {name}");
+            return;
+        }
 
         var directoryName = DirectoryHelper.CreateDirectoryIfRequired(result.DirectoryName);
 
