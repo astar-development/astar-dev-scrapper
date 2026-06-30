@@ -101,8 +101,8 @@ public class ScrapeConfigurationViewModel : ViewModelBase, IAsyncDisposable
                 .Include(e => e.ConnectionStrings)
                 .Include(e => e.UserConfiguration)
                 .Include(e => e.SearchConfiguration).ThenInclude(sc => sc.SearchCategories)
-                .Include(e => e.ScrapeDirectories)
-                .SingleAsync();
+                .Include(e => e.ScrapeDirectories).OrderByDescending(s=>s.Id)
+                .FirstAsync();
 
             MapFromEntity(_entity);
         }
