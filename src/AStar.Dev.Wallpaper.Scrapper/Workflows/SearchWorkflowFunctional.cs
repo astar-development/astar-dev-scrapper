@@ -8,7 +8,6 @@ using AStar.Dev.Wallpaper.Scrapper.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using Serilog;
-using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 

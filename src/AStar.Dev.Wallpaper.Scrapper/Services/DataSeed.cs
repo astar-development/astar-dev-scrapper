@@ -1,7 +1,6 @@
 using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using AStar.Dev.Wallpaper.Scrapper.Models;
-using Microsoft.EntityFrameworkCore;
 using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;

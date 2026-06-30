@@ -1,5 +1,4 @@
 using Microsoft.Playwright;
-using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
