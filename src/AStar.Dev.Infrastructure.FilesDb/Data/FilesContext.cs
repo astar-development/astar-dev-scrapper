@@ -78,8 +78,7 @@ public sealed class FilesContext : DbContext
     /// <inheritdoc />
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if(!optionsBuilder.IsConfigured)
-            _ = optionsBuilder.UseSqlite("Data Source=/home/jbarden/Documents/Scrapper/files.db");
+        if(!optionsBuilder.IsConfigured) _ = optionsBuilder.UseSqlite("Data Source=/home/jbarden/Documents/Scrapper/files.db");
     }
 
     /// <summary>

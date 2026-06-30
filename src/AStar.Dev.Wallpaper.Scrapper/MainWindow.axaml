@@ -5,15 +5,16 @@
         Width="2600"
         Height="800">
     <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="12,12,12,0" Spacing="8">
-            <Button x:Name="EditConfigurationButton" Content="Edit Configuration" Click="OnEditConfigurationClicked" />
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File">
+                <MenuItem Header="Edit Configuration" Click="OnEditConfigurationClicked" />
+                <MenuItem Header="Edit Classifications" Click="OnEditClassificationsClicked" />
+                <MenuItem Header="Export/Import Configuration" Click="OnExportImportConfigurationClicked" />
+                <MenuItem Header="Edit Tags" Click="OnEditTagsClicked" />
+            </MenuItem>
+        </Menu>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="12,4,12,0" Spacing="8">
             <Button x:Name="ScrapeSiteNewButton" Content="Scrape Site New" Click="OnScrapeSiteFunctionalClicked" />
-            <Button x:Name="ExportButton" Content="Export Classifications" Click="OnExportClicked" />
-            <Button x:Name="ImportButton" Content="Import Classifications" Click="OnImportClicked" />
-            <Button x:Name="ExportScrapeConfigButton" Content="Export Config" Click="OnExportScrapeConfigClicked" />
-            <Button x:Name="ImportScrapeConfigButton" Content="Import Config" Click="OnImportScrapeConfigClicked" />
-            <Button x:Name="ExportTagsButton" Content="Export Tags" Click="OnExportTagsClicked" />
-            <Button x:Name="ImportTagsButton" Content="Import Tags" Click="OnImportTagsClicked" />
             <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClicked" IsEnabled="False" />
         </StackPanel>
         <ScrollViewer x:Name="StatusScroller" Margin="12,8">
