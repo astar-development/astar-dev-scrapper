@@ -1,5 +1,5 @@
 using AStar.Dev.Wallpaper.Scrapper.Classifications;
-using AStar.Dev.Wallpaper.Scrapper.ConfigurationImportExport;
+using AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
 using AStar.Dev.Wallpaper.Scrapper.Tags;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Views;
@@ -15,12 +15,12 @@ public sealed class GivenTheNewMenuViews
         typeof(ClassificationsView).GetInterface(nameof(IDisposable)).ShouldNotBeNull();
 
     [Fact]
-    public void when_configuration_import_export_view_type_is_inspected_then_it_exists_in_the_correct_namespace() =>
-        typeof(ConfigurationImportExportView).ShouldNotBeNull();
+    public void when_scrape_configuration_view_type_is_inspected_then_it_exists_in_the_correct_namespace() =>
+        typeof(ScrapeConfigurationView).ShouldNotBeNull();
 
     [Fact]
-    public void when_configuration_import_export_view_type_is_inspected_then_it_implements_idisposable() =>
-        typeof(ConfigurationImportExportView).GetInterface(nameof(IDisposable)).ShouldNotBeNull();
+    public void when_scrape_configuration_view_type_is_inspected_then_it_implements_idisposable() =>
+        typeof(ScrapeConfigurationView).GetInterface(nameof(IDisposable)).ShouldNotBeNull();
 
     [Fact]
     public void when_tags_view_type_is_inspected_then_it_exists_in_the_correct_namespace() =>
