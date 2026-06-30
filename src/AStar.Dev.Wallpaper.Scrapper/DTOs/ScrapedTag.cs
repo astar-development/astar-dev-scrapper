@@ -27,6 +27,10 @@ public sealed class ScrapedTag
     /// </summary>
     public bool IncludeInSearch { get; set; }
 
+    public DateTimeOffset CreatedAt {get;set;} = DateTimeOffset.UtcNow;
+
+    public DateTimeOffset UpdatedAt {get;set;} = DateTimeOffset.UtcNow;
+
     /// <inheritdoc />
     public override string ToString()
         => this.ToJson();

@@ -5,16 +5,12 @@ using AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using AStar.Dev.Wallpaper.Scrapper.Repositories;
-using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.DTOs;
 using Serilog;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using System.IO.Abstractions;
-using FileClassificationDto = AStar.Dev.Wallpaper.Scrapper.DTOs.FileClassification;
-using FileClassificationDomain = AStar.Dev.Infrastructure.FilesDb.Models.FileClassification;
-using AStar.Dev.Utilities;
 
 namespace AStar.Dev.Wallpaper.Scrapper;
 

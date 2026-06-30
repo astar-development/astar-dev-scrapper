@@ -1,7 +1,7 @@
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.FilesDb.Models;
-using AStar.Dev.Wallpaper.Scrapper;
 using AStar.Dev.Wallpaper.Scrapper.Services;
+using Microsoft.Extensions.Time.Testing;
 using Serilog;
 using System.IO.Abstractions;
 using System.Text.Json;
@@ -109,12 +109,14 @@ public sealed class GivenAnImportExportService
     private readonly MockFileSystem mockFileSystem;
     private readonly ILogger mockLogger;
     private readonly IImportExportService sut;
+    private System.TimeProvider timeProvider;
 
     public GivenAnImportExportService()
     {
+        timeProvider = new FakeTimeProvider();
         mockFileSystem = new MockFileSystem();
         mockLogger     = Substitute.For<ILogger>();
-        sut            = new ImportExportService(mockFileSystem, mockLogger);
+        sut            = new ImportExportService(mockFileSystem, timeProvider, mockLogger);
     }
 
     [Fact]
@@ -216,7 +218,7 @@ public sealed class GivenAnImportExportService
         var throwingFileSystem = Substitute.For<IFileSystem>();
         throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
                                .Throw(new IOException("Disk full"));
-        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+        var throwingSut = new ImportExportService(throwingFileSystem, timeProvider, mockLogger);
 
         var act = () => throwingSut.ExportFileClassificationsToFile([]);
 
@@ -229,7 +231,7 @@ public sealed class GivenAnImportExportService
         var throwingFileSystem = Substitute.For<IFileSystem>();
         throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
                                .Throw(new IOException("Disk full"));
-        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+        var throwingSut = new ImportExportService(throwingFileSystem,timeProvider,  mockLogger);
 
         Should.Throw<IOException>(() => throwingSut.ExportFileClassificationsToFile([]));
 
@@ -338,7 +340,7 @@ public sealed class GivenAnImportExportService
         var throwingFileSystem = Substitute.For<IFileSystem>();
         throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
                                .Throw(new IOException("Disk full"));
-        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+        var throwingSut = new ImportExportService(throwingFileSystem, timeProvider, mockLogger);
 
         var act = () => throwingSut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
 
@@ -351,7 +353,7 @@ public sealed class GivenAnImportExportService
         var throwingFileSystem = Substitute.For<IFileSystem>();
         throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
                                .Throw(new IOException("Disk full"));
-        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+        var throwingSut = new ImportExportService(throwingFileSystem, timeProvider, mockLogger);
 
         Should.Throw<IOException>(() => throwingSut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData()));
 
@@ -497,7 +499,7 @@ public sealed class GivenAnImportExportService
         var throwingFileSystem = Substitute.For<IFileSystem>();
         throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
                                .Throw(new IOException("Disk full"));
-        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+        var throwingSut = new ImportExportService(throwingFileSystem,timeProvider,  mockLogger);
 
         var act = () => throwingSut.ExportScrapedTagsToFile([]);
 
@@ -510,7 +512,7 @@ public sealed class GivenAnImportExportService
         var throwingFileSystem = Substitute.For<IFileSystem>();
         throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
                                .Throw(new IOException("Disk full"));
-        var throwingSut = new ImportExportService(throwingFileSystem, mockLogger);
+        var throwingSut = new ImportExportService(throwingFileSystem,timeProvider,  mockLogger);
 
         Should.Throw<IOException>(() => throwingSut.ExportScrapedTagsToFile([]));
 

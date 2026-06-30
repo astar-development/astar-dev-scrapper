@@ -16,8 +16,6 @@ using Serilog.Exceptions;
 using ScrapeConfigModel = AStar.Dev.Wallpaper.Scrapper.Models.ScrapeConfiguration;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
-using Microsoft.Playwright;
-using Serilog.Core;
 using System.Globalization;
 using Testably.Abstractions;
 using System.IO.Abstractions;

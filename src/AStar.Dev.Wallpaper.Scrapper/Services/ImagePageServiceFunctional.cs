@@ -1,16 +1,9 @@
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.FilesDb.Data;
-using AStar.Dev.Infrastructure.FilesDb.Models;
-using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.Models;
-using AStar.Dev.Wallpaper.Scrapper.Pages;
-using AStar.Dev.Wallpaper.Scrapper.Repositories;
-using AStar.Dev.Wallpaper.Scrapper.Support;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Playwright;
 using Serilog.Core;
-using SkiaSharp;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 

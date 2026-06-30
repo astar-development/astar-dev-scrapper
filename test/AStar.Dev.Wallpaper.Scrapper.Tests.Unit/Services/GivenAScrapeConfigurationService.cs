@@ -1,6 +1,5 @@
 using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Infrastructure.FilesDb.Models;
-using AStar.Dev.Wallpaper.Scrapper;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;

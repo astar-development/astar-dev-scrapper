@@ -11,7 +11,7 @@ using ScrapedTagDomain = AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public sealed class ImportExportService(IFileSystem fileSystem, ILogger logger) : IImportExportService
+public sealed class ImportExportService(IFileSystem fileSystem, TimeProvider timeProvider, ILogger logger) : IImportExportService
 {
     public void ExportFileClassificationsToFile(List<FileClassificationDomain> classifications)
     {
@@ -121,6 +121,6 @@ public sealed class ImportExportService(IFileSystem fileSystem, ILogger logger) 
             return $"Error: Failed to deserialize tags from file - {ApplicationMetadata.ScrapedTagsExportFilePath}";
         }
 
-        return tags.ToDomain();
+        return tags.ToDomain(timeProvider);
     }
 }
