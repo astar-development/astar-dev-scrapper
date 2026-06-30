@@ -44,15 +44,19 @@ public partial class App : Application
 
         builder.Services
             .Configure<ScrapeConfigModel>(builder.Configuration.GetSection("ScrapeConfiguration"))
-            .AddSingleton(sp => sp.GetRequiredService<IDbContextFactory<FilesContext>>()
-                .CreateDbContext().ScrapeConfiguration
-                .Include(e => e.ConnectionStrings)
-                .Include(e => e.UserConfiguration)
-                .Include(e => e.SearchConfiguration).ThenInclude(s => s.SearchCategories)
-                .Include(e => e.ScrapeDirectories)
-                .OrderByDescending(e => e.Id)
-                .First()
-                .ToAppModel())
+            .AddSingleton(sp =>
+            {
+                using var ctx = sp.GetRequiredService<IDbContextFactory<FilesContext>>().CreateDbContext();
+
+                return ctx.ScrapeConfiguration
+                    .Include(e => e.ConnectionStrings)
+                    .Include(e => e.UserConfiguration)
+                    .Include(e => e.SearchConfiguration).ThenInclude(s => s.SearchCategories)
+                    .Include(e => e.ScrapeDirectories)
+                    .OrderByDescending(e => e.Id)
+                    .First()
+                    .ToAppModel();
+            })
             .AddSingleton<LogBroadcaster>()
             .AddSingleton(sp => {
                 var broadcaster = sp.GetRequiredService<LogBroadcaster>();

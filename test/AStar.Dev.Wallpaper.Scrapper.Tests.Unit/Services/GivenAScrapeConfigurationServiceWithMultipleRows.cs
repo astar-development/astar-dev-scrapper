@@ -66,6 +66,13 @@ public sealed class GivenAScrapeConfigurationServiceWithMultipleRows : IAsyncLif
             .FirstAsync(TestContext.Current.CancellationToken);
 
         newestEntity.ConnectionStrings.Sqlite.ShouldBe(ImportedSqlite);
+
+        var oldestEntity = await verifyCtx.ScrapeConfiguration
+            .Include(x => x.ConnectionStrings)
+            .OrderBy(e => e.Id)
+            .FirstAsync(TestContext.Current.CancellationToken);
+
+        oldestEntity.ConnectionStrings.Sqlite.ShouldBe(OlderSqlite);
     }
 
     private static ScrapeConfigurationEntity CreateScrapeConfigEntity(string sqlite) => new()

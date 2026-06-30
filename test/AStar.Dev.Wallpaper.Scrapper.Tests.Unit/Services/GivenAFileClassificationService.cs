@@ -42,7 +42,7 @@ public sealed class GivenAFileClassificationService : IAsyncLifetime
     public async ValueTask DisposeAsync() => await connection.DisposeAsync();
 
     [Fact]
-    public async Task when_classifying_with_multiple_search_configuration_rows_then_no_exception_is_thrown()
+    public async Task when_classifying_with_multiple_search_configuration_rows_and_no_matching_category_then_no_classifications_are_recorded()
     {
         var fileDetail = new FileDetail
         {
@@ -50,8 +50,12 @@ public sealed class GivenAFileClassificationService : IAsyncLifetime
             DirectoryName = new DirectoryName("/tmp")
         };
 
-        await Should.NotThrowAsync(() =>
-            sut.ClassifyAsync(fileDetail, "any-category", [], TestContext.Current.CancellationToken));
+        await sut.ClassifyAsync(fileDetail, "any-category", [], TestContext.Current.CancellationToken);
+
+        await using var verifyCtx = new FilesContext(options);
+        var count = await verifyCtx.DownloadedFileClassifications.CountAsync(TestContext.Current.CancellationToken);
+
+        count.ShouldBe(0);
     }
 
     private static ScrapeConfigurationEntity CreateScrapeConfigEntity() => new()
