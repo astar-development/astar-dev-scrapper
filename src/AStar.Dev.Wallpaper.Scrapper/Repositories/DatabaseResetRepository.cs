@@ -29,7 +29,7 @@ public sealed class DatabaseResetRepository(IDbContextFactory<FilesContext> cont
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         var dirs = await context.Set<ScrapeDirectories>()
-            .OrderBy(d => d.Id)
+            .OrderByDescending(d => d.Id)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
