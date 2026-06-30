@@ -14,7 +14,7 @@
             </MenuItem>
         </Menu>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="12,4,12,0" Spacing="8">
-            <Button x:Name="ScrapeSiteNewButton" Content="Scrape Site" Click="OnScrapeSiteFunctionalClicked" />
+            <Button x:Name="ScrapeSiteNewButton" Content="Scrape Wallhaven" Click="OnScrapeSiteFunctionalClicked" />
             <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClicked" IsEnabled="False" />
         </StackPanel>
         <ScrollViewer x:Name="StatusScroller" Margin="12,8">

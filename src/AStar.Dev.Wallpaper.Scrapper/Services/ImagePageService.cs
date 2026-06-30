@@ -9,7 +9,7 @@ using SkiaSharp;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ScrapeConfiguration scrapeConfiguration, Logger logger)
+public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ScrapeConfiguration scrapeConfiguration, TimeProvider timeProvider, Logger logger)
 {
     public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks, string categoryId, string name, CancellationToken ct = default)
     {
@@ -22,7 +22,8 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
 
                 if(await fileDetailRepository.ExistsAsync(fileName))
                 {
-                    logger.Information("Not downloading {fileName} as we already have it...", fileName);
+                    logger.Information("Not downloading {fileName} as we already have it...{Timestamp:HH:mm:ss:fff}", fileName, timeProvider.GetUtcNow());
+                    await Task.Delay(TimeSpan.FromMilliseconds(500), ct);
                     continue;
                 }
 

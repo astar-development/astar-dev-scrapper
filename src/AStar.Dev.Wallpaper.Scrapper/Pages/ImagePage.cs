@@ -24,6 +24,7 @@ public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfig
 
         ILocator imageTag   = page.Locator("#wallpaper");
         var      sourcePath = await imageTag.GetAttributeAsync("src");
+        
         return new ImagePageResult(sourcePath, directoryNameUpdated, filePrefix, skip, imageTags);
     }
 
