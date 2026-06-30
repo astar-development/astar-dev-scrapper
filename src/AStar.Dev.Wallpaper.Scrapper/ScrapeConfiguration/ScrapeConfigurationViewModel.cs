@@ -89,7 +89,6 @@ public class ScrapeConfigurationViewModel : ViewModelBase, IAsyncDisposable
     public ScrapeConfigurationViewModel(IDbContextFactory<FilesContext> contextFactory)
     {
         _context = contextFactory.CreateDbContext();
-        SaveCommand = new AsyncRelayCommand(SaveAsync);
     }
 
     public async Task LoadAsync()
