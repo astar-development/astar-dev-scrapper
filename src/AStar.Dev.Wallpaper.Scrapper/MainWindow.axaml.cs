@@ -57,21 +57,47 @@ public partial class MainWindow : Window, IDisposable
 
     private async void OnResetDatabaseClicked(object? sender, RoutedEventArgs e)
     {
-        var dialog = new ConfirmationDialog("This will delete all downloaded files and reset search category progress. Continue?");
-        var confirmed = await dialog.ShowDialog<bool>(this);
-
-        if (!confirmed)
-            return;
-
         try
         {
-            await databaseResetService.ResetAsync();
-            UpdateStatus("Database reset completed successfully.");
+            var dbDialog = new ConfirmationDialog("This will reset search category progress and delete all file records. Continue?");
+            var dbConfirmed = await dbDialog.ShowDialog<bool>(this);
+
+            if (!dbConfirmed)
+                return;
+
+            try
+            {
+                await databaseResetService.ResetAsync(CancellationToken.None);
+                UpdateStatus("Database reset completed successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Database reset failed");
+                UpdateStatus($"Database reset failed: {ex.Message}");
+                return;
+            }
+
+            var fileDialog = new ConfirmationDialog("This will permanently delete all downloaded files from the save directory. Continue?");
+            var fileConfirmed = await fileDialog.ShowDialog<bool>(this);
+
+            if (!fileConfirmed)
+                return;
+
+            try
+            {
+                await databaseResetService.DeleteSaveDirectoryAsync(CancellationToken.None);
+                UpdateStatus("Save directory deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Save directory deletion failed");
+                UpdateStatus($"Save directory deletion failed: {ex.Message}");
+            }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "Database reset failed");
-            UpdateStatus($"Database reset failed: {ex.Message}");
+            logger.Error(ex, "Unexpected error during database reset");
+            UpdateStatus($"Unexpected error: {ex.Message}");
         }
     }
 

@@ -24,4 +24,15 @@ public sealed class DatabaseResetRepository(IDbContextFactory<FilesContext> cont
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         _ = await context.Files.ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
     }
+
+    public async Task<string?> GetBaseSaveDirectoryAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var dirs = await context.Set<ScrapeDirectories>()
+            .OrderBy(d => d.Id)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return dirs?.BaseSaveDirectory;
+    }
 }

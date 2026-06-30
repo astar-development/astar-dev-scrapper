@@ -10,7 +10,7 @@ public sealed class GivenADatabaseResetService
     private const string NonExistentDirectory = "/nonexistent/path";
 
     private readonly IDatabaseResetRepository repo = Substitute.For<IDatabaseResetRepository>();
-    private readonly MockFileSystem fileSystem = new MockFileSystem();
+    private readonly MockFileSystem fileSystem = new();
     private readonly DatabaseResetService sut;
 
     public GivenADatabaseResetService()
@@ -84,5 +84,25 @@ public sealed class GivenADatabaseResetService
         repo.GetBaseSaveDirectoryAsync(Arg.Any<CancellationToken>()).Returns(NonExistentDirectory);
 
         await Should.NotThrowAsync(() => sut.DeleteSaveDirectoryAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task when_deleting_save_directory_and_path_is_empty_then_no_directory_operations_occur()
+    {
+        repo.GetBaseSaveDirectoryAsync(Arg.Any<CancellationToken>()).Returns(string.Empty);
+
+        await Should.NotThrowAsync(() => sut.DeleteSaveDirectoryAsync(CancellationToken.None));
+
+        fileSystem.Statistics.Directory.Methods
+            .ShouldNotContain(m => m.Name == "Delete");
+    }
+
+    [Fact]
+    public async Task when_get_base_save_directory_throws_then_exception_propagates()
+    {
+        repo.GetBaseSaveDirectoryAsync(Arg.Any<CancellationToken>())
+            .Returns<Task<string?>>(_ => Task.FromException<string?>(new InvalidOperationException("db error")));
+
+        await Should.ThrowAsync<InvalidOperationException>(() => sut.DeleteSaveDirectoryAsync(CancellationToken.None));
     }
 }
