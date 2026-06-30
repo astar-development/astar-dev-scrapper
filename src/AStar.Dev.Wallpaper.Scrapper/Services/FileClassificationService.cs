@@ -67,6 +67,7 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
                     if (!existingParts.Any(ep => ep.Text.Equals(part.Text, StringComparison.OrdinalIgnoreCase)))
                     {
                         existing.FileNameParts.Add(new FileNamePart { Text = part.Text });
+                        existing.UpdatedAt = timeProvider.GetUtcNow();
                     }
                 }
             }

@@ -5,7 +5,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 /// <summary>
 ///     Represents a unique tag observed during a scrape run
 /// </summary>
-public sealed class ScrapedTag
+public sealed class ScrapedTag : AuditableEntity
 {
     /// <summary>
     ///     Gets or sets the Id of the <see cref="ScrapedTag" />

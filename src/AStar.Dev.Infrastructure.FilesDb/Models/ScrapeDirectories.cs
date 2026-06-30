@@ -3,7 +3,7 @@ namespace AStar.Dev.Infrastructure.FilesDb.Models;
 /// <summary>
 /// Directories used for scraping, including root directory, base save directory, and any subdirectories. This allows for flexible organization of scraped data and easy configuration of save paths.
 /// </summary>
-public class ScrapeDirectories
+public class ScrapeDirectories : AuditableEntity
 {
     /// <summary>
     /// The internal primary key for the ScrapeDirectories table.

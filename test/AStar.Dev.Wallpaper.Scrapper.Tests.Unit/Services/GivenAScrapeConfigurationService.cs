@@ -30,7 +30,7 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
             .Options;
 
         await using var seedContext = new FilesContext(options);
-        await seedContext.Database.EnsureCreatedAsync();
+        await seedContext.Database.MigrateAsync();
         seedContext.ScrapeConfiguration.Add(CreateInitialScrapeConfigurationEntity());
         await seedContext.SaveChangesAsync();
 

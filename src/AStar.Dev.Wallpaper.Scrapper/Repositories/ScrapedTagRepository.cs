@@ -47,7 +47,10 @@ public sealed class ScrapedTagRepository(IDbContextFactory<FilesContext> context
         {
             var existing = existingMap.FirstOrDefault(t => t.Value == tag.Value && t.Category == tag.Category);
             if(existing is not null)
+            {
                 existing.IncludeInSearch = tag.IncludeInSearch;
+                existing.UpdatedAt = DateTimeOffset.UtcNow;
+            }
             else
                 context.ScrapedTags.Add(tag);
         }

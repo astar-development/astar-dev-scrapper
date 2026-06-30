@@ -8,10 +8,11 @@ using AStar.Dev.Wallpaper.Scrapper.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using Serilog;
+using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
-public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchResultsPageFunctional, IDbContextFactory<FilesContext> dbContextFactory, ConfigurationSaver configurationSaver, ImagePageService imagePageService)
+public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchResultsPageFunctional, IDbContextFactory<FilesContext> dbContextFactory, ConfigurationSaver configurationSaver, ImagePageService imagePageService, ILogger logger)
 {
     private Infrastructure.FilesDb.Models.ScrapeConfigurationEntity scrapeConfiguration = null!;
     private SearchConfiguration searchConfiguration = null!;
@@ -21,8 +22,9 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
     {
         try
         {
-            scrapeConfiguration = await dbContextFactory.CreateDbContext().ScrapeConfiguration.FirstAsync(ct);
-            searchConfiguration = dbContextFactory.CreateDbContext().ScrapeConfiguration.GetScrapeConfigurations().ToAppModel().SearchConfiguration;
+            ScrapeConfiguration scrapeConfiguration = dbContextFactory.CreateDbContext().ScrapeConfiguration.GetScrapeConfigurations().ToAppModel();
+            searchConfiguration = scrapeConfiguration.SearchConfiguration;
+            scrapeDirectories = scrapeConfiguration.ScrapeDirectories;
             List<Category> searchCategories = FilterSearchCategories([.. searchConfiguration.SearchCategories]);
             await ProcessSearchCategories([.. searchConfiguration.SearchCategories], scrapeLogger, ct);
 
@@ -53,14 +55,14 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
 
             if(SearchCategoryHasBeenFullyVisited(combinedSearchString, searchCategory, imageCount))
             {
-                scrapeLogger.Debug("{Category} category has been fully visited...", searchCategory.Name);
+                logger.Debug("{Category} category has been fully visited...", searchCategory.Name);
                 continue;
             }
 
             var startingPage = searchCategory.LastPageVisited > 0 ? searchCategory.LastPageVisited : 1;
             searchConfiguration = searchConfiguration with { StartingPageNumber = startingPage };
 
-            scrapeLogger.Debug("Visiting {Category} from page {StartingPage} now...", searchCategory.Name, startingPage);
+            logger.Debug("Visiting {Category} from page {StartingPage} now...", searchCategory.Name, startingPage);
             scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
 
             _ = DirectoryHelper.CreateDirectoryIfRequired([Path.Combine(scrapeDirectories.RootDirectory, scrapeDirectories.BaseDirectory, subDirectoryName)]);
