@@ -1,19 +1,17 @@
 using System.Diagnostics;
 using AStar.Dev.FunctionalParadigm;
-using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using Serilog;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
-public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchResultsPageFunctional, IDbContextFactory<FilesContext> dbContextFactory, ConfigurationSaver configurationSaver, ImagePageService imagePageService, ILogger logger)
+public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchResultsPageFunctional, ScrapeConfiguration injectedScrapeConfiguration, ConfigurationSaver configurationSaver, ImagePageService imagePageService, ILogger logger)
 {
-    private Infrastructure.FilesDb.Models.ScrapeConfigurationEntity scrapeConfiguration = null!;
+    private ScrapeConfiguration scrapeConfiguration = null!;
     private SearchConfiguration searchConfiguration = null!;
     private ScrapeDirectories   scrapeDirectories = null!;
 
@@ -21,7 +19,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
     {
         try
         {
-            ScrapeConfiguration scrapeConfiguration = dbContextFactory.CreateDbContext().ScrapeConfiguration.GetScrapeConfigurations().ToAppModel();
+            scrapeConfiguration = injectedScrapeConfiguration;
             searchConfiguration = scrapeConfiguration.SearchConfiguration;
             scrapeDirectories = scrapeConfiguration.ScrapeDirectories;
             List<Category> searchCategories = FilterSearchCategories([.. searchConfiguration.SearchCategories]);
@@ -55,6 +53,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
             if(searchCategory.IsUpToDate(imageCount, pageCount))
             {
                 logger.Information("{Category} is up to date (same image/page count), skipping...", searchCategory.Name);
+                await Task.Delay(TimeSpan.FromSeconds(RandomDelay()), ct);
                 continue;
             }
 
@@ -74,6 +73,8 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
             await configurationSaver.SaveUpdatedConfigurationAsync();
         }
     }
+
+    private static int RandomDelay() => new Random().Next(1, 5);
 
     private async Task ProcessAllCategoryPages(Category searchCategory, string combinedSearchString, ILogger scrapeLogger, CancellationToken ct)
     {

@@ -170,17 +170,19 @@ public partial class MainWindow : Window, IDisposable
         var canvas = surface.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        using var clipPath = new SKPath();
-        clipPath.AddRoundRect(new SKRect(0, 0, 500, 500), 20, 20);
-        canvas.ClipPath(clipPath, antialias: true);
-
         var scale = Math.Min(500f / original.Width, 500f / original.Height);
         var drawWidth = original.Width * scale;
         var drawHeight = original.Height * scale;
         var offsetX = (500f - drawWidth) / 2f;
         var offsetY = (500f - drawHeight) / 2f;
+        var destRect = new SKRect(offsetX, offsetY, offsetX + drawWidth, offsetY + drawHeight);
+
+        using var clipPath = new SKPath();
+        clipPath.AddRoundRect(destRect, 20, 20);
+        canvas.ClipPath(clipPath, antialias: true);
+
         var srcRect = new SKRect(0, 0, original.Width, original.Height);
-        canvas.DrawBitmap(original, srcRect, new SKRect(offsetX, offsetY, offsetX + drawWidth, offsetY + drawHeight));
+        canvas.DrawBitmap(original, srcRect, destRect);
 
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);

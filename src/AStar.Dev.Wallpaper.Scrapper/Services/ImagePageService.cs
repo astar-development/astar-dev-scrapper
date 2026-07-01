@@ -48,16 +48,16 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
         var result = await imagePage.GetImageFromPage(pageLink, name).ConfigureAwait(false);
         if(result.Skip || result.ImageUrl is null)
         {
-            logger.Information("Skipping: {Name}", name);
+            logger.Information("Skipping Name: {Name} with Tags: {Tags}", name, string.Join(", ", result.Tags));
             return;
         }
 
         var directoryName = DirectoryHelper.CreateDirectoryIfRequired(result.DirectoryName);
 
-        var filename         = Path.GetFileName(result.ImageUrl);
+        var filename         = Path.GetFileName(result.ImageUrl).Replace("김희재", string.Empty).ToLowerInvariant();
         var fileNameCombined = !string.IsNullOrEmpty(result.FilePrefix) ? result.FilePrefix + " " + filename : filename;
 
-        var imageNameWithPath = directoryName.Value.CombinePath(fileNameCombined.Replace(' ', '-').ToLowerInvariant());
+        var imageNameWithPath = directoryName.Value.CombinePath(fileNameCombined.Replace(' ', '-').Replace("김희재", string.Empty).ToLowerInvariant());
         var image             = await ImageRetrieverHelper.GetTheImageAsync(result.ImageUrl).ConfigureAwait(false);
         logger.Information("About to save {filename} as {imageNameWithPath} as we don't appear to have it.", filename, imageNameWithPath);
         await ImageSaveHelper.SaveImage(image, imageNameWithPath).ConfigureAwait(false);
