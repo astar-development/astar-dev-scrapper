@@ -1,4 +1,4 @@
-﻿namespace AStar.Dev.Wallpaper.Scrapper.Models;
+namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
 public sealed class Category
 {
@@ -10,5 +10,7 @@ public sealed class Category
 
     public int LastPageVisited { get; set; }
 
-    public int TotalPages => (int)Math.Ceiling((decimal)LastKnownImageCount / 24);
+    public int TotalPages { get; set; }
+
+    public bool IsUpToDate(int imageCount, int pageCount) => imageCount == LastKnownImageCount && pageCount == TotalPages;
 }

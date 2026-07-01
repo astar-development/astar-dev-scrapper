@@ -155,13 +155,39 @@ public partial class MainWindow : Window, IDisposable
         {
             try
             {
-                ThumbnailImage.Source = new Bitmap(imagePath);
+                ThumbnailImage.Source = CreateRoundedBitmap(imagePath);
             }
             catch (Exception ex)
             {
                 logger.Warning(ex, "Failed to load thumbnail for {imagePath}", imagePath);
             }
         });
+
+    private static Bitmap CreateRoundedBitmap(string imagePath)
+    {
+        using var original = SKBitmap.Decode(imagePath);
+        using var surface = SKSurface.Create(new SKImageInfo(500, 500, SKColorType.Rgba8888, SKAlphaType.Premul));
+        var canvas = surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
+
+        using var clipPath = new SKPath();
+        clipPath.AddRoundRect(new SKRect(0, 0, 500, 500), 20, 20);
+        canvas.ClipPath(clipPath, antialias: true);
+
+        var scale = Math.Min(500f / original.Width, 500f / original.Height);
+        var drawWidth = original.Width * scale;
+        var drawHeight = original.Height * scale;
+        var offsetX = (500f - drawWidth) / 2f;
+        var offsetY = (500f - drawHeight) / 2f;
+        var srcRect = new SKRect(0, 0, original.Width, original.Height);
+        canvas.DrawBitmap(original, srcRect, new SKRect(offsetX, offsetY, offsetX + drawWidth, offsetY + drawHeight));
+
+        using var image = surface.Snapshot();
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var ms = new MemoryStream(data.ToArray());
+
+        return new Bitmap(ms);
+    }
 
     private static Bitmap CreatePlaceholderBitmap()
     {
@@ -174,7 +200,7 @@ public partial class MainWindow : Window, IDisposable
 
         using var font = new SKFont(SKTypeface.Default, 28);
         using var textPaint = new SKPaint { Color = SKColors.LightGray, IsAntialias = true };
-        canvas.DrawText("No image downloaded", 250, 260, SKTextAlign.Center, font, textPaint);
+        canvas.DrawText("No image downloaded yet", 250, 260, SKTextAlign.Center, font, textPaint);
 
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);

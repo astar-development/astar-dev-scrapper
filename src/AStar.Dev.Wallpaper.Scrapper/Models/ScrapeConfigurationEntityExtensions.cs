@@ -11,7 +11,7 @@ public static class ScrapeConfigurationEntityExtensions
             ToSearchConfiguration(entity),
             ToScrapeDirectoriesAppModel(entity));
 
-    private static UserConfiguration ToUserConfiguration(ScrapeConfigurationEntity entity) 
+    private static UserConfiguration ToUserConfiguration(ScrapeConfigurationEntity entity)
         => new(entity.UserConfiguration.LoginEmailAddress, entity.UserConfiguration.Username, entity.UserConfiguration.Password, entity.UserConfiguration.SessionCookie);
 
     private static SearchConfiguration ToSearchConfiguration(ScrapeConfigurationEntity entity)
@@ -25,6 +25,7 @@ public static class ScrapeConfigurationEntityExtensions
                             Name                = c.Name,
                             LastKnownImageCount = c.LastKnownImageCount,
                             LastPageVisited     = c.LastPageVisited,
+                            TotalPages          = c.TotalPages,
                         })],
                     entity.SearchConfiguration.SearchString,
                     entity.SearchConfiguration.TopWallpapers,
