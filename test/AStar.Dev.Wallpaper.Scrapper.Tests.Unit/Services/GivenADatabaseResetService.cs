@@ -1,6 +1,5 @@
 using AStar.Dev.Wallpaper.Scrapper.Repositories;
 using AStar.Dev.Wallpaper.Scrapper.Services;
-using System.IO.Abstractions;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Services;
 
