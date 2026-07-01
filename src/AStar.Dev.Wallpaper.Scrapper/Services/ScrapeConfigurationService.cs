@@ -16,6 +16,7 @@ public sealed class ScrapeConfigurationService(IDbContextFactory<FilesContext> c
             .Include(e => e.UserConfiguration)
             .Include(e => e.SearchConfiguration).ThenInclude(s => s.SearchCategories)
             .Include(e => e.ScrapeDirectories)
+            .OrderByDescending(e => e.Id)
             .FirstAsync(token)
             .ConfigureAwait(false);
     }
@@ -29,6 +30,7 @@ public sealed class ScrapeConfigurationService(IDbContextFactory<FilesContext> c
             .Include(e => e.UserConfiguration)
             .Include(e => e.SearchConfiguration).ThenInclude(s => s.SearchCategories)
             .Include(e => e.ScrapeDirectories)
+            .OrderByDescending(e => e.Id)
             .FirstAsync(token)
             .ConfigureAwait(false);
 

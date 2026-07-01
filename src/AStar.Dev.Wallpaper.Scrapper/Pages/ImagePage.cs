@@ -17,13 +17,14 @@ public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfig
         _ = await page.GotoAsync(link);
 
         IReadOnlyList<ILocator> tagLocators   = await page.Locator(".tagname").AllAsync();
-        var                     directoryName = scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory.CombinePath(categoryName);
+        var                     directoryName = scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory.CombinePath(categoryName.Replace(' ', '-'));
         var (directoryNameUpdated, filePrefix, skip, imageTags) = await ProcessTheImageTags(tagLocators, [directoryName]);
 
         if(skip) return new ImagePageResult(null, directoryNameUpdated, filePrefix, skip, imageTags);
 
         ILocator imageTag   = page.Locator("#wallpaper");
         var      sourcePath = await imageTag.GetAttributeAsync("src");
+        
         return new ImagePageResult(sourcePath, directoryNameUpdated, filePrefix, skip, imageTags);
     }
 

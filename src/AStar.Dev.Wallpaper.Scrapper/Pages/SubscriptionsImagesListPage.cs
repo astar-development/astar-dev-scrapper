@@ -14,7 +14,10 @@ public sealed class SubscriptionsImagesListPage(IPlaywrightService playwrightSer
     private ILocator NewSubscriptionWallpapersHeader => page.GetByText("New Subscription Wallpapers", new PageGetByTextOptions { Exact = false, });
 
     public async Task<IResponse?> LoadSubscriptionResultsPageAsync(int pageNumber)
-        => _ = await page.GotoAsync($"{searchConfiguration.Subscriptions}{pageNumber}");
+    {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
+        return await page.GotoAsync($"{searchConfiguration.Subscriptions}{pageNumber}");
+    }
 
     public async Task<(int pageCount, string subDirectoryName)> PageInfoAsync()
     {

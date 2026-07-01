@@ -19,5 +19,6 @@ public static class ClassificationQueries
                 .Include(e => e.UserConfiguration)
                 .Include(e => e.SearchConfiguration).ThenInclude(s => s.SearchCategories)
                 .Include(e => e.ScrapeDirectories)
+                .OrderByDescending(s => s.Id)
                 .First();
 }

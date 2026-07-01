@@ -1,3 +1,4 @@
+using System.Globalization;
 using AStar.Dev.Infrastructure.FilesDb.Data;
 using AStar.Dev.Infrastructure.FilesDb.Models;
 using Microsoft.EntityFrameworkCore;
@@ -74,6 +75,7 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
         }
 
         await context.SaveChangesAsync(token);
+
         return new { Success = true, Count = classifications.Count };
     }
 
@@ -88,13 +90,14 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
             fc.FileNameParts.Any(fnp => fileDetail.FullNameWithPath.Contains(fnp.Text, StringComparison.OrdinalIgnoreCase))));
     }
 
-    private static async Task CollectCategoryMatchAsync(FilesContext context, string categoryId, List<FileClassification> matched, CancellationToken token)
+    private async Task CollectCategoryMatchAsync(FilesContext context, string categoryId, List<FileClassification> matched, CancellationToken token)
     {
         if (string.IsNullOrEmpty(categoryId)) return;
 
         var searchConfig = await context.SearchConfigurations
             .Include(sc => sc.SearchCategories)
-            .SingleAsync(token);
+            .OrderByDescending(sc => sc.Id)
+            .FirstAsync(token);
 
         var category = searchConfig.SearchCategories.FirstOrDefault(c => c.Id == categoryId && c.IncludeInSearch);
         if (category is null) return;
@@ -102,7 +105,7 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
         matched.Add(await FindOrCreateClassificationAsync(context, category.Name));
     }
 
-    private static async Task CollectTagMatchesAsync(FilesContext context, IReadOnlyList<string> imageTags, List<FileClassification> matched, CancellationToken token)
+    private async Task CollectTagMatchesAsync(FilesContext context, IReadOnlyList<string> imageTags, List<FileClassification> matched, CancellationToken token)
     {
         if (imageTags.Count == 0) return;
 
@@ -115,9 +118,10 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
             matched.Add(await FindOrCreateClassificationAsync(context, tag.Value));
     }
 
-    private static async Task<FileClassification> FindOrCreateClassificationAsync(FilesContext context, string name)
+    private async Task<FileClassification> FindOrCreateClassificationAsync(FilesContext context, string name)
     {
-        var normalizedName = name.ToLowerInvariant();
+        var textInfo = new CultureInfo("en-GB", false).TextInfo;
+        var normalizedName = textInfo.ToTitleCase(name ?? "");
         var tracked = context.ChangeTracker.Entries<FileClassification>()
             .FirstOrDefault(e => e.Entity.Name.Equals(normalizedName, StringComparison.OrdinalIgnoreCase))?.Entity;
         if (tracked is not null) return tracked;
@@ -125,7 +129,8 @@ public sealed class FileClassificationService(IDbContextFactory<FilesContext> co
         var existing = await context.FileClassifications.FirstOrDefaultAsync(fc => fc.Name == normalizedName);
         if (existing is not null) return existing;
 
-        var created = new FileClassification { Name = normalizedName, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var now = timeProvider.GetUtcNow();
+        var created = new FileClassification { Name = normalizedName, CreatedAt = now, UpdatedAt = now };
         context.FileClassifications.Add(created);
 
         return created;

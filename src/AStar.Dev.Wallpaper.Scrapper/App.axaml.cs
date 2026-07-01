@@ -15,7 +15,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Exceptions;
-using ScrapeConfigModel = AStar.Dev.Wallpaper.Scrapper.Models.ScrapeConfiguration;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using System.Globalization;
@@ -43,17 +42,21 @@ public partial class App : Application
         builder.Configuration.AddUserSecrets<App>(optional: true, reloadOnChange: true);
 
         builder.Services
-            .Configure<ScrapeConfigModel>(builder.Configuration.GetSection("ScrapeConfiguration"))
-            .AddSingleton(sp => sp.GetRequiredService<IDbContextFactory<FilesContext>>()
-                .CreateDbContext().ScrapeConfiguration
-                .Include(e => e.ConnectionStrings)
-                .Include(e => e.UserConfiguration)
-                .Include(e => e.SearchConfiguration).ThenInclude(s => s.SearchCategories)
-                .Include(e => e.ScrapeDirectories)
-                .OrderBy(e => e.Id)
-                .First()
-                .ToAppModel())
+            .AddSingleton(sp =>
+            {
+                using var ctx = sp.GetRequiredService<IDbContextFactory<FilesContext>>().CreateDbContext();
+
+                return ctx.ScrapeConfiguration
+                    .Include(e => e.ConnectionStrings)
+                    .Include(e => e.UserConfiguration)
+                    .Include(e => e.SearchConfiguration).ThenInclude(s => s.SearchCategories)
+                    .Include(e => e.ScrapeDirectories)
+                    .OrderByDescending(e => e.Id)
+                    .First()
+                    .ToAppModel();
+            })
             .AddSingleton<LogBroadcaster>()
+            .AddSingleton<ImageBroadcaster>()
             .AddSingleton(sp => {
                 var broadcaster = sp.GetRequiredService<LogBroadcaster>();
                 return new LoggerConfiguration()
@@ -92,7 +95,7 @@ public partial class App : Application
             .AddTransient<ScrapeConfigurationView>()
             .AddTransient<ClassificationsView>()
             .AddTransient<TagsView>()
-            .AddTransient<IPlaywrightService, PlaywrightService>()
+            .AddSingleton<IPlaywrightService, PlaywrightService>()
             .AddTransient<IImagePageServiceFunctional, ImagePageServiceFunctional>()
             .AddTransient<SearchWorkflowFunctional>()
             .AddTransient<SearchResultsPageFunctional>()
