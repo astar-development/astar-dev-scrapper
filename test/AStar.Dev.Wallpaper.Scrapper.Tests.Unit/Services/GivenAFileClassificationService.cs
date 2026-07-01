@@ -42,24 +42,7 @@ public sealed class GivenAFileClassificationService : IAsyncLifetime
     public async ValueTask DisposeAsync() => await connection.DisposeAsync();
 
     [Fact]
-    public async Task when_classifying_with_multiple_search_configuration_rows_and_no_matching_category_then_no_classifications_are_recorded()
-    {
-        var fileDetail = new FileDetail
-        {
-            FileName      = new FileName("test.jpg"),
-            DirectoryName = new DirectoryName("/tmp")
-        };
-
-        await sut.ClassifyAsync(fileDetail, "any-category", [], TestContext.Current.CancellationToken);
-
-        await using var verifyCtx = new FilesContext(options);
-        var count = await verifyCtx.DownloadedFileClassifications.CountAsync(TestContext.Current.CancellationToken);
-
-        count.ShouldBe(0);
-    }
-
-    [Fact]
-    public async Task when_loading_page_classification_data_with_no_seed_data_then_searchable_classifications_are_empty()
+    public async Task when_loading_page_classification_data_with_no_classification_seed_data_then_searchable_classifications_are_empty()
     {
         var result = await sut.LoadPageClassificationDataAsync("any-category", TestContext.Current.CancellationToken);
 
@@ -67,7 +50,7 @@ public sealed class GivenAFileClassificationService : IAsyncLifetime
     }
 
     [Fact]
-    public async Task when_loading_page_classification_data_with_no_seed_data_then_category_classification_is_null()
+    public async Task when_loading_page_classification_data_with_no_classification_seed_data_then_category_classification_is_null()
     {
         var result = await sut.LoadPageClassificationDataAsync("any-category", TestContext.Current.CancellationToken);
 
@@ -75,7 +58,7 @@ public sealed class GivenAFileClassificationService : IAsyncLifetime
     }
 
     [Fact]
-    public async Task when_loading_page_classification_data_with_no_seed_data_then_included_tags_are_empty()
+    public async Task when_loading_page_classification_data_with_no_classification_seed_data_then_included_tags_are_empty()
     {
         var result = await sut.LoadPageClassificationDataAsync("any-category", TestContext.Current.CancellationToken);
 
@@ -132,6 +115,19 @@ public sealed class GivenAFileClassificationService : IAsyncLifetime
     }
 
     [Fact]
+    public async Task when_loading_page_classification_data_with_category_only_in_older_config_then_category_classification_is_null()
+    {
+        await using var seedCtx = new FilesContext(options);
+        seedCtx.ScrapeConfiguration.Add(CreateScrapeConfigEntityWithCategory("cat1", "Animals", true));
+        seedCtx.ScrapeConfiguration.Add(CreateScrapeConfigEntity());
+        await seedCtx.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var result = await sut.LoadPageClassificationDataAsync("cat1", TestContext.Current.CancellationToken);
+
+        result.CategoryClassification.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task when_loading_page_classification_data_then_only_included_scraped_tags_are_returned()
     {
         await using var seedCtx = new FilesContext(options);
@@ -150,13 +146,15 @@ public sealed class GivenAFileClassificationService : IAsyncLifetime
         await using var seedCtx = new FilesContext(options);
         var classification = new FileClassification { Name = "Animals", IncludeInSearch = true };
         seedCtx.FileClassifications.Add(classification);
-        await seedCtx.SaveChangesAsync(TestContext.Current.CancellationToken);
-
         var fileDetail = new FileDetail
         {
             FileName      = new FileName("test.jpg"),
-            DirectoryName = new DirectoryName("/tmp")
+            DirectoryName = new DirectoryName("/tmp"),
+            FileHandle    = new FileHandle("test-handle-category")
         };
+        seedCtx.Files.Add(fileDetail);
+        await seedCtx.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         var pageData = new PageClassificationData([], classification, []);
 
         await sut.ClassifyAsync(fileDetail, pageData, [], TestContext.Current.CancellationToken);
@@ -194,13 +192,15 @@ public sealed class GivenAFileClassificationService : IAsyncLifetime
             FileNameParts   = [new FileNamePart { Text = "animals" }]
         };
         seedCtx.FileClassifications.Add(classification);
-        await seedCtx.SaveChangesAsync(TestContext.Current.CancellationToken);
-
         var fileDetail = new FileDetail
         {
             FileName      = new FileName("animals-photo.jpg"),
-            DirectoryName = new DirectoryName("/tmp")
+            DirectoryName = new DirectoryName("/tmp"),
+            FileHandle    = new FileHandle("test-handle-filename")
         };
+        seedCtx.Files.Add(fileDetail);
+        await seedCtx.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         var pageData = new PageClassificationData([classification], null, []);
 
         await sut.ClassifyAsync(fileDetail, pageData, [], TestContext.Current.CancellationToken);

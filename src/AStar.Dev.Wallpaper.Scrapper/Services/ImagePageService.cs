@@ -13,6 +13,8 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
 {
     public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks, string categoryId, string name, CancellationToken ct = default)
     {
+        var pageData = await fileClassificationService.LoadPageClassificationDataAsync(categoryId, ct).ConfigureAwait(false);
+
         foreach(var pageLink in imagePageLinks)
         {
             ct.ThrowIfCancellationRequested();
@@ -20,33 +22,33 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
             {
                 var fileName = Path.GetFileName(pageLink);
 
-                if(await fileDetailRepository.ExistsAsync(fileName))
+                if(await fileDetailRepository.ExistsAsync(fileName).ConfigureAwait(false))
                 {
                     logger.Information("Not downloading {fileName} as we already have it...{Timestamp:HH:mm:ss:fff} (UTC)", fileName, timeProvider.GetUtcNow());
-                    await Task.Delay(TimeSpan.FromMilliseconds(500), ct);
+                    await Task.Delay(TimeSpan.FromMilliseconds(500), ct).ConfigureAwait(false);
                     continue;
                 }
 
-                await ProcessImagePageAsync(pageLink, categoryId, name, ct);
+                await ProcessImagePageAsync(pageLink, name, pageData, ct).ConfigureAwait(false);
             }
             catch(Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.Warning(ex, "Failed to process {pageLink}, retrying after delay.", pageLink);
-                await Task.Delay(TimeSpan.FromSeconds(10), ct);
-                await ProcessImagePageAsync(pageLink, categoryId, name, ct);
+                await Task.Delay(TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
+                await ProcessImagePageAsync(pageLink, name, pageData, ct).ConfigureAwait(false);
             }
         }
     }
 
-    private async Task ProcessImagePageAsync(string pageLink, string categoryId, string name, CancellationToken ct)
+    private async Task ProcessImagePageAsync(string pageLink, string name, PageClassificationData pageData, CancellationToken ct)
     {
         var delay = Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4);
-        await Task.Delay(TimeSpan.FromSeconds(delay), ct);
+        await Task.Delay(TimeSpan.FromSeconds(delay), ct).ConfigureAwait(false);
 
-        var result = await imagePage.GetImageFromPage(pageLink, name);
+        var result = await imagePage.GetImageFromPage(pageLink, name).ConfigureAwait(false);
         if(result.Skip || result.ImageUrl is null)
         {
-            logger.Information($"Skipping: {name}");
+            logger.Information("Skipping: {Name}", name);
             return;
         }
 
@@ -56,9 +58,9 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
         var fileNameCombined = !string.IsNullOrEmpty(result.FilePrefix) ? result.FilePrefix + " " + filename : filename;
 
         var imageNameWithPath = directoryName.Value.CombinePath(fileNameCombined.Replace(' ', '-').ToLowerInvariant());
-        var image             = await ImageRetrieverHelper.GetTheImageAsync(result.ImageUrl);
+        var image             = await ImageRetrieverHelper.GetTheImageAsync(result.ImageUrl).ConfigureAwait(false);
         logger.Information("About to save {filename} as {imageNameWithPath} as we don't appear to have it.", filename, imageNameWithPath);
-        await ImageSaveHelper.SaveImage(image, imageNameWithPath);
+        await ImageSaveHelper.SaveImage(image, imageNameWithPath).ConfigureAwait(false);
         imageBroadcaster.Broadcast(imageNameWithPath);
 
         var fileInfo   = new FileInfo(imageNameWithPath);
@@ -81,7 +83,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
             }
         }
 
-        await fileDetailRepository.AddAsync(fileDetail);
-        await fileClassificationService.ClassifyAsync(fileDetail, categoryId, result.Tags, ct);
+        await fileDetailRepository.AddAsync(fileDetail).ConfigureAwait(false);
+        await fileClassificationService.ClassifyAsync(fileDetail, pageData, result.Tags, ct).ConfigureAwait(false);
     }
 }
