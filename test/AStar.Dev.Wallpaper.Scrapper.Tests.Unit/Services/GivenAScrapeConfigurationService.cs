@@ -212,7 +212,12 @@ public sealed class GivenAScrapeConfigurationService : IAsyncLifetime
         return entity;
     }
 
-    private static ScrapeConfigurationEntity CreateImportEntity(string sqlite = "Data Source=updated.db", string password = "new-password", string sessionCookie = "new-session-cookie", string apiKey = "new-api-key", List<SearchCategoryEntity>? categories = null)
+    private static ScrapeConfigurationEntity CreateImportEntity(
+        string sqlite = "Data Source=updated.db",
+        string password = "new-password",
+        string sessionCookie = "new-session-cookie",
+        string apiKey = "new-api-key",
+        List<SearchCategoryEntity>? categories = null)
     {
         var entity = new ScrapeConfigurationEntity
         {
