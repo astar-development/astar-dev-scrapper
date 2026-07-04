@@ -30,6 +30,10 @@
     <Using Include="NSubstitute" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);NU1701;IDE1006;</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\AStar.Dev.Utilities\AStar.Dev.Utilities.csproj" />
   </ItemGroup>
