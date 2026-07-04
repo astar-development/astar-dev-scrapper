@@ -1,9 +1,9 @@
+using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Wallpaper.Scrapper.Services;
+using AStar.Dev.Wallpaper.Scrapper.Support;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using AStar.Dev.Wallpaper.Scrapper.Services;
-using AStar.Dev.Wallpaper.Scrapper.Support;
-using AStar.Dev.FunctionalParadigm;
 using Serilog;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Tags;
@@ -29,7 +29,7 @@ public partial class TagsView : Window, IDisposable
 
     private async void OnExportTagsClicked(object? sender, RoutedEventArgs e)
         => _ = await ResetCancellationTokenSource()
-            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+            .Match(
                 onSuccess: DisableControlsAndClearStatus,
                 onFailure: ex =>
                 {
@@ -46,7 +46,7 @@ public partial class TagsView : Window, IDisposable
 
     private async void OnImportTagsClicked(object? sender, RoutedEventArgs e)
         => _ = await ResetCancellationTokenSource()
-            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+            .Match(
                 onSuccess: DisableControlsAndClearStatus,
                 onFailure: ex =>
                 {

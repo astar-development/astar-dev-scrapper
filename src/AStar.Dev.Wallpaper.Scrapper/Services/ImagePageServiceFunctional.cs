@@ -1,5 +1,6 @@
 using AStar.Dev.FunctionalParadigm;
-using AStar.Dev.Infrastructure.FilesDb.Data;
+using AStar.Dev.Infrastructure.AppDb;
+using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ public interface IImagePageServiceFunctional
     Task<Result<Unit, string>> GetTheImagePagesAsync(Logger logger, CancellationToken token);
 }
 
-public sealed class ImagePageServiceFunctional(IDbContextFactory<FilesContext> dbContextFactory, SearchWorkflowFunctional searchWorkflowFunctional) : IImagePageServiceFunctional
+public sealed class ImagePageServiceFunctional(IDbContextFactory<AppDbContext> dbContextFactory, SearchWorkflowFunctional searchWorkflowFunctional) : IImagePageServiceFunctional
 {
     public async Task<Result<Unit, string>> GetTheImagePagesAsync(Logger logger, CancellationToken token)
     {
@@ -25,7 +26,7 @@ public sealed class ImagePageServiceFunctional(IDbContextFactory<FilesContext> d
             .Tap(_ => logger.Information("Scrape completed..."));
 
         // await GetTheImagePagesAsync([], ct: CancellationToken.None);
-    
+
         return Unit.Value;
     }
 
@@ -71,7 +72,7 @@ public sealed class ImagePageServiceFunctional(IDbContextFactory<FilesContext> d
     //     var imageNameWithPath = directoryName.Value.CombinePath(fileNameCombined.Replace(' ', '-')).ToLowerInvariant();
     //     var image = await ImageRetrieverHelper.GetTheImageAsync(result.ImageUrl);
     //     logger.Information("About to save {filename} as {imageNameWithPath} as we don't appear to have it.", filename, imageNameWithPath);
-    //     await ImageSaveHelper.SaveImage(image, imageNameWithPath);
+    //     await ImageSaveHelper.SaveImageAsync(image, imageNameWithPath);
 
     //     var fileInfo = new FileInfo(imageNameWithPath);
     //     var fileDetail = new FileDetail

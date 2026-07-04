@@ -1,62 +1,55 @@
 using AStar.Dev.FunctionalParadigm;
-using AStar.Dev.Infrastructure.FilesDb.Models;
+using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Extensions.Time.Testing;
 using Serilog;
 using System.IO.Abstractions;
 using System.Text.Json;
-using FileClassificationDomain = AStar.Dev.Infrastructure.FilesDb.Models.FileClassification;
-using ScrapedTagDomain = AStar.Dev.Infrastructure.FilesDb.Models.ScrapedTag;
+using FileClassificationDomain = AStar.Dev.Infrastructure.AppDb.Entities.FileClassificationCategoryEntity;
+using FileClassificationKeywordDomain = AStar.Dev.Infrastructure.AppDb.Entities.FileClassificationKeywordEntity;
+using ScrapedTagDomain = AStar.Dev.Infrastructure.AppDb.Entities.ScrapedTagEntity;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Services;
 
 public sealed class GivenAnImportExportService
 {
-    private static readonly string scrapperDirectory           = Path.GetDirectoryName(ApplicationMetadata.FileClassificationsExportFilePath)!;
+    private static readonly string scrapperDirectory = Path.GetDirectoryName(ApplicationMetadata.FileClassificationsExportFilePath)!;
     private static readonly string scrapeConfigScrapperDirectory = Path.GetDirectoryName(ApplicationMetadata.ScrapeConfigurationExportFilePath)!;
-    private static readonly string scrapperTagsDirectory       = Path.GetDirectoryName(ApplicationMetadata.ScrapedTagsExportFilePath)!;
+    private static readonly string scrapperTagsDirectory = Path.GetDirectoryName(ApplicationMetadata.ScrapedTagsExportFilePath)!;
 
     private const string CelebrityClassificationName = "Test Celebrity";
-    private const string NormalClassificationName    = "Test Normal";
-    private const string ValidPassword               = "super-secret-password";
+    private const string NormalClassificationName = "Test Normal";
+    private const string ValidPassword = "super-secret-password";
 
     private const string ActionTagValue = "Action";
-    private const string GenreCategory  = "Genre";
+    private const string GenreCategory = "Genre";
     private const string ComedyTagValue = "Comedy";
 
     private const string ValidClassificationsJson = """
         [
           {
-            "createdAt": "2026-06-20T10:11:12",
-            "updatedAt": "2026-06-20T13:14:15",
             "id": 1,
             "name": "Test Celebrity",
-            "celebrity": true,
+            "level": 3,
+            "parentId": null,
+            "isFamous": true,
             "includeInSearch": true,
-            "fileNameParts": [
+            "keywords": [
               {
-                "createdAt": "0001-01-01T00:00:00",
-                "updatedAt": "0001-01-01T00:00:00",
                 "id": 1,
-                "text": "Test Celebrity",
-                "includeInSearch": true
+                "keyword": "Test Celebrity"
               }
             ]
           },
           {
-            "createdAt": "2026-06-20T10:11:12",
-            "updatedAt": "2026-06-20T13:14:15",
             "id": 2,
             "name": "Test Normal",
-            "celebrity": false,
+            "isFamous": false,
             "includeInSearch": true,
-            "fileNameParts": [
+            "keywords": [
               {
-                "createdAt": "0001-01-01T00:00:00",
-                "updatedAt": "0001-01-01T00:00:00",
                 "id": 2,
-                "text": "Test Normal",
-                "includeInSearch": true
+                "keyword": "Test Normal"
               }
             ]
           }
@@ -115,14 +108,14 @@ public sealed class GivenAnImportExportService
     {
         timeProvider = new FakeTimeProvider();
         mockFileSystem = new MockFileSystem();
-        mockLogger     = Substitute.For<ILogger>();
-        sut            = new ImportExportService(mockFileSystem, timeProvider, mockLogger);
+        mockLogger = Substitute.For<ILogger>();
+        sut = new ImportExportService(mockFileSystem, timeProvider, mockLogger);
     }
 
     [Fact]
     public void when_importing_and_file_does_not_exist_then_failure_result_is_returned() =>
         sut.ImportFileClassificationsFromFile()
-           .ShouldBeOfType<Fail<List<FileClassificationDomain>, string>>();
+           .ShouldBeOfType<Fail<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>();
 
     [Fact]
     public void when_importing_and_file_does_not_exist_then_logger_receives_error_call()
@@ -139,7 +132,7 @@ public sealed class GivenAnImportExportService
         mockFileSystem.File.WriteAllText(ApplicationMetadata.FileClassificationsExportFilePath, "null");
 
         sut.ImportFileClassificationsFromFile()
-           .ShouldBeOfType<Fail<List<FileClassificationDomain>, string>>();
+           .ShouldBeOfType<Fail<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>();
     }
 
     [Fact]
@@ -159,17 +152,27 @@ public sealed class GivenAnImportExportService
         SetupValidImportFile();
 
         sut.ImportFileClassificationsFromFile()
-           .ShouldBeOfType<Ok<List<FileClassificationDomain>, string>>();
+           .ShouldBeOfType<Ok<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>();
     }
 
     [Fact]
-    public void when_importing_valid_classifications_then_correct_count_is_returned()
+    public void when_importing_valid_classifications_then_correct_category_count_is_returned()
     {
         SetupValidImportFile();
 
         sut.ImportFileClassificationsFromFile()
-           .ShouldBeOfType<Ok<List<FileClassificationDomain>, string>>()
-           .Value.Count.ShouldBe(2);
+           .ShouldBeOfType<Ok<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>()
+           .Value.Categories.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void when_importing_valid_classifications_then_correct_keyword_count_is_returned()
+    {
+        SetupValidImportFile();
+
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Ok<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>()
+           .Value.Keywords.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -178,8 +181,8 @@ public sealed class GivenAnImportExportService
         SetupValidImportFile();
 
         sut.ImportFileClassificationsFromFile()
-           .ShouldBeOfType<Ok<List<FileClassificationDomain>, string>>()
-           .Value[0].Name.ShouldBe(CelebrityClassificationName);
+           .ShouldBeOfType<Ok<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>()
+           .Value.Categories[0].Name.ShouldBe(CelebrityClassificationName);
     }
 
     [Fact]
@@ -188,8 +191,54 @@ public sealed class GivenAnImportExportService
         SetupValidImportFile();
 
         sut.ImportFileClassificationsFromFile()
-           .ShouldBeOfType<Ok<List<FileClassificationDomain>, string>>()
-           .Value[1].Name.ShouldBe(NormalClassificationName);
+           .ShouldBeOfType<Ok<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>()
+           .Value.Categories[1].Name.ShouldBe(NormalClassificationName);
+    }
+
+    [Fact]
+    public void when_importing_valid_classifications_then_level_is_mapped()
+    {
+        SetupValidImportFile();
+
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Ok<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>()
+           .Value.Categories[0].Level.ShouldBe(3);
+    }
+
+    [Fact]
+    public void when_importing_valid_classifications_then_keyword_is_linked_to_its_category()
+    {
+        SetupValidImportFile();
+
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Ok<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>()
+           .Value.Keywords[0].CategoryId.ShouldBe(1);
+    }
+
+    [Fact]
+    public void when_exporting_and_reimporting_a_classification_then_level_survives_the_round_trip()
+    {
+        mockFileSystem.Directory.CreateDirectory(scrapperDirectory);
+        var classifications = CreateDomainClassifications();
+
+        sut.ExportFileClassificationsToFile(classifications);
+
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Ok<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>()
+           .Value.Categories[0].Level.ShouldBe(3);
+    }
+
+    [Fact]
+    public void when_exporting_and_reimporting_a_classification_then_keyword_survives_the_round_trip()
+    {
+        mockFileSystem.Directory.CreateDirectory(scrapperDirectory);
+        var classifications = CreateDomainClassifications();
+
+        sut.ExportFileClassificationsToFile(classifications);
+
+        sut.ImportFileClassificationsFromFile()
+           .ShouldBeOfType<Ok<(List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords), string>>()
+           .Value.Keywords.ShouldContain(k => k.Keyword == "celebrity-keyword");
     }
 
     [Fact]
@@ -220,7 +269,7 @@ public sealed class GivenAnImportExportService
                                .Throw(new IOException("Disk full"));
         var throwingSut = new ImportExportService(throwingFileSystem, timeProvider, mockLogger);
 
-        var act = () => throwingSut.ExportFileClassificationsToFile([]);
+        var act = () => throwingSut.ExportFileClassificationsToFile(([], []));
 
         act.ShouldThrow<IOException>();
     }
@@ -231,9 +280,9 @@ public sealed class GivenAnImportExportService
         var throwingFileSystem = Substitute.For<IFileSystem>();
         throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
                                .Throw(new IOException("Disk full"));
-        var throwingSut = new ImportExportService(throwingFileSystem,timeProvider,  mockLogger);
+        var throwingSut = new ImportExportService(throwingFileSystem, timeProvider, mockLogger);
 
-        Should.Throw<IOException>(() => throwingSut.ExportFileClassificationsToFile([]));
+        Should.Throw<IOException>(() => throwingSut.ExportFileClassificationsToFile(([], [])));
 
         mockLogger.Received(1).Error(Arg.Any<Exception>(), Arg.Any<string>(), Arg.Any<string>());
     }
@@ -328,7 +377,7 @@ public sealed class GivenAnImportExportService
 
         sut.ExportScrapeConfigurationToFile(CreateScrapeConfigurationEntityWithSensitiveData());
 
-        var json = mockFileSystem.File.ReadAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath);
+        string json = mockFileSystem.File.ReadAllText(ApplicationMetadata.ScrapeConfigurationExportFilePath);
         using var doc = JsonDocument.Parse(json);
         doc.RootElement.GetProperty("userConfiguration").GetProperty("password").GetString()
            .ShouldBe(ApplicationMetadata.Redacted);
@@ -499,7 +548,7 @@ public sealed class GivenAnImportExportService
         var throwingFileSystem = Substitute.For<IFileSystem>();
         throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
                                .Throw(new IOException("Disk full"));
-        var throwingSut = new ImportExportService(throwingFileSystem,timeProvider,  mockLogger);
+        var throwingSut = new ImportExportService(throwingFileSystem, timeProvider, mockLogger);
 
         var act = () => throwingSut.ExportScrapedTagsToFile([]);
 
@@ -512,7 +561,7 @@ public sealed class GivenAnImportExportService
         var throwingFileSystem = Substitute.For<IFileSystem>();
         throwingFileSystem.File.When(f => f.WriteAllText(Arg.Any<string>(), Arg.Any<string?>()))
                                .Throw(new IOException("Disk full"));
-        var throwingSut = new ImportExportService(throwingFileSystem,timeProvider,  mockLogger);
+        var throwingSut = new ImportExportService(throwingFileSystem, timeProvider, mockLogger);
 
         Should.Throw<IOException>(() => throwingSut.ExportScrapedTagsToFile([]));
 
@@ -537,29 +586,36 @@ public sealed class GivenAnImportExportService
         mockFileSystem.File.WriteAllText(ApplicationMetadata.ScrapedTagsExportFilePath, ValidTagsJson);
     }
 
-    private static List<FileClassificationDomain> CreateDomainClassifications() =>
-    [
-        new() { Id = 1, Name = CelebrityClassificationName, Celebrity = true,  IncludeInSearch = true },
-        new() { Id = 2, Name = NormalClassificationName,    Celebrity = false, IncludeInSearch = true }
-    ];
+    private static (List<FileClassificationDomain> Categories, List<FileClassificationKeywordDomain> Keywords) CreateDomainClassifications() =>
+    (
+        Categories:
+        [
+            new() { Id = 1, Name = CelebrityClassificationName, Level = 3, IsFamous = true,  IncludeInSearch = true },
+            new() { Id = 2, Name = NormalClassificationName,    Level = 3, IsFamous = false, IncludeInSearch = true }
+        ],
+        Keywords:
+        [
+            new() { Id = 1, CategoryId = 1, Keyword = "celebrity-keyword" },
+            new() { Id = 2, CategoryId = 2, Keyword = "normal-keyword" }
+        ]
+    );
 
     private static ScrapeConfigurationEntity CreateScrapeConfigurationEntityWithSensitiveData() => new()
     {
-        ConnectionStrings = new ConnectionStrings { Sqlite = "Data Source=production.db" },
-        UserConfiguration = new UserConfiguration
+        ConnectionStrings = new ConnectionStringsEntity { Sqlite = "Data Source=production.db" },
+        UserConfiguration = new UserConfigurationEntity
         {
             LoginEmailAddress = "user@example.com",
-            Username          = "testuser",
-            Password          = ValidPassword,
-            SessionCookie     = "actual-session-cookie"
+            Username = "testuser",
+            Password = ValidPassword,
+            SessionCookie = "actual-session-cookie"
         },
-        SearchConfiguration = new SearchConfiguration
+        SearchConfiguration = new SearchConfigurationEntity
         {
-            BaseUrl          = "https://example.com",
-            ApiKey           = "actual-api-key",
-            SearchCategories = []
+            BaseUrl = new Uri("https://example.com"),
+            ApiKey = "actual-api-key"
         },
-        ScrapeDirectories = new ScrapeDirectories { RootDirectory = "/tmp/scrape" }
+        ScrapeDirectories = new ScrapeDirectoriesEntity { RootDirectory = "/tmp/scrape" }
     };
 
     private static List<ScrapedTagDomain> CreateDomainTags() =>

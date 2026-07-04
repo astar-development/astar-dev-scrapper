@@ -48,7 +48,7 @@
     <ItemGroup>
         <ProjectReference Include="../AStar.Dev.Guard.Clauses/AStar.Dev.Guard.Clauses.csproj" />
         <ProjectReference Include="../AStar.Dev.FunctionalParadigm/AStar.Dev.FunctionalParadigm.csproj" />
-        <ProjectReference Include="../AStar.Dev.Infrastructure.FilesDb/AStar.Dev.Infrastructure.FilesDb.csproj" />
+        <ProjectReference Include="../AStar.Dev.Infrastructure.AppDb/AStar.Dev.Infrastructure.AppDb.csproj" />
         <ProjectReference Include="../AStar.Dev.Utilities/AStar.Dev.Utilities.csproj" />
     </ItemGroup>
 

@@ -1,10 +1,10 @@
-using AStar.Dev.Infrastructure.FilesDb.Data;
+using AStar.Dev.Infrastructure.AppDb;
 using Microsoft.EntityFrameworkCore;
 using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public class DatabaseInitializationService(IDbContextFactory<FilesContext> contextFactory, Logger logger)
+public class DatabaseInitializationService(IDbContextFactory<AppDbContext> contextFactory, Logger logger)
 {
     public async Task InitialiseAsync()
     {
@@ -13,8 +13,9 @@ public class DatabaseInitializationService(IDbContextFactory<FilesContext> conte
         await context.Database.MigrateAsync();
 
         await DataSeed.SeedTagsToIgnoreAsync(logger, context);
+        await DataSeed.SeedScrapeConfigurationAsync(logger, context);
 
-        var csvPath = Path.Combine(ApplicationMetadata.ApplicationFolder, "Mappings.csv");
+        string csvPath = Path.Combine(ApplicationMetadata.ApplicationFolder, "Mappings.csv");
         await DataSeed.SeedFileClassificationsAsync(csvPath, logger, context);
     }
 }

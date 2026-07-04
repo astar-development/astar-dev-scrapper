@@ -1,20 +1,17 @@
-﻿using AStar.Dev.Infrastructure.FilesDb.Models;
+using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Utilities;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
-internal static class DirectoryHelper
+/// <inheritdoc/>
+public class DirectoryHelper : IDirectoryHelper
 {
-    public static DirectoryName CreateDirectoryIfRequired(List<string> fullDirectoryPath)
+    /// <inheritdoc/>
+    public DirectoryName CreateDirectoryIfRequired(List<string> fullDirectoryPath)
     {
-        var directory = Path.Combine([..fullDirectoryPath])!;
-        directory = directory.CleanPath();
+        string directory = Path.Combine([.. fullDirectoryPath])!;
 
-        //if(directory.LastIndexOf(':') > 2) fullDirectoryPath = directory[..2] + directory[2..].Replace(":", "_");
-
-        if(Directory.Exists(directory)) return new(directory);
-
-        _ = Directory.CreateDirectory(directory);
+        _ = Directory.CreateDirectory(directory.CleanPath());
 
         return new(directory);
     }
