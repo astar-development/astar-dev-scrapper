@@ -1,12 +1,12 @@
-using AStar.Dev.Infrastructure.FilesDb.Data;
-using AStar.Dev.Infrastructure.FilesDb.Models;
+using AStar.Dev.Infrastructure.AppDb;
+using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Support;
 
-public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logger logger, IDbContextFactory<FilesContext> contextFactory)
+public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, Logger logger, IDbContextFactory<AppDbContext> contextFactory)
 {
     public async Task SaveUpdatedConfigurationAsync()
     {
@@ -14,7 +14,7 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
         {
             await UpdateAndSaveTheConfigurationAsync();
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             logger.Error(exception.GetBaseException().Message);
             throw;
@@ -33,26 +33,26 @@ public sealed class ConfigurationSaver(ScrapeConfiguration scrapeConfiguration, 
                                                    .DistinctBy(c => c.Id)
                                                    .ToList();
 
-        foreach(var cat in dedupedCategories)
+        foreach (var cat in dedupedCategories)
         {
             var existing = entity.SearchConfiguration.SearchCategories
                                  .FirstOrDefault(ec => ec.Id == cat.Id);
-            if(existing != null)
+            if (existing != null)
             {
                 existing.LastKnownImageCount = cat.LastKnownImageCount;
-                existing.LastPageVisited     = cat.LastPageVisited;
-                existing.TotalPages          = cat.TotalPages;
+                existing.LastPageVisited = cat.LastPageVisited;
+                existing.TotalPages = cat.TotalPages;
             }
             else
             {
-                entity.SearchConfiguration.SearchCategories.Add(new SearchCategories
+                entity.SearchConfiguration.SearchCategories.Add(new SearchCategoryEntity
                 {
                     SearchConfigurationId = entity.SearchConfiguration.Id,
-                    Id                    = cat.Id,
-                    Name                  = cat.Name,
-                    LastKnownImageCount   = cat.LastKnownImageCount,
-                    LastPageVisited       = cat.LastPageVisited,
-                    TotalPages            = cat.TotalPages,
+                    Id = cat.Id,
+                    Name = cat.Name,
+                    LastKnownImageCount = cat.LastKnownImageCount,
+                    LastPageVisited = cat.LastPageVisited,
+                    TotalPages = cat.TotalPages,
                 });
             }
         }

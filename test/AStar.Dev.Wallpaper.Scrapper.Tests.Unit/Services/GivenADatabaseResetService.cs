@@ -12,10 +12,7 @@ public sealed class GivenADatabaseResetService
     private readonly MockFileSystem fileSystem = new();
     private readonly DatabaseResetService sut;
 
-    public GivenADatabaseResetService()
-    {
-        sut = new DatabaseResetService(repo, fileSystem);
-    }
+    public GivenADatabaseResetService() => sut = new DatabaseResetService(repo, fileSystem);
 
     [Fact]
     public async Task when_resetting_then_reset_search_categories_is_called()
@@ -51,7 +48,7 @@ public sealed class GivenADatabaseResetService
     public async Task when_reset_search_categories_throws_then_delete_all_files_is_not_called()
     {
         repo.ResetSearchCategoriesAsync(Arg.Any<CancellationToken>())
-            .Returns<Task>(_ => Task.FromException(new InvalidOperationException()));
+            .Returns(_ => Task.FromException(new InvalidOperationException()));
 
         await Should.ThrowAsync<InvalidOperationException>(() => sut.ResetAsync(CancellationToken.None));
 
@@ -100,7 +97,7 @@ public sealed class GivenADatabaseResetService
     public async Task when_get_base_save_directory_throws_then_exception_propagates()
     {
         repo.GetBaseSaveDirectoryAsync(Arg.Any<CancellationToken>())
-            .Returns<Task<string?>>(_ => Task.FromException<string?>(new InvalidOperationException("db error")));
+            .Returns(_ => Task.FromException<string?>(new InvalidOperationException("db error")));
 
         await Should.ThrowAsync<InvalidOperationException>(() => sut.DeleteSaveDirectoryAsync(CancellationToken.None));
     }

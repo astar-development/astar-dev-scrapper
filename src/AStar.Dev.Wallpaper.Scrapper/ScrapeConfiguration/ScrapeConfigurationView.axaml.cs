@@ -1,8 +1,8 @@
+using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Wallpaper.Scrapper.Services;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using AStar.Dev.Wallpaper.Scrapper.Services;
-using AStar.Dev.FunctionalParadigm;
 using Serilog;
 
 namespace AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
@@ -33,7 +33,7 @@ public partial class ScrapeConfigurationView : Window, IDisposable
     {
         base.OnClosed(e);
         cts?.Dispose();
-        if(DataContext is IAsyncDisposable disposable)
+        if (DataContext is IAsyncDisposable disposable)
             await disposable.DisposeAsync();
     }
 
@@ -41,7 +41,7 @@ public partial class ScrapeConfigurationView : Window, IDisposable
 
     private async void OnExportScrapeConfigClicked(object? sender, RoutedEventArgs e)
         => _ = await ResetCancellationTokenSource()
-            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+            .Match(
                 onSuccess: DisableControlsAndClearStatus,
                 onFailure: ex =>
                 {
@@ -58,7 +58,7 @@ public partial class ScrapeConfigurationView : Window, IDisposable
 
     private async void OnImportScrapeConfigClicked(object? sender, RoutedEventArgs e)
         => _ = await ResetCancellationTokenSource()
-            .Match<CancellationToken, Exception, Result<CancellationToken, string>>(
+            .Match(
                 onSuccess: DisableControlsAndClearStatus,
                 onFailure: ex =>
                 {

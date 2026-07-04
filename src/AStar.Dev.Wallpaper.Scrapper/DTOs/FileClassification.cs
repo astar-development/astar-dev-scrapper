@@ -7,18 +7,6 @@ namespace AStar.Dev.Wallpaper.Scrapper.DTOs;
 public sealed class FileClassification
 {
     /// <summary>
-    ///     Gets or sets the date and time when the entity was created.
-    ///     This property is automatically set when a new instance of the entity is added to the database.
-    /// </summary>
-    public DateTimeOffset CreatedAt { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the date and time when the entity was last modified.
-    ///     This property is automatically updated whenever changes are made to the entity and saved to the database.
-    /// </summary>
-    public DateTimeOffset UpdatedAt { get; set; }
-
-    /// <summary>
     ///     Gets or sets the unique identifier for the file classification.
     ///     This property serves as the primary key for the <see cref="FileClassification" /> entity.
     /// </summary>
@@ -32,10 +20,20 @@ public sealed class FileClassification
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    ///     Gets or sets a value indicating whether the file classification is considered a "Celebrity."
+    ///     Gets or sets the hierarchy level: 1 = top, 2 = sub, 3 = leaf.
+    /// </summary>
+    public int Level { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the id of the parent classification; null for root nodes.
+    /// </summary>
+    public int? ParentId { get; set; }
+
+    /// <summary>
+    ///     Gets or sets a value indicating whether the file classification is considered "famous."
     ///     This property is used to mark specific classifications with special significance.
     /// </summary>
-    public bool Celebrity { get; set; }
+    public bool IsFamous { get; set; }
 
     /// <summary>
     ///     Gets or sets a value indicating whether this classification should be included in search results.
@@ -44,9 +42,9 @@ public sealed class FileClassification
     public bool IncludeInSearch { get; set; }
 
     /// <summary>
-    ///     Gets or sets the collection of file name parts associated with the file classification.
+    ///     Gets or sets the collection of keywords associated with the file classification.
     ///     This property represents the one-to-many relationship between a file classification
-    ///     and its constituent parts that define or describe its naming structure.
+    ///     and the keywords matched against file names to apply it.
     /// </summary>
-    public List<FileNamePart> FileNameParts { get; set; } = [];
+    public List<FileClassificationKeyword> Keywords { get; set; } = [];
 }

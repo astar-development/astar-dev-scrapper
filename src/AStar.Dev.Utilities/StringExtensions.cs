@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace AStar.Dev.Utilities;
@@ -31,7 +30,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The string to check for being null, empty or whitespace</param>
     /// <returns>True if the string is null, empty or whitespace, False otherwise</returns>
-    public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? value) =>
+    public static bool IsNullOrWhiteSpace(this string? value) =>
         string.IsNullOrWhiteSpace(value);
 
     /// <summary>
@@ -71,15 +70,12 @@ public static class StringExtensions
     public static bool IsImage(this string fileName)
     {
         if (string.IsNullOrEmpty(fileName)) return false;
-        var extension = Path.GetExtension(fileName)?.TrimStart('.');
-        if(extension.IsNullOrWhiteSpace()) return false;
 
-        var hashSet = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase)
-        {
-            "jpg", "jpeg", "png", "bmp", "gif"
-        };
-
-        return hashSet.Contains(extension);
+        return fileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+        || fileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
+        || fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+        || fileName.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase)
+        || fileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -141,7 +137,7 @@ public static class StringExtensions
     /// <returns>The normalized file path, prefixed with a forward slash if not already prefixed</returns>
     public static string NormalizeLinux(this string path)
     {
-        if(string.IsNullOrWhiteSpace(path))
+        if (string.IsNullOrWhiteSpace(path))
             return "/";
 
         path = path.Trim()
@@ -158,7 +154,7 @@ public static class StringExtensions
     /// <returns>The normalized file path, prefixed with a backslash if not already prefixed</returns>
     public static string NormalizeWindows(this string path)
     {
-        if(string.IsNullOrWhiteSpace(path))
+        if (string.IsNullOrWhiteSpace(path))
             return "\\";
 
         path = path.Trim()
@@ -175,9 +171,24 @@ public static class StringExtensions
     /// <returns>The human-readable string format</returns>
     public static string FileSizeToText(this long fileSize) => fileSize switch
     {
+        // add gigabyte formatting
         0 => string.Empty,
         < 1024 => $"{fileSize} B",
         < 1024 * 1024 => $"{fileSize / 1024.0:F1} KB",
-        _ => $"{fileSize / (1024.0 * 1024):F1} MB"
+        < 1024 * 1024 * 1024 => $"{fileSize / (1024.0 * 1024):F1} MB",
+        _ => $"{fileSize / (1024.0 * 1024 * 1024):F1} GB"
     };
+
+    /// <summary>
+    ///   The TitleCased method converts a string to title case using the specified culture.
+    /// </summary>
+    /// <param name="value">The string to convert</param>
+    /// <param name="cultureName">The culture to use for title casing</param>
+    /// <returns>The title-cased string</returns>
+    public static string ToTitleCase(this string value, string cultureName = "en-GB")
+#pragma warning disable CA1308 // Normalize strings to uppercase
+        => string.IsNullOrWhiteSpace(value)
+            ? string.Empty
+            : new System.Globalization.CultureInfo(cultureName, false).TextInfo.ToTitleCase(value.ToLowerInvariant());
+#pragma warning restore CA1308 // Normalize strings to uppercase
 }

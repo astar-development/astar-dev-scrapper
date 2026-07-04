@@ -1,4 +1,4 @@
-using AStar.Dev.Infrastructure.FilesDb.Models;
+using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
@@ -9,20 +9,20 @@ using SkiaSharp;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ScrapeConfiguration scrapeConfiguration, TimeProvider timeProvider, Logger logger, ImageBroadcaster imageBroadcaster)
+public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ScrapeConfiguration scrapeConfiguration, TimeProvider timeProvider, Logger logger, IDirectoryHelper directoryHelper, ImageBroadcaster imageBroadcaster)
 {
     public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks, string categoryId, string name, CancellationToken ct = default)
     {
         var pageData = await fileClassificationService.LoadPageClassificationDataAsync(categoryId, ct).ConfigureAwait(false);
 
-        foreach(var pageLink in imagePageLinks)
+        foreach (string pageLink in imagePageLinks)
         {
             ct.ThrowIfCancellationRequested();
             try
             {
-                var fileName = Path.GetFileName(pageLink);
+                string fileName = Path.GetFileName(pageLink);
 
-                if(await fileDetailRepository.ExistsAsync(fileName).ConfigureAwait(false))
+                if (await fileDetailRepository.ExistsAsync(fileName).ConfigureAwait(false))
                 {
                     logger.Information("Not downloading {fileName} as we already have it...{Timestamp:HH:mm:ss:fff} (UTC)", fileName, timeProvider.GetUtcNow());
                     await Task.Delay(TimeSpan.FromMilliseconds(500), ct).ConfigureAwait(false);
@@ -31,7 +31,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
 
                 await ProcessImagePageAsync(pageLink, name, pageData, ct).ConfigureAwait(false);
             }
-            catch(Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.Warning(ex, "Failed to process {pageLink}, retrying after delay.", pageLink);
                 await Task.Delay(TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
@@ -42,48 +42,65 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
 
     private async Task ProcessImagePageAsync(string pageLink, string name, PageClassificationData pageData, CancellationToken ct)
     {
-        var delay = Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4);
-        await Task.Delay(TimeSpan.FromSeconds(delay), ct).ConfigureAwait(false);
-
-        var result = await imagePage.GetImageFromPage(pageLink, name).ConfigureAwait(false);
-        if(result.Skip || result.ImageUrl is null)
+        try
         {
-            logger.Information("Skipping Name: {Name} with Tags: {Tags}", name, string.Join(", ", result.Tags));
-            return;
-        }
+            int delay = Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4);
+            await Task.Delay(TimeSpan.FromSeconds(delay), ct).ConfigureAwait(false);
 
-        var directoryName = DirectoryHelper.CreateDirectoryIfRequired(result.DirectoryName);
-
-        var filename         = Path.GetFileName(result.ImageUrl).Replace("김희재", string.Empty).ToLowerInvariant();
-        var fileNameCombined = !string.IsNullOrEmpty(result.FilePrefix) ? result.FilePrefix + " " + filename : filename;
-
-        var imageNameWithPath = directoryName.Value.CombinePath(fileNameCombined.Replace(' ', '-').Replace("김희재", string.Empty).ToLowerInvariant());
-        var image             = await ImageRetrieverHelper.GetTheImageAsync(result.ImageUrl).ConfigureAwait(false);
-        logger.Information("About to save {filename} as {imageNameWithPath} as we don't appear to have it.", filename, imageNameWithPath);
-        await ImageSaveHelper.SaveImage(image, imageNameWithPath).ConfigureAwait(false);
-        imageBroadcaster.Broadcast(imageNameWithPath);
-
-        var fileInfo   = new FileInfo(imageNameWithPath);
-        var fileDetail = new FileDetail
-        {
-            DirectoryName = directoryName,
-            FileName      = new FileName(filename),
-            FileSize      = fileInfo.Length,
-            IsImage       = filename.IsImage()
-        };
-
-        if(fileDetail.IsImage)
-        {
-            var imageDetail = SKImage.FromEncodedData(imageNameWithPath);
-            if(imageDetail is not null)
+            var result = await imagePage.GetImageFromPageAsync(pageLink, name).ConfigureAwait(false);
+            if (result.Skip || result.ImageUrl is null)
             {
-                fileDetail.Height      = imageDetail.Height;
-                fileDetail.Width       = imageDetail.Width;
-                fileDetail.ImageDetail = new ImageDetail { Width = imageDetail.Width, Height = imageDetail.Height };
+                logger.Information("Skipping {Name} with Tags: {Tags}", name, string.Join(", ", result.Tags));
+                return;
             }
-        }
 
-        await fileDetailRepository.AddAsync(fileDetail).ConfigureAwait(false);
-        await fileClassificationService.ClassifyAsync(fileDetail, pageData, result.Tags, ct).ConfigureAwait(false);
+            var directoryName = directoryHelper.CreateDirectoryIfRequired(result.DirectoryName);
+
+            string filename = ScrapedFileNameFactory.Create(result.FilePrefix, result.ImageUrl);
+
+            string imageNameWithPath = directoryName.Value.CombinePath(filename);
+            byte[] image = await ImageRetrieverHelper.GetTheImageAsync(result.ImageUrl).ConfigureAwait(false);
+            logger.Information("About to save {filename} to ...{imageNameWithPath} as we don't appear to have it.", filename, imageNameWithPath[^50..]);
+            await ImageSaveHelper.SaveImageAsync(image, imageNameWithPath).ConfigureAwait(false);
+            imageBroadcaster.Broadcast(imageNameWithPath);
+
+            var fileInfo = new FileInfo(imageNameWithPath);
+            var fileDetail = new FileDetailEntity
+            {
+                DirectoryName = directoryName,
+                FileName = new FileName(filename),
+                FileSize = fileInfo.Length,
+                IsImage = filename.IsImage()
+            };
+
+            if (fileDetail.IsImage)
+            {
+                var imageDetail = SKImage.FromEncodedData(imageNameWithPath);
+                if (imageDetail is not null)
+                {
+                    fileDetail.Height = imageDetail.Height;
+                    fileDetail.Width = imageDetail.Width;
+                    fileDetail.ImageDetail = new ImageDetailEntity { Width = imageDetail.Width, Height = imageDetail.Height };
+                }
+            }
+
+            await fileDetailRepository.AddAsync(fileDetail).ConfigureAwait(false);
+            await fileClassificationService.ClassifyAsync(fileDetail, pageData, result.Tags, ct).ConfigureAwait(false);
+        }
+        catch(TaskCanceledException)
+        {
+            logger.Warning("Task was cancelled while processing {pageLink}.", pageLink);
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            logger.Warning("Operation was cancelled while processing {pageLink}.", pageLink);
+            throw;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.Error(ex, "Error processing image page {pageLink}: {Message}", pageLink, ex.Message);
+            throw;
+        }
     }
 }
