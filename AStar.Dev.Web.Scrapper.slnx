@@ -4,7 +4,6 @@
   <Project Path="test/AStar.Dev.Utilities.Tests.Unit/AStar.Dev.Utilities.Tests.Unit.csproj" />
   <Project Path="src/AStar.Dev.FunctionalParadigm/AStar.Dev.FunctionalParadigm.csproj" />
   <Project Path="src/AStar.Dev.Guard.Clauses/AStar.Dev.Guard.Clauses.csproj" />
-  <Project Path="src/AStar.Dev.Infrastructure.FilesDb/AStar.Dev.Infrastructure.FilesDb.csproj" />
   <Project Path="src/AStar.Dev.Utilities/AStar.Dev.Utilities.csproj" />
   <Project Path="src/AStar.Dev.Wallpaper.Scrapper/AStar.Dev.Wallpaper.Scrapper.csproj" />
 </Solution>
