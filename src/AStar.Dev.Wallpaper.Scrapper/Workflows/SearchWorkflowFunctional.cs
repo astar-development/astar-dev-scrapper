@@ -24,7 +24,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
             searchConfiguration = scrapeConfiguration.SearchConfiguration;
             scrapeDirectories = scrapeConfiguration.ScrapeDirectories;
             var searchCategories = FilterSearchCategories([.. searchConfiguration.SearchCategories]);
-            await ProcessSearchCategoriesAsync([.. searchConfiguration.SearchCategories], scrapeLogger, ct);
+            await ProcessSearchCategoriesAsync(searchCategories, scrapeLogger, ct);
 
             return Unit.Value;
         }
@@ -102,8 +102,7 @@ public sealed class SearchWorkflowFunctional(SearchResultsPageFunctional searchR
 
     private ScrapeDirectories UpdateSubDirectoryIfRequired(string subDirectoryName)
     {
-        if (scrapeDirectories is null) scrapeDirectories = new ScrapeDirectories(scrapeConfiguration.ScrapeDirectories.RootDirectory, scrapeConfiguration.ScrapeDirectories.BaseSaveDirectory, scrapeConfiguration.ScrapeDirectories.BaseDirectory, scrapeConfiguration.ScrapeDirectories.BaseDirectoryFamous, subDirectoryName);
-        else if (subDirectoryName.Length > 0) scrapeDirectories = scrapeDirectories with { SubDirectoryName = subDirectoryName };
+        if (subDirectoryName.Length > 0) scrapeDirectories = scrapeDirectories with { SubDirectoryName = subDirectoryName };
 
         return scrapeDirectories;
     }

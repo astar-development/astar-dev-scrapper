@@ -19,5 +19,5 @@ public static class ScrapeSiteWorkflowDecision
     ///     failure carrying the setup error, without invoking <paramref name="workflow" />.
     /// </returns>
     public static Task<Result<Unit, string>> DecideAsync(Result<CancellationToken, Exception> setupResult, Func<CancellationToken, Task<Result<Unit, string>>> workflow)
-        => throw new NotImplementedException();
+        => setupResult.MatchAsync(workflow, exception => Result.Failure<Unit, string>(exception.Message)).AsTask();
 }

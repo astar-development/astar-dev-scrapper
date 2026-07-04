@@ -14,10 +14,14 @@ public sealed class TopWallpapersPage(IPlaywrightService playwrightService, Sear
     private ILocator ImagePreviews => page.GetByRole(AriaRole.Link);
 
     public async Task<IResponse?> LoadTopWallpapersPageAsync(int pageNumber)
-        => _ = await page.GotoAsync($"{searchConfiguration.TopWallpapers}{pageNumber}");
+    {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
+        return _ = await page.GotoAsync($"{searchConfiguration.TopWallpapers}{pageNumber}");
+    }
 
     public async Task<int> PageInfoAsync()
     {
+        page ??= await playwrightService.ConfigurePlaywrightAsync();
         string? text = await PageCount.First.TextContentAsync();
 
         if (text is null) return 0;

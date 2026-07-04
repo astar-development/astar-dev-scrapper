@@ -18,5 +18,5 @@ public static class SqliteConnectionStringProvider
     ///     Resolves the Sqlite connection string from <paramref name="configuration" />, falling back to
     ///     <see cref="DefaultConnectionString" /> when not configured.
     /// </summary>
-    public static string Get(IConfiguration configuration) => throw new NotImplementedException();
+    public static string Get(IConfiguration configuration) => configuration["ConnectionStrings:Sqlite"] ?? DefaultConnectionString;
 }
