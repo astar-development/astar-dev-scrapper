@@ -1,4 +1,5 @@
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Guard.Clauses;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
@@ -19,5 +20,10 @@ public static class ScrapeSiteWorkflowDecision
     ///     failure carrying the setup error, without invoking <paramref name="workflow" />.
     /// </returns>
     public static Task<Result<Unit, string>> DecideAsync(Result<CancellationToken, Exception> setupResult, Func<CancellationToken, Task<Result<Unit, string>>> workflow)
-        => setupResult.MatchAsync(workflow, exception => Result.Failure<Unit, string>(exception.Message)).AsTask();
+    {
+        GuardAgainst.Null(setupResult);
+        GuardAgainst.Null(workflow);
+
+        return setupResult.MatchAsync(workflow, exception => Result.Failure<Unit, string>(exception.Message)).AsTask();
+    }
 }

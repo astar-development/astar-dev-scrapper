@@ -101,7 +101,10 @@ public partial class MainWindow : Window, IDisposable
     }
 
     private async void OnScrapeSiteFunctionalClicked(object? sender, RoutedEventArgs e)
-        => _ = await ScrapeSiteWorkflowDecision.DecideAsync(
+    {
+        try
+        {
+            _ = await ScrapeSiteWorkflowDecision.DecideAsync(
                 ResetCancellationTokenSource().Tap(
                     onSuccess: DisableControlsAndClearStatus,
                     onFailure: ex =>
@@ -111,8 +114,17 @@ public partial class MainWindow : Window, IDisposable
                     }
                 ),
                 RunScrapeWorkflowAsync
-            )
-            .EnsureAsync(() => ResetUI());
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            UpdateStatus("Scrape cancelled.");
+        }
+        finally
+        {
+            ResetUI();
+        }
+    }
 #pragma warning restore IDE1006 // Naming Styles
 
     private Result<CancellationToken, Exception> ResetCancellationTokenSource()

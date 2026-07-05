@@ -1,3 +1,4 @@
+using AStar.Dev.Guard.Clauses;
 using Microsoft.Extensions.Configuration;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Support;
@@ -18,5 +19,5 @@ public static class SqliteConnectionStringProvider
     ///     Resolves the Sqlite connection string from <paramref name="configuration" />, falling back to
     ///     <see cref="DefaultConnectionString" /> when not configured.
     /// </summary>
-    public static string Get(IConfiguration configuration) => configuration["ConnectionStrings:Sqlite"] ?? DefaultConnectionString;
+    public static string Get(IConfiguration configuration) => GuardAgainst.Null(configuration)["ConnectionStrings:Sqlite"] ?? DefaultConnectionString;
 }

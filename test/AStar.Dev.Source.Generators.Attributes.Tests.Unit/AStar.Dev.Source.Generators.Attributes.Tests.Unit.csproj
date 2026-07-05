@@ -32,10 +32,6 @@
     </PackageReference>
   </ItemGroup>
 
-  <PropertyGroup>
-    <NoWarn>$(NoWarn);NU1701;IDE1006;</NoWarn>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\AStar.Dev.Source.Generators.Attributes\AStar.Dev.Source.Generators.Attributes.csproj" />
   </ItemGroup>
