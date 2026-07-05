@@ -2,13 +2,12 @@ using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
-using Microsoft.Playwright;
 using Serilog.Core;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
 public sealed class TopWallpapersWorkflow(
-    TopWallpapersPage topWallpapersPage,
+    ITopWallpapersPage topWallpapersPage,
     ImagePageService imagePageService,
     SearchConfiguration searchConfiguration,
     ConfigurationSaver configurationSaver,

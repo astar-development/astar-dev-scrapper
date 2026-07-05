@@ -81,7 +81,7 @@ public sealed class SearchResultsPage(IPlaywrightService playwrightService, Logg
             if (hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
         }
 
-        return [.. wantedLinks.Take(24)];
+        return [.. wantedLinks.Take(ScrapperConstants.ImagesPerPage)];
     }
 
     private async Task<(int pageCount, int imageCount, string subDirectoryName)> GetPageInfoAsync()
@@ -99,7 +99,7 @@ public sealed class SearchResultsPage(IPlaywrightService playwrightService, Logg
         string searchResults = text.Replace(",", string.Empty)[..firstSpaceIndex];
         decimal imageCount = decimal.Parse(searchResults, CultureInfo.InvariantCulture);
 
-        return (Convert.ToInt32(Math.Ceiling(imageCount / 24)), (int)imageCount, subDirectoryName);
+        return (Convert.ToInt32(Math.Ceiling(imageCount / ScrapperConstants.ImagesPerPage)), (int)imageCount, subDirectoryName);
     }
 
     private async Task<IResponse?> GotoPageAsync(string searchString, int pageNumber)

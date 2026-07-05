@@ -14,7 +14,7 @@ using Serilog;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Workflows;
 
-public sealed class GivenASearchWorkflowFunctionalWithANonEmptySubDirectory : IAsyncLifetime
+public sealed class GivenASearchWorkflowWithANonEmptySubDirectory : IAsyncLifetime
 {
     private const string CategoryId = "cat-4";
     private const string RootDirectory = "root-directory";
@@ -81,14 +81,14 @@ public sealed class GivenASearchWorkflowFunctionalWithANonEmptySubDirectory : IA
         var contextFactory = Substitute.For<IDbContextFactory<AppDbContext>>();
         contextFactory.CreateDbContextAsync(Arg.Any<CancellationToken>()).Returns(_ => Task.FromResult(new AppDbContext(options)));
 
-        var searchResultsPage = new SearchResultsPageFunctional(playwrightService, new LoggerConfiguration().CreateLogger());
+        var searchResultsPage = new SearchResultsPage(playwrightService, new LoggerConfiguration().CreateLogger());
         var configurationSaver = new ConfigurationSaver(scrapeConfiguration, new LoggerConfiguration().CreateLogger(), contextFactory);
         var imagePage = new ImagePage(playwrightService, scrapeConfiguration, new(), new(), Substitute.For<IScrapedTagRepository>());
         var fileClassificationService = new FileClassificationService(contextFactory);
         var imagePageService = new ImagePageService(imagePage, Substitute.For<IFileDetailRepository>(), fileClassificationService, scrapeConfiguration, System.TimeProvider.System, new LoggerConfiguration().CreateLogger(), Substitute.For<IDirectoryHelper>(), new());
         var directoryHelper = Substitute.For<IDirectoryHelper>();
 
-        var sut = new SearchWorkflowFunctional(searchResultsPage, scrapeConfiguration, configurationSaver, imagePageService, directoryHelper, Substitute.For<ILogger>());
+        var sut = new SearchWorkflow(searchResultsPage, scrapeConfiguration, configurationSaver, imagePageService, directoryHelper, Substitute.For<ILogger>());
 
         await sut.RunAsync(Substitute.For<ILogger>(), TestContext.Current.CancellationToken);
 
