@@ -119,6 +119,10 @@
     CA1707 (identifier contains underscores) is suppressed because the repo
     mandates the when_[action]_then_[outcome] snake_case naming convention
     for all test methods; underscores are intentional and required by style.
+
+    IDE1006 (naming style violation) is suppressed for the same reason: the
+    naming-style analyzer flags the snake_case when_..._then_... test method
+    convention, which CA1707 alone does not cover.
   -->
   <PropertyGroup Condition="$(MSBuildProjectName.Contains('.Tests'))
                           Or $(MSBuildProjectName.EndsWith('.IntegrationTests'))">
@@ -128,7 +132,7 @@
       CA1859: Use concrete types for fields — suppressed in tests because the
       sut field must be typed to the interface to exercise the public contract.
     -->
-    <NoWarn>$(NoWarn);CA1707;CA1859</NoWarn>
+    <NoWarn>$(NoWarn);CA1707;CA1859;IDE1006</NoWarn>
   </PropertyGroup>
 
 </Project>

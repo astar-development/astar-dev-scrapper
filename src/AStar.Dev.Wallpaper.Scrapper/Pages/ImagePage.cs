@@ -38,8 +38,6 @@ public sealed class ImagePage(IPlaywrightService playwrightService, ScrapeConfig
 
         await scrapedTagRepository.SaveAsync([.. tagData.Where(t => !string.IsNullOrWhiteSpace(t.Category))]);
 
-        await scrapedTagRepository.SaveAsync([.. tagData.Select(t => t).Where(t => !string.IsNullOrWhiteSpace(t.Category))]);
-
         foreach (var (tagText, tagToUse) in tagData)
         {
             if (tagToUse == null) continue;

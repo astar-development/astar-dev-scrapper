@@ -101,21 +101,30 @@ public partial class MainWindow : Window, IDisposable
     }
 
     private async void OnScrapeSiteFunctionalClicked(object? sender, RoutedEventArgs e)
-        => _ = await ResetCancellationTokenSource()
-            .Match(
-                onSuccess: DisableControlsAndClearStatus,
-                onFailure: ex =>
-                {
-                    logger.Error(ex, "Failed to reset cancellation token source");
-                    UpdateStatus($"Error: {ex.Message}");
-                    return ex.Message;
-                }
-            )
-            .Tap(_ => logger.Information("Configuring Playwright..."))
-            .Tap(_ => logger.Information("Starting scrape..."))
-            .BindAsync(page => searchWorkflowFunctional.RunAsync(logger, cts!.Token))
-            .TapAsync(_ => logger.Information("Scrape completed..."))
-            .EnsureAsync(() => ResetUI());
+    {
+        try
+        {
+            _ = await ScrapeSiteWorkflowDecision.DecideAsync(
+                ResetCancellationTokenSource().Tap(
+                    onSuccess: DisableControlsAndClearStatus,
+                    onFailure: ex =>
+                    {
+                        logger.Error(ex, "Failed to reset cancellation token source");
+                        UpdateStatus($"Error: {ex.Message}");
+                    }
+                ),
+                RunScrapeWorkflowAsync
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            UpdateStatus("Scrape cancelled.");
+        }
+        finally
+        {
+            ResetUI();
+        }
+    }
 #pragma warning restore IDE1006 // Naming Styles
 
     private Result<CancellationToken, Exception> ResetCancellationTokenSource()
@@ -125,13 +134,20 @@ public partial class MainWindow : Window, IDisposable
         return cts.Token;
     }
 
-    private Result<CancellationToken, string> DisableControlsAndClearStatus(CancellationToken ct = default)
+    private void DisableControlsAndClearStatus(CancellationToken ct)
     {
         ScrapeSiteNewButton.IsEnabled = false;
         CancelButton.IsEnabled = true;
         StatusLabel.Text = string.Empty;
+    }
 
-        return ct;
+    private Task<Result<Unit, string>> RunScrapeWorkflowAsync(CancellationToken ct)
+    {
+        logger.Information("Configuring Playwright...");
+        logger.Information("Starting scrape...");
+
+        return searchWorkflowFunctional.RunAsync(logger, ct)
+            .TapAsync(_ => logger.Information("Scrape completed..."));
     }
 
     private void ResetUI()

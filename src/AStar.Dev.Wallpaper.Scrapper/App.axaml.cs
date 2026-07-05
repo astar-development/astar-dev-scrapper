@@ -2,7 +2,6 @@ using System.Globalization;
 using System.IO.Abstractions;
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Infrastructure.AppDb.Entities;
-using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.Classifications;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
@@ -66,11 +65,7 @@ public partial class App : Application
                     .CreateLogger();
             })
             .AddSingleton<ILogger>(sp => sp.GetRequiredService<Serilog.Core.Logger>())
-            .AddDbContextFactory<AppDbContext>(options =>
-            {
-                string dbPath = "astar-dev-onedrive-sync".ApplicationDirectory().CombinePath("astar-dev-onedrive-sync.db");
-                options.UseSqlite($"Data Source={dbPath}");
-            })
+            .AddDbContextFactory<AppDbContext>(options => options.UseSqlite(SqliteConnectionStringProvider.Get(builder.Configuration)))
             .AddSingleton(sp =>
             {
                 using var ctx = sp.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();

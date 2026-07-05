@@ -236,6 +236,8 @@ Refactor both to the exact shape of the Phase 4 `SearchWorkflow` (they are alrea
 ### Phase 6 — MainWindow + composition
 
 1. Rework `OnScrapeSiteFunctionalClicked` chain: failure branch produces `Fail` (B5 fixed properly), UI-state changes isolated in two functions (`DisableControls`, `ResetUI`), workflow selection ready for the two re-wired workflows.
+   - **Phase 0 review note (B5):** a standalone repro showed the original chain's `Match` failure lambda already type-inferred to `Result<CancellationToken, string>` via the DU's implicit operator, so the described "success string continues the chain" defect was not reproducible under actual compiler behaviour. The `ScrapeSiteWorkflowDecision` extraction stands regardless — it removes the fragile implicit-conversion-driven type unification and the `cts!.Token` null-forgiving read.
+   - **Widen scope to sibling views:** the same `Match(onSuccess: DisableControlsAndClearStatus, onFailure: ex => ex.Message)` pattern exists in `ScrapeConfiguration/ScrapeConfigurationView.axaml.cs`, `Tags/TagsView.axaml.cs`, and `Classifications/ClassificationsView.axaml.cs` — apply the same `ScrapeSiteWorkflowDecision`-style short-circuit + try/finally `ResetUI` treatment there.
 2. `App.axaml.cs` DI cleanup: dead registrations removed (done in Phase 2), blocking `Task.Run(...).GetAwaiter().GetResult()` database init replaced with an async-friendly startup, three `Func<TView>` factory registrations collapsed into one generic helper.
 3. Validate `ScrapeConfiguration` at startup via `Validation<ScrapeConfiguration>` — invalid config surfaces all errors in the UI instead of failing mid-scrape.
 4. Final `c-sharp-reviewer` pass over the whole diff; `graphify update .`.
