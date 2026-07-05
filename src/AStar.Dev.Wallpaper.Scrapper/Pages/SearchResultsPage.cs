@@ -99,7 +99,7 @@ public sealed class SearchResultsPage(IPlaywrightService playwrightService, Logg
         string searchResults = text.Replace(",", string.Empty)[..firstSpaceIndex];
         decimal imageCount = decimal.Parse(searchResults, CultureInfo.InvariantCulture);
 
-        return (Convert.ToInt32(Math.Ceiling(imageCount / 24)), (int)imageCount, subDirectoryName);
+        return (Convert.ToInt32(Math.Ceiling(imageCount / ScrapperConstants.ImagesPerPage)), (int)imageCount, subDirectoryName);
     }
 
     private async Task<IResponse?> GotoPageAsync(string searchString, int pageNumber)

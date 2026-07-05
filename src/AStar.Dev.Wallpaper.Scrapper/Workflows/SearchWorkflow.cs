@@ -110,7 +110,9 @@ public sealed class SearchWorkflow(SearchResultsPage searchResultsPage, ScrapeCo
     private SearchConfiguration UpdateSearchDetailsIfRequired(string combinedSearchString)
     {
         if (searchConfiguration.SearchString == combinedSearchString) return searchConfiguration;
+
         searchConfiguration = searchConfiguration with { StartingPageNumber = 1, SearchString = combinedSearchString };
+
         return searchConfiguration;
     }
 

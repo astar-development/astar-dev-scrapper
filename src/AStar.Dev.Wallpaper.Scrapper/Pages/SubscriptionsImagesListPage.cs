@@ -33,7 +33,7 @@ public sealed class SubscriptionsImagesListPage(IPlaywrightService playwrightSer
         if (hashIndex > 0) subDirectoryName = text[hashIndex..].Replace(" ", "-").Replace("#", string.Empty);
 
         string searchResults = text.Replace(",", string.Empty)[..firstSpaceIndex];
-        decimal imageCount = decimal.Parse(searchResults, CultureInfo.InvariantCulture) / 24;
+        decimal imageCount = decimal.Parse(searchResults, CultureInfo.InvariantCulture) / ScrapperConstants.ImagesPerPage;
 
         return (Convert.ToInt32(Math.Ceiling(imageCount)), subDirectoryName);
     }
