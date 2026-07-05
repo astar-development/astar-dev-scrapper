@@ -11,8 +11,10 @@
         "safebrowsing",
         "Scroller",
         "Serilog",
+        "Shouldly",
         "Skia",
         "tagname",
-        "topwallpapers"
+        "topwallpapers",
+        "Xunit"
     ]
 }

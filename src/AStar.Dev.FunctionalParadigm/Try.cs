@@ -1,0 +1,39 @@
+namespace AStar.Dev.FunctionalParadigm;
+
+/// <summary>
+///     Bridges throwing operations into <see cref="Exceptional{T}" />, capturing thrown exceptions into a
+///     <see cref="Failure{T}" /> instead of letting them propagate.
+/// </summary>
+/// <remarks>
+///     <see cref="OperationCanceledException" /> (including <see cref="TaskCanceledException" />) is never
+///     captured — it always rethrows, so <see cref="CancellationToken.ThrowIfCancellationRequested" /> semantics
+///     survive.
+/// </remarks>
+public static class Try
+{
+    /// <summary>
+    ///     Runs the specified operation, capturing any thrown exception (other than
+    ///     <see cref="OperationCanceledException" />) into a <see cref="Failure{T}" />.
+    /// </summary>
+    public static Exceptional<T> Run<T>(Func<T> operation) => throw new NotImplementedException();
+
+    /// <summary>
+    ///     Runs the specified operation, throwing immediately if <paramref name="cancellationToken" /> is
+    ///     cancelled, and otherwise capturing any thrown exception (other than
+    ///     <see cref="OperationCanceledException" />) into a <see cref="Failure{T}" />.
+    /// </summary>
+    public static Exceptional<T> Run<T>(Func<T> operation, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+    /// <summary>
+    ///     Runs the specified asynchronous operation, capturing any thrown exception (other than
+    ///     <see cref="OperationCanceledException" />) into a <see cref="Failure{T}" />.
+    /// </summary>
+    public static Task<Exceptional<T>> RunAsync<T>(Func<Task<T>> operation) => throw new NotImplementedException();
+
+    /// <summary>
+    ///     Runs the specified asynchronous operation, throwing immediately if <paramref name="cancellationToken" />
+    ///     is cancelled, and otherwise capturing any thrown exception (other than
+    ///     <see cref="OperationCanceledException" />) into a <see cref="Failure{T}" />.
+    /// </summary>
+    public static Task<Exceptional<T>> RunAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken) => throw new NotImplementedException();
+}
