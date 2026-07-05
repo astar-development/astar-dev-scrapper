@@ -54,9 +54,9 @@ public sealed class GivenASearchWorkflowWithAMidListSearchString
         var configurationSaver = new ConfigurationSaver(scrapeConfiguration, new LoggerConfiguration().CreateLogger(), contextFactory);
         var imagePage = new ImagePage(playwrightService, scrapeConfiguration, new(), new(), Substitute.For<IScrapedTagRepository>());
         var fileClassificationService = new FileClassificationService(contextFactory);
-        var imagePageService = new ImagePageService(imagePage, Substitute.For<IFileDetailRepository>(), fileClassificationService, scrapeConfiguration, System.TimeProvider.System, new LoggerConfiguration().CreateLogger(), Substitute.For<IDirectoryHelper>(), new());
+        var imagePageService = new ImagePageService(imagePage, Substitute.For<IFileDetailRepository>(), fileClassificationService, scrapeConfiguration, System.TimeProvider.System, new LoggerConfiguration().CreateLogger(), Substitute.For<IDirectoryHelper>(), new(), new NoOpDelayStrategy(), Substitute.For<IImageRetriever>(), Substitute.For<IImageSaver>(), new MockFileSystem());
 
-        var sut = new SearchWorkflow(searchResultsPage, scrapeConfiguration, configurationSaver, imagePageService, Substitute.For<IDirectoryHelper>(), Substitute.For<ILogger>());
+        var sut = new SearchWorkflow(searchResultsPage, scrapeConfiguration, configurationSaver, imagePageService, Substitute.For<IDirectoryHelper>(), Substitute.For<ILogger>(), new NoOpDelayStrategy(), System.TimeProvider.System);
 
         await sut.RunAsync(Substitute.For<ILogger>(), TestContext.Current.CancellationToken);
 
