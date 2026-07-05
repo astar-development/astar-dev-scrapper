@@ -155,7 +155,7 @@ Use the GitHub Copilot tool:
 ```text
 {
   owner: "astar-development",
-  repo: "astar-dev-mono",
+  repo: "astar-dev-scrapper",
   title: "feat: descriptive title using conventional commits",
   head: "feature/your-feature-name",
   base: "main",
