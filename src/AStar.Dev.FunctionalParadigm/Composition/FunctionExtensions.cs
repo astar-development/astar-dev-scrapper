@@ -16,20 +16,25 @@ public static class FunctionExtensions
     /// <summary>
     ///     Pipes the value through the specified function, returning the function's result.
     /// </summary>
-    public static TOut Pipe<TIn, TOut>(this TIn value, Func<TIn, TOut> fn) => throw new NotImplementedException();
+    public static TOut Pipe<TIn, TOut>(this TIn value, Func<TIn, TOut> fn) => fn(value);
 
     /// <summary>
     ///     Asynchronously pipes the value through the specified function, returning the function's result.
     /// </summary>
-    public static Task<TOut> PipeAsync<TIn, TOut>(this TIn value, Func<TIn, Task<TOut>> fn) => throw new NotImplementedException();
+    public static async Task<TOut> PipeAsync<TIn, TOut>(this TIn value, Func<TIn, Task<TOut>> fn) => await fn(value).ConfigureAwait(false);
 
     /// <summary>
     ///     Executes a side-effect action on the value, and returns the original value unchanged.
     /// </summary>
-    public static T Tap<T>(this T value, Action<T> sideEffect) => throw new NotImplementedException();
+    public static T Tap<T>(this T value, Action<T> sideEffect)
+    {
+        sideEffect(value);
+
+        return value;
+    }
 
     /// <summary>
     ///     Composes two functions into one, running <paramref name="first" /> then <paramref name="second" />.
     /// </summary>
-    public static Func<TIn, TOut> Compose<TIn, TMid, TOut>(this Func<TIn, TMid> first, Func<TMid, TOut> second) => throw new NotImplementedException();
+    public static Func<TIn, TOut> Compose<TIn, TMid, TOut>(this Func<TIn, TMid> first, Func<TMid, TOut> second) => input => second(first(input));
 }
