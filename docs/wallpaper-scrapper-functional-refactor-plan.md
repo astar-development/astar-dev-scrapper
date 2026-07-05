@@ -151,7 +151,7 @@ Plus `ScrapeErrorFactory` per DU convention, and one logging extension `Result<T
 
 Every phase follows the repo's non-negotiable TDD workflow: **c-sharp-qa writes failing tests → commit → c-sharp-dev implements → all tests green → c-sharp-reviewer reviews → new c-sharp-dev fixes findings**. Tests come first in every phase — there is no after-the-fact test pass. Standing test rules: never against the real database (in-memory SQLite via `IDbContextFactory`), NSubstitute for collaborators, zero-delay strategy injected into workflow tests, Shouldly assertions, `Given…`/`when_…_then_…` naming. One commit (or PR) per phase; `graphify update .` after each phase.
 
-### Phase 0 — Bug fixes (TDD, before any refactor)
+### Phase 0 — Bug fixes (TDD, before any refactor) - complete
 
 Fix B1–B5 from §3.3, each with a failing test first:
 
@@ -162,11 +162,11 @@ Fix B1–B5 from §3.3, each with a failing test first:
 - **B5:** test that when control-reset fails the workflow is **not** invoked. Fix ahead of the full Phase 6 rework: failure lambda returns a `Fail` result.
 - **B6:** DB connection string becomes configurable (`ConnectionStrings:Sqlite` from configuration/user secrets) with `/home/jbarden/Documents/Scrapper/scrapper.db` as the default. Tests: DI-composed connection string uses the configured value when present, the new default otherwise. Fresh database — no data migration; old data re-imported manually via the existing Import buttons after first run.
 
-### Phase 1 — FunctionalParadigm additions
+### Phase 1 — FunctionalParadigm additions - complete
 
 Implement §4.1–4.4 with full test coverage (Match/Map/Bind laws, error accumulation, cancellation passthrough, async overloads). No consumer changes yet — additive, zero risk.
 
-### Phase 2 — Deletions, merges, renames
+### Phase 2 — Deletions, merges, renames - complete
 
 1. Delete: `SearchWorkflow` (old), `ConfigurationSaverFunctional`, `ImagePageServiceFunctional` (+ its interface), `ImagePageResultFunctional` (+ interface), `TopWallpapersWorkflowFunctional`, `SearchResultsPage` (old twin).
 2. Merge `TopWallpapersPageFunctional` into `TopWallpapersPage` (keeping the `page ??=` init fix and the `ITopWallpapersPage` interface, renamed from `ITopWallpapersPageFunctional`).
