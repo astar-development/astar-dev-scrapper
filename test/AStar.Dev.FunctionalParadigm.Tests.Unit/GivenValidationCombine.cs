@@ -46,4 +46,16 @@ public class GivenValidationCombine
         invalid.Errors[0].ShouldBe(firstError);
         invalid.Errors[1].ShouldBe(secondError);
     }
+
+    [Fact]
+    public void when_input_is_empty_then_returns_valid_with_empty_list()
+    {
+        var validations = Array.Empty<Validation<int>>();
+
+        var actual = validations.Combine();
+
+        actual.ShouldBeOfType<Valid<IReadOnlyList<int>>>();
+        var valid = (Valid<IReadOnlyList<int>>)actual;
+        valid.Value.ShouldBeEmpty();
+    }
 }

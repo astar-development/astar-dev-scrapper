@@ -38,6 +38,7 @@ public class GivenExceptionalBind
         var actual = exceptional.Bind(value =>
         {
             invoked = true;
+
             return Exceptional.Success(value * 5);
         });
 

@@ -6,7 +6,18 @@ namespace AStar.Dev.FunctionalParadigm;
 ///     Use the <see cref="Exceptional" /> factory class to construct instances.
 /// </summary>
 /// <typeparam name="T">The type of the success value.</typeparam>
-public abstract record Exceptional<T>;
+public abstract record Exceptional<T>
+{
+    /// <summary>
+    ///     Implicitly lifts a success value into an <see cref="Exceptional{T}" />.
+    /// </summary>
+    public static implicit operator Exceptional<T>(T value) => new Success<T>(value);
+
+    /// <summary>
+    ///     Implicitly lifts a captured exception into an <see cref="Exceptional{T}" />.
+    /// </summary>
+    public static implicit operator Exceptional<T>(Exception exception) => new Failure<T>(exception);
+}
 
 /// <summary>
 ///     Represents a successful <see cref="Exceptional{T}" /> carrying a value.

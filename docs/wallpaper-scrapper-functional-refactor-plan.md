@@ -125,6 +125,10 @@ public static class FunctionExtensions
 
 Enables chaining on plain values (e.g. header-text → parse → page-count) without intermediate locals.
 
+**Namespace decision (Phase 1, empirically verified):** `FunctionExtensions` lives in `AStar.Dev.FunctionalParadigm.Composition`, NOT the flat namespace. A flat-namespace `Tap<T>(this T, Action<T>)` silently wins overload resolution against `ResultExtensions.Tap(onSuccess, onFailure = null)` (C# prefers the candidate with no omitted optional argument) — `result.Tap(x => ...)` binds `x` to the whole `Result<,>` instead of the success value, with no compiler error. Splitting `ResultExtensions.Tap` into fixed-arity overloads instead produces CS0121 at existing call sites. Do not merge the namespaces; the explicit `using ...Composition` is the fix.
+
+**Implicit operators (Phase 1):** `Exceptional<T>` gained `implicit operator` from `T` (→ Success) and `Exception` (→ Failure), mirroring `Result<TResult,TError>`. `Validation<T>` deliberately has none: `T` can itself be a `Func<...>` under `Apply`, making a blanket implicit-from-`T` ambiguous and error-prone.
+
 ### 4.5 Domain error DU — lives in the Scrapper project, not FunctionalParadigm
 
 `ScrapeError` is domain-specific; FunctionalParadigm stays generic.
