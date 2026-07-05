@@ -81,7 +81,7 @@ public sealed class SearchResultsPage(IPlaywrightService playwrightService, Logg
             if (hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
         }
 
-        return [.. wantedLinks.Take(24)];
+        return [.. wantedLinks.Take(ScrapperConstants.ImagesPerPage)];
     }
 
     private async Task<(int pageCount, int imageCount, string subDirectoryName)> GetPageInfoAsync()

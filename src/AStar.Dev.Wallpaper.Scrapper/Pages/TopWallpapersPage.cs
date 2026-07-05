@@ -5,7 +5,7 @@ using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
-public sealed class TopWallpapersPage(IPlaywrightService playwrightService, SearchConfiguration searchConfiguration)
+public sealed class TopWallpapersPage(IPlaywrightService playwrightService, SearchConfiguration searchConfiguration) : ITopWallpapersPage
 {
     private IPage page = null!;
 
@@ -45,6 +45,6 @@ public sealed class TopWallpapersPage(IPlaywrightService playwrightService, Sear
             if (hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
         }
 
-        return [.. wantedLinks.Take(24)];
+        return [.. wantedLinks.Take(ScrapperConstants.ImagesPerPage)];
     }
 }

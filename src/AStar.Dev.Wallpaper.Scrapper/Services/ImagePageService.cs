@@ -34,7 +34,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.Warning(ex, "Failed to process {pageLink}, retrying after delay.", pageLink);
-                await Task.Delay(TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
+                await Task.Delay(ScrapperConstants.RetryDelay, ct).ConfigureAwait(false);
                 await ProcessImagePageAsync(pageLink, name, pageData, ct).ConfigureAwait(false);
             }
         }

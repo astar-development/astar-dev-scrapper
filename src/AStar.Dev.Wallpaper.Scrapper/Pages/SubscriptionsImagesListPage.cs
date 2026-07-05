@@ -51,7 +51,7 @@ public sealed class SubscriptionsImagesListPage(IPlaywrightService playwrightSer
             if (hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
         }
 
-        return [.. wantedLinks.Take(24)];
+        return [.. wantedLinks.Take(ScrapperConstants.ImagesPerPage)];
     }
 
     public async Task ClearAsync()
