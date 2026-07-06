@@ -56,6 +56,18 @@ public static class ValidationExtensions
     }
 
     /// <summary>
+    ///     Reduces a <see cref="Validation{T}" /> to a single value by invoking <paramref name="onValid" />
+    ///     with the validated value, or <paramref name="onInvalid" /> with the accumulated errors.
+    /// </summary>
+    public static TOut Match<T, TOut>(this Validation<T> validation, Func<T, TOut> onValid, Func<IReadOnlyList<ValidationError>, TOut> onInvalid)
+        => validation switch
+            {
+                Valid<T> valid => onValid(valid.Value),
+                Invalid<T> invalid => onInvalid(invalid.Errors),
+                _ => throw new InvalidOperationException(_unexpectedValidationTypeMessage)
+            };
+
+    /// <summary>
     ///     Lifts a <see cref="Validation{T}" /> into a <see cref="Result{TResult,TError}" />, mapping the
     ///     accumulated errors to a domain error via <paramref name="mapErrors" />.
     /// </summary>
