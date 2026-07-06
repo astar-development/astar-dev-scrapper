@@ -135,6 +135,16 @@ Omitting causes `AVLN2100` build errors.
 
 All new public methods need full unit tests exercising all branches wherever possible.
 
+## Pre-report self-review checklist (mandatory before claiming done)
+
+Every phase review so far has flagged the same misses. Run this sweep over the FULL diff (`git diff` + new files) before reporting completion:
+
+1. **Consistency sweep.** Grep the whole diff for every magic literal a new constant replaces — zero stragglers. Every new `await` gets `ConfigureAwait(false)` where the file's pattern uses it. `var` when the type is obvious from the RHS. Blank-line-before-return per style rules.
+2. **Guards on new public APIs.** Every new public method and every `<Name>Factory` method validates reference-type arguments (`GuardAgainst.Null` / `ArgumentNullException.ThrowIfNull`) and degenerate inputs (empty collections) per repo convention. The reviewer has flagged this in every phase — do not ship without it.
+3. **Factories, not ctors.** Records that have a `<Name>Factory` are never constructed via `new` at call sites — including pre-existing records touched by your change.
+4. **Mirror-type parity.** When adding a type that mirrors an existing one (e.g. a new DU alongside `Result<T,E>`), diff its public API surface against the mirror: overload matrix, implicit operators, Task/ValueTask-receiver async overloads. A missing overload here was the only review blocker in four phases.
+5. **DEVIATIONS section.** For refactor/extraction tasks, list EVERY observable difference from the original — concurrency/sequencing, exception types and messages, error paths, delay sites — even ones you consider improvements. Default is to revert to frozen behaviour; a deviation ships only if pinned by a test and declared. Silent "improvements" are defects.
+
 ## Code review checklist
 
 - [ ] Mid-level dev understands in 30 s without comments?
