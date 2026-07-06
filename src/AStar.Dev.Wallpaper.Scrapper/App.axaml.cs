@@ -97,6 +97,10 @@ public partial class App : Application
             .AddTransient<ImagePageService>()
             .AddTransient<ImagePage>()
             .AddSingleton<IDirectoryHelper, DirectoryHelper>()
+            .AddSingleton<IDelayStrategy, RandomDelayStrategy>()
+            .AddTransient<IImageSaver, ImageSaver>()
+            .AddHttpClient<IImageRetriever, ImageRetriever>(client => client.Timeout = TimeSpan.FromMinutes(2))
+            .Services
             .AddTransient(_ => TimeProvider.System)
             .AddTransient<Func<ScrapeConfigurationView>>(sp => () => sp.GetRequiredService<ScrapeConfigurationView>())
             .AddTransient<Func<ClassificationsView>>(sp => () => sp.GetRequiredService<ClassificationsView>())

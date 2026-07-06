@@ -1,4 +1,4 @@
-using System.Globalization;
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Playwright;
 using Serilog.Core;
@@ -71,17 +71,11 @@ public sealed class SearchResultsPage(IPlaywrightService playwrightService, Logg
 
     private async Task<IReadOnlyCollection<string>> GetTheImagePageLinksAsync()
     {
-        List<string> wantedLinks = [];
-        var imagePreviews = await ImagePreviews.AllAsync();
+        var imagePreviews = await ImagePreviews.AllAsync().ConfigureAwait(false);
+        List<string?> hrefs = [];
+        foreach (var imagePreview in imagePreviews) hrefs.Add(await imagePreview.GetAttributeAsync("href").ConfigureAwait(false));
 
-        foreach (var imagePreview in imagePreviews)
-        {
-            string? hrefString = await imagePreview.GetAttributeAsync("href");
-
-            if (hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
-        }
-
-        return [.. wantedLinks.Take(ScrapperConstants.ImagesPerPage)];
+        return ImageLinkSelector.SelectWanted(hrefs);
     }
 
     private async Task<(int pageCount, int imageCount, string subDirectoryName)> GetPageInfoAsync()
@@ -90,16 +84,9 @@ public sealed class SearchResultsPage(IPlaywrightService playwrightService, Logg
 
         if (text is null) return (0, 0, string.Empty);
 
-        int firstSpaceIndex = text.IndexOf(' ');
-        int hashIndex = text.IndexOf("for ", StringComparison.Ordinal) + 3;
-        string subDirectoryName = string.Empty;
-
-        if (hashIndex > 0) subDirectoryName = text[(hashIndex + 1)..].Replace(" ", "-").Replace("#", string.Empty);
-
-        string searchResults = text.Replace(",", string.Empty)[..firstSpaceIndex];
-        decimal imageCount = decimal.Parse(searchResults, CultureInfo.InvariantCulture);
-
-        return (Convert.ToInt32(Math.Ceiling(imageCount / ScrapperConstants.ImagesPerPage)), (int)imageCount, subDirectoryName);
+        return PageHeaderParser.Parse(text).Match(
+            pageInfo => (pageInfo.PageCount, pageInfo.ImageCount, pageInfo.SubDirectoryName),
+            error => throw new InvalidOperationException(error.Message));
     }
 
     private async Task<IResponse?> GotoPageAsync(string searchString, int pageNumber)

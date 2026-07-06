@@ -1,4 +1,4 @@
-using System.Globalization;
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Playwright;
@@ -26,32 +26,19 @@ public sealed class SubscriptionsImagesListPage(IPlaywrightService playwrightSer
 
         if (text is null) return (0, string.Empty);
 
-        int firstSpaceIndex = text.IndexOf(' ');
-        int hashIndex = text.IndexOf("New", StringComparison.Ordinal);
-        string subDirectoryName = string.Empty;
-
-        if (hashIndex > 0) subDirectoryName = text[hashIndex..].Replace(" ", "-").Replace("#", string.Empty);
-
-        string searchResults = text.Replace(",", string.Empty)[..firstSpaceIndex];
-        decimal imageCount = decimal.Parse(searchResults, CultureInfo.InvariantCulture) / ScrapperConstants.ImagesPerPage;
-
-        return (Convert.ToInt32(Math.Ceiling(imageCount)), subDirectoryName);
+        return SubscriptionHeaderParser.Parse(text).Match(
+            pageInfo => (pageInfo.PageCount, pageInfo.SubDirectoryName),
+            error => throw new InvalidOperationException(error.Message));
     }
 
     public async Task<IReadOnlyCollection<string>> GetImagePageLinksAsync()
     {
         page ??= await playwrightService.ConfigurePlaywrightAsync();
-        List<string> wantedLinks = [];
-        var imagePreviews = await ImagePreviews.AllAsync();
+        var imagePreviews = await ImagePreviews.AllAsync().ConfigureAwait(false);
+        List<string?> hrefs = [];
+        foreach (var imagePreview in imagePreviews) hrefs.Add(await imagePreview.GetAttributeAsync("href").ConfigureAwait(false));
 
-        foreach (var imagePreview in imagePreviews)
-        {
-            string? hrefString = await imagePreview.GetAttributeAsync("href");
-
-            if (hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
-        }
-
-        return [.. wantedLinks.Take(ScrapperConstants.ImagesPerPage)];
+        return ImageLinkSelector.SelectWanted(hrefs);
     }
 
     public async Task ClearAsync()

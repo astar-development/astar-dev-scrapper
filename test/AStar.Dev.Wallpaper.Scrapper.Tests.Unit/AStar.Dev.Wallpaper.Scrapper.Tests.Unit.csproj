@@ -24,12 +24,22 @@
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
   </ItemGroup>
 
+  <!--
+    GivenAnImagePageServiceWithADelayStrategy.cs lives in the
+    AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Services namespace, which is a
+    sibling of (not an ancestor of) AStar.Dev.Wallpaper.Scrapper.Services, so
+    C#'s enclosing-namespace lookup does not make ImagePageService/
+    FileClassificationService visible unqualified. Added here as a global
+    using (infrastructure, not a change to the pinned test contract) rather
+    than editing the committed test file.
+  -->
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
     <Using Include="NSubstitute" />
     <Using Include="Testably.Abstractions.Testing" />
     <Using Include="Testably.Abstractions.Testing.Initializer" />
+    <Using Include="AStar.Dev.Wallpaper.Scrapper.Services" />
   </ItemGroup>
 
 </Project>

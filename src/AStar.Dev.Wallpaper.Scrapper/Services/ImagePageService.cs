@@ -1,3 +1,5 @@
+using System.IO.Abstractions;
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.Models;
@@ -9,8 +11,13 @@ using SkiaSharp;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Services;
 
-public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ScrapeConfiguration scrapeConfiguration, TimeProvider timeProvider, Logger logger, IDirectoryHelper directoryHelper, ImageBroadcaster imageBroadcaster)
+public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository fileDetailRepository, FileClassificationService fileClassificationService, ScrapeConfiguration scrapeConfiguration, TimeProvider timeProvider, Logger logger, IDirectoryHelper directoryHelper, ImageBroadcaster imageBroadcaster, IDelayStrategy delayStrategy, IImageRetriever imageRetriever, IImageSaver imageSaver, IFileSystem fileSystem)
 {
+    private const int LoggedPathTailLength = 50;
+
+    /// <summary>Retained for constructor-signature stability. The image-pause delay it previously drove now lives in <see cref="RandomDelayStrategy" />, which is configured with its own <see cref="Models.ScrapeConfiguration" />.</summary>
+    private readonly ScrapeConfiguration scrapeConfiguration = scrapeConfiguration;
+
     public async Task GetTheImagePagesAsync(IReadOnlyCollection<string> imagePageLinks, string categoryId, string name, CancellationToken ct = default)
     {
         var pageData = await fileClassificationService.LoadPageClassificationDataAsync(categoryId, ct).ConfigureAwait(false);
@@ -25,7 +32,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
                 if (await fileDetailRepository.ExistsAsync(fileName).ConfigureAwait(false))
                 {
                     logger.Information("Not downloading {fileName} as we already have it...{Timestamp:HH:mm:ss:fff} (UTC)", fileName, timeProvider.GetUtcNow());
-                    await Task.Delay(TimeSpan.FromMilliseconds(500), ct).ConfigureAwait(false);
+                    await delayStrategy.DelayAsync(DelayKind.ImageAlreadyDownloaded, ct).ConfigureAwait(false);
                     continue;
                 }
 
@@ -34,7 +41,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.Warning(ex, "Failed to process {pageLink}, retrying after delay.", pageLink);
-                await Task.Delay(ScrapperConstants.RetryDelay, ct).ConfigureAwait(false);
+                await delayStrategy.DelayAsync(DelayKind.Retry, ct).ConfigureAwait(false);
                 await ProcessImagePageAsync(pageLink, name, pageData, ct).ConfigureAwait(false);
             }
         }
@@ -44,8 +51,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
     {
         try
         {
-            int delay = Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4);
-            await Task.Delay(TimeSpan.FromSeconds(delay), ct).ConfigureAwait(false);
+            await delayStrategy.DelayAsync(DelayKind.BeforeImage, ct).ConfigureAwait(false);
 
             var result = await imagePage.GetImageFromPageAsync(pageLink, name).ConfigureAwait(false);
             if (result.Skip || result.ImageUrl is null)
@@ -59,12 +65,13 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
             string filename = ScrapedFileNameFactory.Create(result.FilePrefix, result.ImageUrl);
 
             string imageNameWithPath = directoryName.Value.CombinePath(filename);
-            byte[] image = await ImageRetrieverHelper.GetTheImageAsync(result.ImageUrl).ConfigureAwait(false);
-            logger.Information("About to save {filename} to ...{imageNameWithPath} as we don't appear to have it.", filename, imageNameWithPath[^50..]);
-            await ImageSaveHelper.SaveImageAsync(image, imageNameWithPath).ConfigureAwait(false);
+            byte[] image = (await imageRetriever.GetImageAsync(result.ImageUrl, ct).ConfigureAwait(false))
+                .Match(bytes => bytes, error => throw new InvalidOperationException(error.Message));
+            logger.Information("About to save {filename} to ...{imageNameWithPath} as we don't appear to have it.", filename, TruncatedForLogging(imageNameWithPath));
+            await imageSaver.SaveAsync(image, imageNameWithPath).ConfigureAwait(false);
             imageBroadcaster.Broadcast(imageNameWithPath);
 
-            var fileInfo = new FileInfo(imageNameWithPath);
+            var fileInfo = fileSystem.FileInfo.New(imageNameWithPath);
             var fileDetail = new FileDetailEntity
             {
                 DirectoryName = directoryName,
@@ -103,4 +110,7 @@ public sealed class ImagePageService(ImagePage imagePage, IFileDetailRepository 
             throw;
         }
     }
+
+    private static string TruncatedForLogging(string imageNameWithPath)
+        => imageNameWithPath.Length > LoggedPathTailLength ? imageNameWithPath[^LoggedPathTailLength..] : imageNameWithPath;
 }
