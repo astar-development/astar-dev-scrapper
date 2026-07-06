@@ -1,9 +1,10 @@
+using NSubstitute.ExceptionExtensions;
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Repositories;
-using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using AStar.Dev.Wallpaper.Scrapper.Tests.Unit.TestData;
 using AStar.Dev.Wallpaper.Scrapper.Workflows;
@@ -14,13 +15,11 @@ using Serilog;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Workflows;
 
-public sealed class GivenASearchWorkflowWithANonEmptySubDirectory : IAsyncLifetime
+public sealed class GivenASearchWorkflowThatFails : IAsyncLifetime
 {
-    private const string CategoryId = "cat-4";
-    private const string RootDirectory = "root-directory";
-    private const string BaseDirectory = "base-directory";
-    private const string HeaderText = "24 Wallpapers found for #TestSubDir";
-    private const string ExpectedSubDirectoryName = "TestSubDir";
+    private const string SearchStringPrefix = "https://example.test/search/";
+    private const string SearchStringSuffix = "/?page=";
+    private const string CategoryId = "cat-fails";
 
     private SqliteConnection connection = null!;
     private DbContextOptions<AppDbContext> options = null!;
@@ -30,9 +29,7 @@ public sealed class GivenASearchWorkflowWithANonEmptySubDirectory : IAsyncLifeti
         connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
 
-        options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite(connection)
-            .Options;
+        options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
 
         await using var seedContext = new AppDbContext(options);
         await seedContext.Database.MigrateAsync();
@@ -42,41 +39,27 @@ public sealed class GivenASearchWorkflowWithANonEmptySubDirectory : IAsyncLifeti
             ConnectionStrings = new ConnectionStringsEntity { Sqlite = "Data Source=test.db", },
             UserConfiguration = new UserConfigurationEntity { LoginEmailAddress = "user@example.com", Username = "user", Password = "password", SessionCookie = "cookie", },
             SearchConfiguration = new SearchConfigurationEntity { BaseUrl = new Uri("https://example.com"), },
-            ScrapeDirectories = new ScrapeDirectoriesEntity { RootDirectory = RootDirectory, },
+            ScrapeDirectories = new ScrapeDirectoriesEntity { RootDirectory = "root-directory", },
         });
         await seedContext.SaveChangesAsync();
     }
 
     public async ValueTask DisposeAsync() => await connection.DisposeAsync();
 
-    [Fact]
-    public async Task when_the_page_reports_a_non_empty_sub_directory_name_then_the_directory_helper_receives_it()
+    private SearchWorkflow BuildSut(IPage page, ILogger logger)
     {
-        var category = new Category { Id = CategoryId, Name = "Category Four", LastKnownImageCount = 999, TotalPages = 999, };
-
-        var okResponse = Substitute.For<IResponse>();
-        okResponse.Ok.Returns(true);
-
-        var page = Substitute.For<IPage>();
-        page.GotoAsync(Arg.Any<string>(), Arg.Any<PageGotoOptions>()).Returns(Task.FromResult<IResponse?>(okResponse));
-
-        var headerLocator = Substitute.For<ILocator>();
-        headerLocator.TextContentAsync().Returns(Task.FromResult<string?>(HeaderText));
-        page.GetByText(Arg.Is<string>(text => text.Contains("Wallpapers found")), Arg.Any<PageGetByTextOptions>()).Returns(headerLocator);
-
-        var noLinksLocator = Substitute.For<ILocator>();
-        noLinksLocator.AllAsync().Returns(Task.FromResult<IReadOnlyList<ILocator>>([]));
-        page.GetByRole(AriaRole.Link, Arg.Any<PageGetByRoleOptions>()).Returns(noLinksLocator);
-
         var playwrightService = Substitute.For<IPlaywrightService>();
         playwrightService.ConfigurePlaywrightAsync().Returns(Task.FromResult(page));
 
-        var searchConfiguration = new SearchConfigurationBuilder { SearchCategories = [category,], }.Build();
-        var scrapeConfiguration = new ScrapeConfigurationBuilder
+        var category = new Category { Id = CategoryId, Name = "Fails Category", LastKnownImageCount = 999, TotalPages = 999, };
+        var searchConfiguration = new SearchConfigurationBuilder
         {
-            SearchConfiguration = searchConfiguration,
-            ScrapeDirectories = new(RootDirectory, "base-save-directory", BaseDirectory, "base-directory-famous", "initial-sub-directory"),
+            SearchCategories = [category,],
+            SearchString = $"{SearchStringPrefix}{category.Id}{SearchStringSuffix}",
+            SearchStringPrefix = SearchStringPrefix,
+            SearchStringSuffix = SearchStringSuffix,
         }.Build();
+        var scrapeConfiguration = new ScrapeConfigurationBuilder { SearchConfiguration = searchConfiguration, }.Build();
 
         var contextFactory = Substitute.For<IDbContextFactory<AppDbContext>>();
         contextFactory.CreateDbContextAsync(Arg.Any<CancellationToken>()).Returns(_ => Task.FromResult(new AppDbContext(options)));
@@ -86,14 +69,32 @@ public sealed class GivenASearchWorkflowWithANonEmptySubDirectory : IAsyncLifeti
         var imagePage = new ImagePage(playwrightService, scrapeConfiguration, new(), new());
         var fileClassificationService = new FileClassificationService(contextFactory);
         var imagePageService = new ImagePageService(imagePage, Substitute.For<IFileDetailRepository>(), fileClassificationService, scrapeConfiguration, System.TimeProvider.System, new LoggerConfiguration().CreateLogger(), Substitute.For<IDirectoryHelper>(), new(), new NoOpDelayStrategy(), Substitute.For<IImageRetriever>(), Substitute.For<IImageSaver>(), new MockFileSystem(), Substitute.For<IScrapedTagRepository>(), Substitute.For<IImageDimensionReader>());
-        var directoryHelper = Substitute.For<IDirectoryHelper>();
 
-        var sut = new SearchWorkflow(searchResultsPage, scrapeConfiguration, configurationSaver, imagePageService, directoryHelper, Substitute.For<ILogger>(), new NoOpDelayStrategy(), System.TimeProvider.System);
+        return new SearchWorkflow(searchResultsPage, scrapeConfiguration, configurationSaver, imagePageService, Substitute.For<IDirectoryHelper>(), logger, new NoOpDelayStrategy(), System.TimeProvider.System);
+    }
+
+    [Fact]
+    public async Task when_the_search_results_page_fails_to_load_then_run_async_returns_a_failure()
+    {
+        var page = Substitute.For<IPage>();
+        page.GotoAsync(Arg.Any<string>(), Arg.Any<PageGotoOptions>()).ThrowsAsync(new PlaywrightException("navigation failed"));
+        var sut = BuildSut(page, Substitute.For<ILogger>());
+
+        var result = await sut.RunAsync(TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Fail<global::AStar.Dev.FunctionalParadigm.Unit, ScrapeError>>().Error.ShouldBeOfType<PageLoadFailed>();
+    }
+
+    [Fact]
+    public async Task when_the_search_results_page_fails_to_load_then_the_logger_receives_exactly_one_error_call()
+    {
+        var page = Substitute.For<IPage>();
+        page.GotoAsync(Arg.Any<string>(), Arg.Any<PageGotoOptions>()).ThrowsAsync(new PlaywrightException("navigation failed"));
+        var logger = Substitute.For<ILogger>();
+        var sut = BuildSut(page, logger);
 
         await sut.RunAsync(TestContext.Current.CancellationToken);
 
-        List<string> expectedDirectoryPath = [Path.Combine(RootDirectory, BaseDirectory, ExpectedSubDirectoryName),];
-
-        directoryHelper.Received(1).CreateDirectoryIfRequired(Arg.Is<List<string>>(directories => directories.SequenceEqual(expectedDirectoryPath)));
+        logger.Received(1).Error(Arg.Any<string>(), Arg.Any<string>());
     }
 }
