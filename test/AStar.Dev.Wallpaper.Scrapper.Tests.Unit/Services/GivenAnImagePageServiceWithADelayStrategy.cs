@@ -110,7 +110,16 @@ public sealed class GivenAnImagePageServiceWithADelayStrategy : IAsyncLifetime
             imageSaver,
             fileSystem,
             scrapedTagRepository ?? Substitute.For<IScrapedTagRepository>(),
-            imageDimensionReader ?? Substitute.For<IImageDimensionReader>());
+            imageDimensionReader ?? BuildDefaultImageDimensionReader());
+    }
+
+    private static IImageDimensionReader BuildDefaultImageDimensionReader()
+    {
+        var imageDimensionReader = Substitute.For<IImageDimensionReader>();
+        imageDimensionReader.Read(Arg.Any<byte[]>(), Arg.Any<string>())
+                             .Returns(Result.Failure<ImageDimensions, ScrapeError>(ScrapeErrorFactory.CreateImageDimensionReadFailed("unset", "dimension reader not under test")));
+
+        return imageDimensionReader;
     }
 
     private static IImageSaver BuildSucceedingImageSaver()
@@ -371,6 +380,26 @@ public sealed class GivenAnImagePageServiceWithADelayStrategy : IAsyncLifetime
 
         result.ShouldBeOfType<Ok<global::AStar.Dev.FunctionalParadigm.Unit, ScrapeError>>();
         await fileDetailRepository.Received(1).AddAsync(Arg.Any<FileDetailEntity>());
+    }
+
+    [Fact]
+    public async Task when_the_scraped_file_is_not_an_image_extension_then_the_dimension_reader_is_still_invoked()
+    {
+        var imagePage = BuildImagePageReturningScrapedImage(ImageUrl);
+        var directoryHelper = Substitute.For<IDirectoryHelper>();
+        directoryHelper.CreateDirectoryIfRequired(Arg.Any<List<string>>()).Returns(new DirectoryName("/save/dir"));
+        var imageRetriever = Substitute.For<IImageRetriever>();
+        imageRetriever.GetImageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success<byte[], ScrapeError>([1, 2, 3,])));
+        var fileSystem = new MockFileSystem();
+        fileSystem.Directory.CreateDirectory("/save/dir");
+        var imageDimensionReader = Substitute.For<IImageDimensionReader>();
+        imageDimensionReader.Read(Arg.Any<byte[]>(), Arg.Any<string>()).Returns(Result.Failure<ImageDimensions, ScrapeError>(ScrapeErrorFactory.CreateImageDimensionReadFailed("/save/dir/12345.data", "dimension reader not under test")));
+
+        var sut = BuildService(imagePage, Substitute.For<IFileDetailRepository>(), new NoOpDelayStrategy(), imageRetriever, BuildSucceedingImageSaver(), fileSystem, directoryHelper, imageDimensionReader: imageDimensionReader);
+
+        await sut.ProcessImagePageAsync(Link, CategoryName, new PageClassificationData([], null, []), TestContext.Current.CancellationToken);
+
+        imageDimensionReader.Received(1).Read(Arg.Any<byte[]>(), Arg.Any<string>());
     }
 
     [Fact]

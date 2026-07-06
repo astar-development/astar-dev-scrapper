@@ -104,6 +104,7 @@ public partial class App : Application
             .AddTransient<Func<ScrapeConfigurationView>>(sp => () => sp.GetRequiredService<ScrapeConfigurationView>())
             .AddTransient(_ => TimeProvider.System)
             .AddTransient<IImageSaver, ImageSaver>()
+            .AddTransient<IImageDimensionReader, ImageDimensionReader>()
             .AddHttpClient<IImageRetriever, ImageRetriever>(client => client.Timeout = TimeSpan.FromMinutes(2));
 
         _host = builder.Build();

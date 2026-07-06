@@ -1,4 +1,5 @@
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using Avalonia.Controls;
@@ -55,7 +56,7 @@ public partial class TagsView : Window, IDisposable
                 }
             )
             .Tap(_ => logger.Information("Importing tags..."))
-            .Bind(_ => importExportService.ImportScrapedTagsFromFile())
+            .Bind(_ => importExportService.ImportScrapedTagsFromFile().ToStringError())
             .MapAsync(tags => scrapedTagService.ImportScrapedTagsAsync(tags, cts!.Token))
             .TapAsync(_ => logger.Information("Tag import completed..."))
             .EnsureAsync(() => ResetUI());

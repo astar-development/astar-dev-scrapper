@@ -1,3 +1,4 @@
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Guard.Clauses;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Models;
@@ -63,5 +64,32 @@ public static class ScrapeErrorFactory
         GuardAgainst.Null(exception);
 
         return new(exception);
+    }
+
+    /// <summary>Creates an <see cref="ImageDimensionReadFailed" /> error.</summary>
+    public static ImageDimensionReadFailed CreateImageDimensionReadFailed(string path, string message)
+    {
+        GuardAgainst.Null(path);
+        GuardAgainst.Null(message);
+
+        return new(path, message);
+    }
+
+    /// <summary>Creates an <see cref="ImportFailed" /> error.</summary>
+    public static ImportFailed CreateImportFailed(string filePath, string message)
+    {
+        GuardAgainst.Null(filePath);
+        GuardAgainst.Null(message);
+
+        return new(filePath, message);
+    }
+
+    /// <summary>Creates a <see cref="ValidationFailed" /> error.</summary>
+    public static ValidationFailed CreateValidationFailed(IReadOnlyList<ValidationError> errors, string message)
+    {
+        GuardAgainst.Null(errors);
+        GuardAgainst.Null(message);
+
+        return new(errors, message);
     }
 }

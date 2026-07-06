@@ -1,4 +1,5 @@
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -68,7 +69,7 @@ public partial class ScrapeConfigurationView : Window, IDisposable
                 }
             )
             .Tap(_ => { logger.Information("Importing scrape configuration..."); ViewModel.UpdateStatus("Importing scrape configuration..."); })
-            .Bind(_ => importExportService.ImportScrapeConfigurationFromFile())
+            .Bind(_ => importExportService.ImportScrapeConfigurationFromFile().ToStringError())
             .MapAsync(entity => scrapeConfigurationService.ImportScrapeConfigurationAsync(entity, cts!.Token))
             .TapAsync(_ => { logger.Information("Scrape configuration import completed..."); ViewModel.UpdateStatus("Import completed."); })
             .EnsureAsync(() => ResetUI());

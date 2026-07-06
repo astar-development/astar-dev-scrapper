@@ -4,7 +4,6 @@ using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Playwright;
-using Serilog;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Pages;
 
@@ -18,7 +17,7 @@ public sealed class GivenASearchResultsPage
         var playwrightService = Substitute.For<IPlaywrightService>();
         playwrightService.ConfigurePlaywrightAsync().Returns(Task.FromResult(page));
 
-        return new SearchResultsPage(playwrightService, new LoggerConfiguration().CreateLogger());
+        return new SearchResultsPage(playwrightService);
     }
 
     private static IPage BuildPageReturning(IResponse? response)

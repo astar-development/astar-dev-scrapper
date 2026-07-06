@@ -1,6 +1,7 @@
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Classifications;
 using AStar.Dev.Wallpaper.Scrapper.Dialogs;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.ScrapeConfigurationEditor;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
@@ -146,8 +147,9 @@ public partial class MainWindow : Window, IDisposable
         logger.Information("Configuring Playwright...");
         logger.Information("Starting scrape...");
 
-        return searchWorkflow.RunAsync(logger, ct)
-            .TapAsync(_ => logger.Information("Scrape completed..."));
+        return searchWorkflow.RunAsync(ct)
+            .TapAsync(_ => logger.Information("Scrape completed..."))
+            .ToStringError();
     }
 
     private void ResetUI()

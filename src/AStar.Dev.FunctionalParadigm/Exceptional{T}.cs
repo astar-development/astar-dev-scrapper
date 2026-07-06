@@ -9,6 +9,14 @@ namespace AStar.Dev.FunctionalParadigm;
 public abstract record Exceptional<T>
 {
     /// <summary>
+    ///     Restricts derivation of <see cref="Exceptional{T}" /> to <see cref="Success{T}" /> and
+    ///     <see cref="Failure{T}" />, both declared in this assembly.
+    /// </summary>
+    private protected Exceptional()
+    {
+    }
+
+    /// <summary>
     ///     Implicitly lifts a success value into an <see cref="Exceptional{T}" />.
     /// </summary>
     public static implicit operator Exceptional<T>(T value) => new Success<T>(value);

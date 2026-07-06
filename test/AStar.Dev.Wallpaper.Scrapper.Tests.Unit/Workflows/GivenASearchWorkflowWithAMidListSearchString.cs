@@ -50,7 +50,7 @@ public sealed class GivenASearchWorkflowWithAMidListSearchString
         var scrapeConfiguration = new ScrapeConfigurationBuilder { SearchConfiguration = searchConfiguration, }.Build();
 
         var contextFactory = Substitute.For<IDbContextFactory<AppDbContext>>();
-        var searchResultsPage = new SearchResultsPage(playwrightService, new LoggerConfiguration().CreateLogger());
+        var searchResultsPage = new SearchResultsPage(playwrightService);
         var configurationSaver = new ConfigurationSaver(scrapeConfiguration, new LoggerConfiguration().CreateLogger(), contextFactory);
         var imagePage = new ImagePage(playwrightService, scrapeConfiguration, new(), new());
         var fileClassificationService = new FileClassificationService(contextFactory);
