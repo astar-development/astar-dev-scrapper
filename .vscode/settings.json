@@ -18,6 +18,7 @@
         "Xunit"
     ],
     "chat.tools.terminal.autoApprove": {
-        "dotnet test": true
+        "dotnet test": true,
+        "git push": true
     }
 }
