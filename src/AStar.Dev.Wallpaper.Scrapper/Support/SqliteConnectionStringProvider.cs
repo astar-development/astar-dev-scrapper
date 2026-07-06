@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using AStar.Dev.Guard.Clauses;
 using Microsoft.Extensions.Configuration;
 
@@ -11,13 +13,14 @@ namespace AStar.Dev.Wallpaper.Scrapper.Support;
 public static class SqliteConnectionStringProvider
 {
     /// <summary>
-    ///     The connection string used when configuration does not supply <c>ConnectionStrings:Sqlite</c>.
+    ///     The connection string used when configuration does not supply <c>ScrapeConfiguration:ConnectionStrings:Sqlite</c>.
     /// </summary>
-    public const string DefaultConnectionString = "Data Source=/home/jbarden/Documents/Scrapper/scrapper.db";
+    public static readonly string DefaultConnectionString =
+        $"Data Source={Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents", "Scrapper", "scrapper.db")}";
 
     /// <summary>
     ///     Resolves the Sqlite connection string from <paramref name="configuration" />, falling back to
     ///     <see cref="DefaultConnectionString" /> when not configured.
     /// </summary>
-    public static string Get(IConfiguration configuration) => GuardAgainst.Null(configuration)["ConnectionStrings:Sqlite"] ?? DefaultConnectionString;
+    public static string Get(IConfiguration configuration) => GuardAgainst.Null(configuration)["ScrapeConfiguration:ConnectionStrings:Sqlite"] ?? DefaultConnectionString;
 }
