@@ -16,5 +16,8 @@
         "tagname",
         "topwallpapers",
         "Xunit"
-    ]
+    ],
+    "chat.tools.terminal.autoApprove": {
+        "dotnet test": true
+    }
 }
