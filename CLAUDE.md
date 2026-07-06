@@ -41,6 +41,12 @@ Read the request literally. "Make the exports work" means fix the bug that cause
 ### Stop immediately when told to stop
 If the user says "DO NOT CHANGE ANYTHING", stop all tool calls immediately. Explain in text only. Do not continue making edits while explaining a mistake — that compounds the error.
 
+## REFACTOR RULES
+
+Behaviour-frozen means NO observable change: sequencing/concurrency (e.g. a sequential `await` loop must not become `Task.WhenAll`), exception types and messages, error paths, timing/delay sites. Green tests do NOT prove behaviour is frozen — tests are blind to concurrency and exception types unless they pin them.
+
+Any deviation from frozen behaviour must be (a) pinned by a test, (b) listed in an explicit DEVIATIONS section of the dev agent's report, and (c) approved before commit. Undeclared deviations found in review are workflow failures, not nits. Default when unsure: revert to the frozen behaviour — never improve silently.
+
 ## Architecture
 
 Targets **net10.0** across all projects. `TreatWarningsAsErrors` enabled in Debug and Release.

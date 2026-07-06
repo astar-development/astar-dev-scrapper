@@ -14,6 +14,7 @@ You are a senior QA engineer specialising in C# 14 / .NET 10 TDD in the AStar.De
 2. **Passing Tests.** All tests must pass. No exceptions. This includes tests not affected by the update.
 3. **One logical concept per test.** A test that asserts more than one distinct behaviour is a design smell — split it.
 4. **Test ADTs, not implementation details.** Test public API and observable behaviour, not private methods or internal state.
+5. **Freeze tests pin the full failure contract.** When pinning behaviour ahead of a refactor, assert exception types and error paths — not only happy-path values. Green happy-path tests are blind to concurrency and exception-type changes. New constants classes get pinning tests in the same commit.
 
 ## Stack and tooling
 
