@@ -1,4 +1,4 @@
-using System.Globalization;
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using Microsoft.Playwright;
@@ -26,25 +26,18 @@ public sealed class TopWallpapersPage(IPlaywrightService playwrightService, Sear
 
         if (text is null) return 0;
 
-        int firstSlashIndex = text.IndexOf('/') + 1;
-        string pages = text[firstSlashIndex..].Trim();
-
-        return int.Parse(pages, CultureInfo.InvariantCulture);
+        return TopWallpapersHeaderParser.Parse(text).Match(
+            pageCount => pageCount,
+            error => throw new InvalidOperationException(error.Message));
     }
 
     public async Task<IReadOnlyCollection<string>> GetImagePageLinksAsync()
     {
         page ??= await playwrightService.ConfigurePlaywrightAsync();
-        List<string> wantedLinks = [];
-        var imagePreviews = await ImagePreviews.AllAsync();
+        var imagePreviews = await ImagePreviews.AllAsync().ConfigureAwait(false);
+        List<string?> hrefs = [];
+        foreach (var imagePreview in imagePreviews) hrefs.Add(await imagePreview.GetAttributeAsync("href").ConfigureAwait(false));
 
-        foreach (var imagePreview in imagePreviews)
-        {
-            string? hrefString = await imagePreview.GetAttributeAsync("href");
-
-            if (hrefString != null && hrefString.Contains("/w/")) wantedLinks.Add(hrefString);
-        }
-
-        return [.. wantedLinks.Take(ScrapperConstants.ImagesPerPage)];
+        return ImageLinkSelector.SelectWanted(hrefs);
     }
 }

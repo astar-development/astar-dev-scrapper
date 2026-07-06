@@ -1,29 +1,23 @@
-using System.Diagnostics;
-using System.IO.Abstractions;
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
 using AStar.Dev.Wallpaper.Scrapper.Support;
-using Microsoft.Playwright;
 using Serilog;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
-public sealed class SearchWorkflow(SearchResultsPage searchResultsPage, ScrapeConfiguration injectedScrapeConfiguration, ConfigurationSaver configurationSaver, ImagePageService imagePageService, IDirectoryHelper directoryHelper, ILogger logger)
+public sealed class SearchWorkflow(SearchResultsPage searchResultsPage, ScrapeConfiguration injectedScrapeConfiguration, ConfigurationSaver configurationSaver, ImagePageService imagePageService, IDirectoryHelper directoryHelper, ILogger logger, IDelayStrategy delayStrategy, TimeProvider timeProvider)
 {
-    private ScrapeConfiguration scrapeConfiguration = null!;
-    private SearchConfiguration searchConfiguration = null!;
-    private ScrapeDirectories scrapeDirectories = null!;
+    private SearchProgress progress = null!;
 
     public async Task<Result<Unit, string>> RunAsync(ILogger scrapeLogger, CancellationToken ct = default)
     {
         try
         {
-            scrapeConfiguration = injectedScrapeConfiguration;
-            searchConfiguration = scrapeConfiguration.SearchConfiguration;
-            scrapeDirectories = scrapeConfiguration.ScrapeDirectories;
-            var searchCategories = FilterSearchCategories([.. searchConfiguration.SearchCategories]);
+            progress = SearchProgressFactory.Create(injectedScrapeConfiguration.SearchConfiguration, injectedScrapeConfiguration.ScrapeDirectories);
+            var searchCategories = SearchProgressFunctions.FilterSearchCategories(progress.SearchConfiguration, progress.SearchConfiguration.SearchCategories);
             await ProcessSearchCategoriesAsync(searchCategories, scrapeLogger, ct);
 
             return Unit.Value;
@@ -35,36 +29,36 @@ public sealed class SearchWorkflow(SearchResultsPage searchResultsPage, ScrapeCo
         }
     }
 
-    private async Task ProcessSearchCategoriesAsync(List<Category> searchCategories, ILogger scrapeLogger, CancellationToken ct)
+    private async Task ProcessSearchCategoriesAsync(IReadOnlyList<Category> searchCategories, ILogger scrapeLogger, CancellationToken ct)
     {
         foreach (var searchCategory in searchCategories)
         {
             ct.ThrowIfCancellationRequested();
-            string combinedSearchString = $"{searchConfiguration.SearchStringPrefix}{searchCategory.Id}{searchConfiguration.SearchStringSuffix}";
+            string combinedSearchString = $"{progress.SearchConfiguration.SearchStringPrefix}{searchCategory.Id}{progress.SearchConfiguration.SearchStringSuffix}";
 
-            searchConfiguration = UpdateSearchDetailsIfRequired(combinedSearchString);
+            progress = SearchProgressFunctions.UpdateSearchDetails(progress, combinedSearchString);
 
-            var pageDetails = await searchResultsPage.LoadSearchPageAsync(combinedSearchString, searchConfiguration.StartingPageNumber);
+            var pageDetails = await searchResultsPage.LoadSearchPageAsync(combinedSearchString, progress.SearchConfiguration.StartingPageNumber);
 
             if (pageDetails is { Ok: false, }) throw new InvalidOperationException("Could not get the image page after retry...");
 
             var (pageCount, imageCount, subDirectoryName) = await searchResultsPage.PageInfoAsync();
-            UpdateSearchTotalPagesIfRequired(pageCount);
+            progress = SearchProgressFunctions.UpdateTotalPages(progress, pageCount);
 
             if (searchCategory.IsUpToDate(imageCount, pageCount))
             {
                 logger.Information("{Category} is up to date (same image/page count), skipping...", searchCategory.Name);
-                await Task.Delay(TimeSpan.FromSeconds(RandomDelay()), ct);
+                await delayStrategy.DelayAsync(DelayKind.CategoryUpToDate, ct).ConfigureAwait(false);
                 continue;
             }
 
             int startingPage = searchCategory.LastPageVisited > 0 ? searchCategory.LastPageVisited : 1;
-            searchConfiguration = searchConfiguration with { StartingPageNumber = startingPage };
+            progress = progress with { SearchConfiguration = progress.SearchConfiguration with { StartingPageNumber = startingPage, }, };
 
             logger.Debug("Visiting {Category} from page {StartingPage} now...", searchCategory.Name, startingPage);
-            scrapeDirectories = UpdateSubDirectoryIfRequired(subDirectoryName);
+            progress = SearchProgressFunctions.UpdateSubDirectory(progress, subDirectoryName);
 
-            _ = directoryHelper.CreateDirectoryIfRequired([Path.Combine(scrapeDirectories.RootDirectory, scrapeDirectories.BaseDirectory, subDirectoryName)]);
+            _ = directoryHelper.CreateDirectoryIfRequired([progress.ScrapeDirectories.RootDirectory.CombinePath(progress.ScrapeDirectories.BaseDirectory, subDirectoryName),]);
 
             await ProcessAllCategoryPagesAsync(searchCategory, combinedSearchString, scrapeLogger, ct);
 
@@ -75,19 +69,16 @@ public sealed class SearchWorkflow(SearchResultsPage searchResultsPage, ScrapeCo
         }
     }
 
-    private static int RandomDelay() => new Random().Next(1, 5);
-
     private async Task ProcessAllCategoryPagesAsync(Category searchCategory, string combinedSearchString, ILogger scrapeLogger, CancellationToken ct)
     {
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
+        long startTimestamp = timeProvider.GetTimestamp();
         scrapeLogger.Debug("About to visit the specific {Category} pages now...", searchCategory.Name);
 
-        for (int currentPageNumber = searchConfiguration.StartingPageNumber; currentPageNumber <= searchConfiguration.TotalPages; currentPageNumber++)
+        for (int currentPageNumber = progress.SearchConfiguration.StartingPageNumber; currentPageNumber <= progress.SearchConfiguration.TotalPages; currentPageNumber++)
         {
-            await Task.Delay(ScrapperConstants.PageNavigationDelay, ct);
-            scrapeLogger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, searchConfiguration.TotalPages, searchCategory.Name);
-            searchConfiguration = searchConfiguration with { StartingPageNumber = currentPageNumber };
+            await delayStrategy.DelayAsync(DelayKind.PageNavigation, ct).ConfigureAwait(false);
+            scrapeLogger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, progress.SearchConfiguration.TotalPages, searchCategory.Name);
+            progress = progress with { SearchConfiguration = progress.SearchConfiguration with { StartingPageNumber = currentPageNumber, }, };
             searchCategory.LastPageVisited = currentPageNumber;
             await configurationSaver.SaveUpdatedConfigurationAsync();
             _ = await searchResultsPage.LoadSearchPageAsync(combinedSearchString, currentPageNumber);
@@ -96,43 +87,6 @@ public sealed class SearchWorkflow(SearchResultsPage searchResultsPage, ScrapeCo
             await imagePageService.GetTheImagePagesAsync(imagePageLinks, searchCategory.Id, searchCategory.Name, ct);
         }
 
-        stopwatch.Stop();
-        scrapeLogger.Information("Completed visiting the {Category}. Total time: {CategoryVisitDuration}", searchCategory.Name, stopwatch.Elapsed);
-    }
-
-    private ScrapeDirectories UpdateSubDirectoryIfRequired(string subDirectoryName)
-    {
-        if (subDirectoryName.Length > 0) scrapeDirectories = scrapeDirectories with { SubDirectoryName = subDirectoryName };
-
-        return scrapeDirectories;
-    }
-
-    private SearchConfiguration UpdateSearchDetailsIfRequired(string combinedSearchString)
-    {
-        if (searchConfiguration.SearchString == combinedSearchString) return searchConfiguration;
-
-        searchConfiguration = searchConfiguration with { StartingPageNumber = 1, SearchString = combinedSearchString };
-
-        return searchConfiguration;
-    }
-
-    private List<Category> FilterSearchCategories(List<Category> searchCategories)
-    {
-        for (int i = 0; i < searchCategories.Count; i++)
-        {
-            string combinedSearchString = $"{searchConfiguration.SearchStringPrefix}{searchCategories[i].Id}{searchConfiguration.SearchStringSuffix}";
-
-            if (combinedSearchString != searchConfiguration.SearchString) continue;
-
-            searchCategories = [.. searchCategories.Skip(i)];
-            break;
-        }
-
-        return searchCategories;
-    }
-
-    private void UpdateSearchTotalPagesIfRequired(int pageCount)
-    {
-        if (searchConfiguration.TotalPages != pageCount) searchConfiguration = searchConfiguration with { TotalPages = pageCount };
+        scrapeLogger.Information("Completed visiting the {Category}. Total time: {CategoryVisitDuration}", searchCategory.Name, timeProvider.GetElapsedTime(startTimestamp));
     }
 }
