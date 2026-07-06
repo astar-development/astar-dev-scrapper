@@ -88,7 +88,7 @@ public sealed class GivenASearchWorkflowWithANonEmptySubDirectory : IAsyncLifeti
         var imagePageService = new ImagePageService(imagePage, Substitute.For<IFileDetailRepository>(), fileClassificationService, scrapeConfiguration, System.TimeProvider.System, new LoggerConfiguration().CreateLogger(), Substitute.For<IDirectoryHelper>(), new(), new NoOpDelayStrategy(), Substitute.For<IImageRetriever>(), Substitute.For<IImageSaver>(), new MockFileSystem(), Substitute.For<IScrapedTagRepository>(), Substitute.For<IImageDimensionReader>());
         var directoryHelper = Substitute.For<IDirectoryHelper>();
 
-        var sut = new SearchWorkflow(searchResultsPage, scrapeConfiguration, configurationSaver, imagePageService, directoryHelper, Substitute.For<ILogger>(), new NoOpDelayStrategy(), System.TimeProvider.System);
+        var sut = new SearchWorkflow(searchResultsPage, scrapeConfiguration, configurationSaver, imagePageService, directoryHelper, Substitute.For<ILogger>(), new NoOpDelayStrategy(), System.TimeProvider.System, new PagedScrapeRunner(configurationSaver, new NoOpDelayStrategy()));
 
         await sut.RunAsync(TestContext.Current.CancellationToken);
 
