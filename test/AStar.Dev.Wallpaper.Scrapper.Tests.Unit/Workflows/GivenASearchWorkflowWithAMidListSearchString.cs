@@ -50,15 +50,15 @@ public sealed class GivenASearchWorkflowWithAMidListSearchString
         var scrapeConfiguration = new ScrapeConfigurationBuilder { SearchConfiguration = searchConfiguration, }.Build();
 
         var contextFactory = Substitute.For<IDbContextFactory<AppDbContext>>();
-        var searchResultsPage = new SearchResultsPage(playwrightService, new LoggerConfiguration().CreateLogger());
+        var searchResultsPage = new SearchResultsPage(playwrightService);
         var configurationSaver = new ConfigurationSaver(scrapeConfiguration, new LoggerConfiguration().CreateLogger(), contextFactory);
-        var imagePage = new ImagePage(playwrightService, scrapeConfiguration, new(), new(), Substitute.For<IScrapedTagRepository>());
+        var imagePage = new ImagePage(playwrightService, scrapeConfiguration, new(), new());
         var fileClassificationService = new FileClassificationService(contextFactory);
-        var imagePageService = new ImagePageService(imagePage, Substitute.For<IFileDetailRepository>(), fileClassificationService, scrapeConfiguration, System.TimeProvider.System, new LoggerConfiguration().CreateLogger(), Substitute.For<IDirectoryHelper>(), new(), new NoOpDelayStrategy(), Substitute.For<IImageRetriever>(), Substitute.For<IImageSaver>(), new MockFileSystem());
+        var imagePageService = new ImagePageService(imagePage, Substitute.For<IFileDetailRepository>(), fileClassificationService, scrapeConfiguration, System.TimeProvider.System, new LoggerConfiguration().CreateLogger(), Substitute.For<IDirectoryHelper>(), new(), new NoOpDelayStrategy(), Substitute.For<IImageRetriever>(), Substitute.For<IImageSaver>(), new MockFileSystem(), Substitute.For<IScrapedTagRepository>(), Substitute.For<IImageDimensionReader>());
 
         var sut = new SearchWorkflow(searchResultsPage, scrapeConfiguration, configurationSaver, imagePageService, Substitute.For<IDirectoryHelper>(), Substitute.For<ILogger>(), new NoOpDelayStrategy(), System.TimeProvider.System);
 
-        await sut.RunAsync(Substitute.For<ILogger>(), TestContext.Current.CancellationToken);
+        await sut.RunAsync(TestContext.Current.CancellationToken);
 
         await page.DidNotReceive().GotoAsync(Arg.Is<string>(url => url.Contains(CategoryBeforeMatchId)), Arg.Any<PageGotoOptions>());
     }

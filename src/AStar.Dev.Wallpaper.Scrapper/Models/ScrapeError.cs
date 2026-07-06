@@ -1,3 +1,5 @@
+using AStar.Dev.FunctionalParadigm;
+
 namespace AStar.Dev.Wallpaper.Scrapper.Models;
 
 /// <summary>Base type for every error that a scrape pipeline operation can fail with.</summary>
@@ -36,3 +38,18 @@ public sealed record ClassificationFailed(string FileName, string Message) : Scr
 /// <summary>An unanticipated exception was raised while running the scrape pipeline.</summary>
 /// <param name="Exception">The exception that was raised.</param>
 public sealed record UnexpectedError(Exception Exception) : ScrapeError(Exception.Message);
+
+/// <summary>The dimensions of a downloaded image could not be read.</summary>
+/// <param name="Path">The path of the image whose dimensions failed to read.</param>
+/// <param name="Message">A human-readable description of the failure.</param>
+public sealed record ImageDimensionReadFailed(string Path, string Message) : ScrapeError(Message);
+
+/// <summary>An export file could not be imported.</summary>
+/// <param name="FilePath">The path of the file that failed to import.</param>
+/// <param name="Message">A human-readable description of the failure.</param>
+public sealed record ImportFailed(string FilePath, string Message) : ScrapeError(Message);
+
+/// <summary>An imported payload failed validation.</summary>
+/// <param name="Errors">The accumulated validation errors.</param>
+/// <param name="Message">A human-readable description of the failure.</param>
+public sealed record ValidationFailed(IReadOnlyList<ValidationError> Errors, string Message) : ScrapeError(Message);

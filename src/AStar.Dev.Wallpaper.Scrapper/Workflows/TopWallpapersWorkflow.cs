@@ -1,3 +1,4 @@
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Pages;
 using AStar.Dev.Wallpaper.Scrapper.Services;
@@ -19,7 +20,7 @@ public sealed class TopWallpapersWorkflow(
     {
         try
         {
-            await GetTheNewTopWallpapersAsync(ct);
+            await GetTheNewTopWallpapersAsync(ct).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -30,15 +31,17 @@ public sealed class TopWallpapersWorkflow(
 
     private async Task GetTheNewTopWallpapersAsync(CancellationToken ct)
     {
-        var pageDetails = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber);
+        var pageDetails = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber).ConfigureAwait(false);
+        var loadedSuccessfully = pageDetails.Match(_ => true, _ => false);
 
-        if (pageDetails is { Ok: false, }) _ = await topWallpapersPage.LoadTopWallpapersPageAsync(1);
+        if (!loadedSuccessfully) _ = await topWallpapersPage.LoadTopWallpapersPageAsync(1).ConfigureAwait(false);
 
-        int pageCount = await topWallpapersPage.PageInfoAsync();
+        int pageCount = (await topWallpapersPage.PageInfoAsync().ConfigureAwait(false))
+            .Match(count => count, error => throw new InvalidOperationException(error.Message));
         logger.Information("There are a total of {TopWallpapersPageCount} pages for the Top Wallpapers.", pageCount);
         _searchConfiguration = _searchConfiguration with { TopWallpapersTotalPages = pageCount };
 
-        await configurationSaver.SaveUpdatedConfigurationAsync();
+        await configurationSaver.SaveUpdatedConfigurationAsync().ConfigureAwait(false);
 
         for (int currentPageNumber = _searchConfiguration.TopWallpapersStartingPageNumber;
             currentPageNumber <= _searchConfiguration.TopWallpapersTotalPages;
@@ -46,13 +49,16 @@ public sealed class TopWallpapersWorkflow(
         {
             ct.ThrowIfCancellationRequested();
             int delay = Random.Shared.Next(_searchConfiguration.ImagePauseInSeconds, _searchConfiguration.ImagePauseInSeconds + 4);
-            await Task.Delay(TimeSpan.FromSeconds(delay), ct);
+            await Task.Delay(TimeSpan.FromSeconds(delay), ct).ConfigureAwait(false);
             _searchConfiguration = _searchConfiguration with { TopWallpapersStartingPageNumber = currentPageNumber };
-            await configurationSaver.SaveUpdatedConfigurationAsync();
-            _ = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber);
-            var imagePageLinks = await topWallpapersPage.GetImagePageLinksAsync();
+            await configurationSaver.SaveUpdatedConfigurationAsync().ConfigureAwait(false);
+            _ = await topWallpapersPage.LoadTopWallpapersPageAsync(_searchConfiguration.TopWallpapersStartingPageNumber).ConfigureAwait(false);
 
-            await imagePageService.GetTheImagePagesAsync(imagePageLinks, "", "", ct: ct);
+            var imagePageLinks = (await topWallpapersPage.GetImagePageLinksAsync().ConfigureAwait(false))
+                .Match(links => links, error => throw new InvalidOperationException(error.Message));
+
+            _ = (await imagePageService.GetTheImagePagesAsync(imagePageLinks, "", "", ct: ct).ConfigureAwait(false))
+                .Match(unit => unit, error => throw new InvalidOperationException(error.Message));
         }
     }
 }

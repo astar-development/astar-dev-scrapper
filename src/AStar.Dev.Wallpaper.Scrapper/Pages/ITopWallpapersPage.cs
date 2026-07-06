@@ -1,12 +1,13 @@
-using Microsoft.Playwright;
+using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
 public interface ITopWallpapersPage
 {
-    Task<IResponse?> LoadTopWallpapersPageAsync(int pageNumber);
+    Task<Result<Unit, ScrapeError>> LoadTopWallpapersPageAsync(int pageNumber);
 
-    Task<int> PageInfoAsync();
+    Task<Result<int, ScrapeError>> PageInfoAsync();
 
-    Task<IReadOnlyCollection<string>> GetImagePageLinksAsync();
+    Task<Result<IReadOnlyCollection<string>, ScrapeError>> GetImagePageLinksAsync();
 }

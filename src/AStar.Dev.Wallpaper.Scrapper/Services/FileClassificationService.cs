@@ -2,6 +2,7 @@ using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Utilities;
+using AStar.Dev.Wallpaper.Scrapper.Models;
 using AStar.Dev.Wallpaper.Scrapper.Support;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,33 +39,9 @@ public sealed class FileClassificationService(IDbContextFactory<AppDbContext> co
         return PageClassificationDataFactory.Create(searchable, categoryClassification, includedTags);
     }
 
-    public async Task ClassifyAsync(FileDetailEntity fileDetail, PageClassificationData pageData, IReadOnlyList<string> imageTags, CancellationToken token)
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(token).ConfigureAwait(false);
-
-        if (await context.FileClassifications.AnyAsync(classification => classification.FileDetailId == fileDetail.Id, token).ConfigureAwait(false))
-            return;
-
-        var matched = new List<FileClassificationCategoryEntity>();
-
-        CollectFileNameMatches(pageData.SearchableClassifications, fileDetail, matched);
-        if (pageData.CategoryClassification is not null)
-            matched.Add(pageData.CategoryClassification);
-        await CollectTagMatchesAsync(context, pageData.IncludedTags, imageTags, matched, token).ConfigureAwait(false);
-
-        var distinct = matched.DistinctBy(c => c.Name).ToList();
-
-        await context.SaveChangesAsync(token).ConfigureAwait(false);
-
-        foreach (var classification in distinct)
-            context.FileClassifications.Add(new FileClassificationEntity
-            {
-                FileDetailId = fileDetail.Id,
-                CategoryId = classification.Id
-            });
-
-        await context.SaveChangesAsync(token).ConfigureAwait(false);
-    }
+    public async Task<Result<Unit, ScrapeError>> ClassifyAsync(FileDetailEntity fileDetail, PageClassificationData pageData, IReadOnlyList<string> imageTags, CancellationToken token)
+        => (await Try.RunAsync(() => ClassifyInternalAsync(fileDetail, pageData, imageTags, token)).ConfigureAwait(false))
+            .ToResult<Unit, ScrapeError>(exception => ScrapeErrorFactory.CreateClassificationFailed(fileDetail.FileName.Value, exception.Message));
 
     internal async Task<(List<FileClassificationCategoryEntity> Categories, List<FileClassificationKeywordEntity> Keywords)> ExportClassificationsAsync(CancellationToken token)
     {
@@ -121,6 +98,37 @@ public sealed class FileClassificationService(IDbContextFactory<AppDbContext> co
         return Unit.Value;
     }
 
+    private async Task<Unit> ClassifyInternalAsync(FileDetailEntity fileDetail, PageClassificationData pageData, IReadOnlyList<string> imageTags, CancellationToken token)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(token).ConfigureAwait(false);
+
+        if (await context.FileClassifications.AnyAsync(classification => classification.FileDetailId == fileDetail.Id, token).ConfigureAwait(false))
+            return Unit.Value;
+
+        var matched = new List<FileClassificationCategoryEntity>(ClassificationMatcher.Match(pageData, fileDetail));
+        await CollectTagMatchesAsync(context, pageData.IncludedTags, imageTags, matched, token).ConfigureAwait(false);
+
+        var distinct = matched.DistinctBy(c => c.Name).ToList();
+
+        foreach (var classification in distinct)
+        {
+            EnsureTracked(context, classification);
+            context.FileClassifications.Add(new FileClassificationEntity { FileDetailId = fileDetail.Id, Category = classification });
+        }
+
+        await context.SaveChangesAsync(token).ConfigureAwait(false);
+
+        return Unit.Value;
+    }
+
+    private static void EnsureTracked(AppDbContext context, FileClassificationCategoryEntity classification)
+    {
+        var entry = context.Entry(classification);
+
+        if (entry.State == EntityState.Detached && classification.Id != 0)
+            entry.State = EntityState.Unchanged;
+    }
+
     private static async Task<FileClassificationCategoryEntity?> ResolveCategoryClassificationAsync(AppDbContext context, string categoryId, CancellationToken token)
     {
         if (string.IsNullOrEmpty(categoryId)) return null;
@@ -141,11 +149,6 @@ public sealed class FileClassificationService(IDbContextFactory<AppDbContext> co
 
         return classification;
     }
-
-    private static void CollectFileNameMatches(IReadOnlyList<(FileClassificationCategoryEntity Category, IReadOnlyList<string> Keywords)> searchable, FileDetailEntity fileDetail, List<FileClassificationCategoryEntity> matched)
-        => matched.AddRange(searchable
-            .Where(entry => entry.Keywords.Any(keyword => fileDetail.FullNameWithPath().Contains(keyword, StringComparison.OrdinalIgnoreCase)))
-            .Select(entry => entry.Category));
 
     private static async Task CollectTagMatchesAsync(AppDbContext context, IReadOnlyList<ScrapedTagEntity> includedTags, IReadOnlyList<string> imageTags, List<FileClassificationCategoryEntity> matched, CancellationToken token)
     {

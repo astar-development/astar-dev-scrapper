@@ -7,33 +7,52 @@ namespace AStar.Dev.Wallpaper.Scrapper.Pages;
 
 public sealed class SubscriptionsImagesListPage(IPlaywrightService playwrightService, SearchConfiguration searchConfiguration)
 {
+    private const string PageHeaderErrorSource = "subscriptions-page-header";
+    private const string ImagePageLinksErrorSource = "subscriptions-image-page-links";
+    private const string ClearAllErrorSource = "subscriptions-clear-all";
+
     private IPage page = null!;
 
     private ILocator ImagePreviews => page.GetByRole(AriaRole.Link);
 
     private ILocator NewSubscriptionWallpapersHeader => page.GetByText("New Subscription Wallpapers", new PageGetByTextOptions { Exact = false, });
 
-    public async Task<IResponse?> LoadSubscriptionResultsPageAsync(int pageNumber)
+    public async Task<Result<Unit, ScrapeError>> LoadSubscriptionResultsPageAsync(int pageNumber)
+        => (await Try.RunAsync(() => GotoSubscriptionsPageAsync(pageNumber)).ConfigureAwait(false))
+            .ToResult<Unit, ScrapeError>(exception => ScrapeErrorFactory.CreatePageLoadFailed($"{searchConfiguration.Subscriptions}{pageNumber}", exception.Message));
+
+    public async Task<Result<PageInfo, ScrapeError>> PageInfoAsync()
+        => (await Try.RunAsync(GetPageHeaderAsync).ConfigureAwait(false))
+            .ToResult<string?, ScrapeError>(exception => ScrapeErrorFactory.CreatePageLoadFailed(PageHeaderErrorSource, exception.Message))
+            .Bind(SubscriptionHeaderParser.Parse);
+
+    public async Task<Result<IReadOnlyCollection<string>, ScrapeError>> GetImagePageLinksAsync()
+        => (await Try.RunAsync(GetTheImagePageLinksAsync).ConfigureAwait(false))
+            .ToResult<IReadOnlyCollection<string>, ScrapeError>(exception => ScrapeErrorFactory.CreatePageLoadFailed(ImagePageLinksErrorSource, exception.Message));
+
+    public async Task<Result<Unit, ScrapeError>> ClearAsync()
+        => (await Try.RunAsync(ClickClearAllSubscriptionsAsync).ConfigureAwait(false))
+            .ToResult<Unit, ScrapeError>(exception => ScrapeErrorFactory.CreatePageLoadFailed(ClearAllErrorSource, exception.Message));
+
+    private async Task<Unit> GotoSubscriptionsPageAsync(int pageNumber)
     {
-        page ??= await playwrightService.ConfigurePlaywrightAsync();
-        return await page.GotoAsync($"{searchConfiguration.Subscriptions}{pageNumber}");
+        await EnsurePageAsync().ConfigureAwait(false);
+        _ = await page.GotoAsync($"{searchConfiguration.Subscriptions}{pageNumber}").ConfigureAwait(false);
+
+        return Unit.Value;
     }
 
-    public async Task<(int pageCount, string subDirectoryName)> PageInfoAsync()
+    private async Task<string?> GetPageHeaderAsync()
     {
-        page ??= await playwrightService.ConfigurePlaywrightAsync();
-        string? text = await NewSubscriptionWallpapersHeader.TextContentAsync();
+        await EnsurePageAsync().ConfigureAwait(false);
 
-        if (text is null) return (0, string.Empty);
-
-        return SubscriptionHeaderParser.Parse(text).Match(
-            pageInfo => (pageInfo.PageCount, pageInfo.SubDirectoryName),
-            error => throw new InvalidOperationException(error.Message));
+        return await NewSubscriptionWallpapersHeader.TextContentAsync().ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyCollection<string>> GetImagePageLinksAsync()
+    private async Task<IReadOnlyCollection<string>> GetTheImagePageLinksAsync()
     {
-        page ??= await playwrightService.ConfigurePlaywrightAsync();
+        await EnsurePageAsync().ConfigureAwait(false);
+
         var imagePreviews = await ImagePreviews.AllAsync().ConfigureAwait(false);
         List<string?> hrefs = [];
         foreach (var imagePreview in imagePreviews) hrefs.Add(await imagePreview.GetAttributeAsync("href").ConfigureAwait(false));
@@ -41,9 +60,17 @@ public sealed class SubscriptionsImagesListPage(IPlaywrightService playwrightSer
         return ImageLinkSelector.SelectWanted(hrefs);
     }
 
-    public async Task ClearAsync()
-        => await page.Locator("div")
-                     .Filter(new LocatorFilterOptions { HasText = " Clear All Subscriptions", })
-                     .GetByRole(AriaRole.Link, new LocatorGetByRoleOptions { Name = " Clear All Subscriptions", })
-                     .ClickAsync();
+    private async Task<Unit> ClickClearAllSubscriptionsAsync()
+    {
+        await EnsurePageAsync().ConfigureAwait(false);
+
+        await page.Locator("div")
+                  .Filter(new LocatorFilterOptions { HasText = " Clear All Subscriptions", })
+                  .GetByRole(AriaRole.Link, new LocatorGetByRoleOptions { Name = " Clear All Subscriptions", })
+                  .ClickAsync().ConfigureAwait(false);
+
+        return Unit.Value;
+    }
+
+    private async Task EnsurePageAsync() => page ??= await playwrightService.ConfigurePlaywrightAsync().ConfigureAwait(false);
 }

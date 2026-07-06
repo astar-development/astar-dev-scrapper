@@ -1,3 +1,4 @@
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scrapper.Models;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Tests.Unit.Models;
@@ -47,4 +48,36 @@ public sealed class GivenTheScrapeErrorFactory
     [Fact]
     public void when_creating_an_unexpected_error_then_the_message_is_the_exception_message() =>
         ScrapeErrorFactory.CreateUnexpectedError(new InvalidOperationException("boom")).Message.ShouldBe("boom");
+
+    [Fact]
+    public void when_creating_an_image_dimension_read_failed_error_then_the_path_is_preserved() =>
+        ScrapeErrorFactory.CreateImageDimensionReadFailed("/some/path/image.jpg", "could not read dimensions").Path.ShouldBe("/some/path/image.jpg");
+
+    [Fact]
+    public void when_creating_an_image_dimension_read_failed_error_then_the_message_is_preserved() =>
+        ScrapeErrorFactory.CreateImageDimensionReadFailed("/some/path/image.jpg", "could not read dimensions").Message.ShouldBe("could not read dimensions");
+
+    [Fact]
+    public void when_creating_an_import_failed_error_then_the_file_path_is_preserved() =>
+        ScrapeErrorFactory.CreateImportFailed("/some/path/export.json", "file not found").FilePath.ShouldBe("/some/path/export.json");
+
+    [Fact]
+    public void when_creating_an_import_failed_error_then_the_message_is_preserved() =>
+        ScrapeErrorFactory.CreateImportFailed("/some/path/export.json", "file not found").Message.ShouldBe("file not found");
+
+    [Fact]
+    public void when_creating_a_validation_failed_error_then_the_errors_are_preserved()
+    {
+        ValidationError[] errors = [new("Name", "Name is required"), new("Level", "Level must be between 1 and 3"),];
+
+        ScrapeErrorFactory.CreateValidationFailed(errors, "validation failed").Errors.ShouldBe(errors);
+    }
+
+    [Fact]
+    public void when_creating_a_validation_failed_error_then_the_message_is_preserved()
+    {
+        ValidationError[] errors = [new("Name", "Name is required"),];
+
+        ScrapeErrorFactory.CreateValidationFailed(errors, "validation failed").Message.ShouldBe("validation failed");
+    }
 }
