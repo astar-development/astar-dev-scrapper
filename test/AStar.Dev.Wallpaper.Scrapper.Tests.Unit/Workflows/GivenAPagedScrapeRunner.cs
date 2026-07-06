@@ -57,7 +57,7 @@ public sealed class GivenAPagedScrapeRunner : IAsyncLifetime
         return new PagedScrapeRunner(configurationSaver, delayStrategy);
     }
 
-    private static Task<Result<Unit, ScrapeError>> OkUnit() => Task.FromResult(Result.Success<Unit, ScrapeError>(Unit.Value));
+    private static Task<Result<global::AStar.Dev.FunctionalParadigm.Unit, ScrapeError>> OkUnit() => Task.FromResult(Result.Success<global::AStar.Dev.FunctionalParadigm.Unit, ScrapeError>(global::AStar.Dev.FunctionalParadigm.Unit.Value));
 
     private static Task<Result<IReadOnlyCollection<string>, ScrapeError>> OkLinks() => Task.FromResult(Result.Success<IReadOnlyCollection<string>, ScrapeError>([]));
 
@@ -110,13 +110,13 @@ public sealed class GivenAPagedScrapeRunner : IAsyncLifetime
             },
             () =>
             {
-                events.Add($"links:{events.Count(e => e.StartsWith("load:"))}");
+                events.Add($"links:{events.Count(e => e.StartsWith("load:", StringComparison.Ordinal))}");
 
                 return OkLinks();
             },
             (_, _) =>
             {
-                events.Add($"process:{events.Count(e => e.StartsWith("load:"))}");
+                events.Add($"process:{events.Count(e => e.StartsWith("load:", StringComparison.Ordinal))}");
 
                 return OkUnit();
             });
@@ -163,7 +163,7 @@ public sealed class GivenAPagedScrapeRunner : IAsyncLifetime
             {
                 loadedPages.Add(page);
 
-                return page == 2 ? Task.FromResult(Result.Failure<Unit, ScrapeError>(loadFailure)) : OkUnit();
+                return page == 2 ? Task.FromResult(Result.Failure<global::AStar.Dev.FunctionalParadigm.Unit, ScrapeError>(loadFailure)) : OkUnit();
             },
             OkLinks,
             (_, _) => OkUnit());
@@ -172,7 +172,7 @@ public sealed class GivenAPagedScrapeRunner : IAsyncLifetime
         var result = await sut.RunAsync(plan, TestContext.Current.CancellationToken);
 
         loadedPages.ShouldBe([1, 2,]);
-        result.ShouldBeOfType<Fail<Unit, ScrapeError>>().Error.ShouldBe(loadFailure);
+        result.ShouldBeOfType<Fail<global::AStar.Dev.FunctionalParadigm.Unit, ScrapeError>>().Error.ShouldBe(loadFailure);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public sealed class GivenAPagedScrapeRunner : IAsyncLifetime
         var result = await sut.RunAsync(plan, TestContext.Current.CancellationToken);
 
         processLinksCalled.ShouldBeFalse();
-        result.ShouldBeOfType<Fail<Unit, ScrapeError>>().Error.ShouldBe(linksFailure);
+        result.ShouldBeOfType<Fail<global::AStar.Dev.FunctionalParadigm.Unit, ScrapeError>>().Error.ShouldBe(linksFailure);
     }
 
     [Fact]
@@ -216,13 +216,13 @@ public sealed class GivenAPagedScrapeRunner : IAsyncLifetime
                 return OkUnit();
             },
             OkLinks,
-            (_, _) => Task.FromResult(Result.Failure<Unit, ScrapeError>(processFailure)));
+            (_, _) => Task.FromResult(Result.Failure<global::AStar.Dev.FunctionalParadigm.Unit, ScrapeError>(processFailure)));
         var sut = BuildSut(new NoOpDelayStrategy(), out _);
 
         var result = await sut.RunAsync(plan, TestContext.Current.CancellationToken);
 
         loadedPages.ShouldBe([1,]);
-        result.ShouldBeOfType<Fail<Unit, ScrapeError>>().Error.ShouldBe(processFailure);
+        result.ShouldBeOfType<Fail<global::AStar.Dev.FunctionalParadigm.Unit, ScrapeError>>().Error.ShouldBe(processFailure);
     }
 
     [Fact]
@@ -257,7 +257,7 @@ public sealed class GivenAPagedScrapeRunner : IAsyncLifetime
 
         var result = await sut.RunAsync(plan, TestContext.Current.CancellationToken);
 
-        result.ShouldBeOfType<Ok<Unit, ScrapeError>>();
+        result.ShouldBeOfType<Ok<global::AStar.Dev.FunctionalParadigm.Unit, ScrapeError>>();
         pageWorkHappened.ShouldBeFalse();
         await delayStrategy.DidNotReceive().DelayAsync(Arg.Any<DelayKind>(), Arg.Any<CancellationToken>());
         await contextFactory.DidNotReceive().CreateDbContextAsync(Arg.Any<CancellationToken>());

@@ -8,8 +8,6 @@ public static class ScrapperConstants
 
     public const float ThumbnailCornerRadius = 20f;
 
-    public static readonly TimeSpan PageNavigationDelay = TimeSpan.FromSeconds(2);
-
     public static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(10);
 
     public static readonly TimeSpan ImageAlreadyDownloadedDelay = TimeSpan.FromMilliseconds(500);
