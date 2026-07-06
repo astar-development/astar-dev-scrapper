@@ -10,10 +10,13 @@ public sealed class RandomDelayStrategy(ScrapeConfiguration scrapeConfiguration)
         => delayKind switch
         {
             DelayKind.CategoryUpToDate => Task.Delay(TimeSpan.FromSeconds(new Random().Next(1, 5)), cancellationToken),
-            DelayKind.PageNavigation => Task.Delay(ScrapperConstants.PageNavigationDelay, cancellationToken),
+            DelayKind.PageNavigation => Task.Delay(TimeSpan.FromSeconds(RandomImagePauseSeconds()), cancellationToken),
             DelayKind.ImageAlreadyDownloaded => Task.Delay(ScrapperConstants.ImageAlreadyDownloadedDelay, cancellationToken),
-            DelayKind.BeforeImage => Task.Delay(TimeSpan.FromSeconds(Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4)), cancellationToken),
+            DelayKind.BeforeImage => Task.Delay(TimeSpan.FromSeconds(RandomImagePauseSeconds()), cancellationToken),
             DelayKind.Retry => Task.Delay(ScrapperConstants.RetryDelay, cancellationToken),
             _ => throw new ArgumentOutOfRangeException(nameof(delayKind), delayKind, "Unrecognised delay kind."),
         };
+
+    private int RandomImagePauseSeconds()
+        => Random.Shared.Next(scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds, scrapeConfiguration.SearchConfiguration.ImagePauseInSeconds + 4);
 }

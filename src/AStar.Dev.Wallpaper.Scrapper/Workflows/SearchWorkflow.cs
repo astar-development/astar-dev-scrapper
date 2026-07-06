@@ -8,7 +8,7 @@ using Serilog;
 
 namespace AStar.Dev.Wallpaper.Scrapper.Workflows;
 
-public sealed class SearchWorkflow(SearchResultsPage searchResultsPage, ScrapeConfiguration injectedScrapeConfiguration, ConfigurationSaver configurationSaver, ImagePageService imagePageService, IDirectoryHelper directoryHelper, ILogger logger, IDelayStrategy delayStrategy, TimeProvider timeProvider)
+public sealed class SearchWorkflow(SearchResultsPage searchResultsPage, ScrapeConfiguration injectedScrapeConfiguration, ConfigurationSaver configurationSaver, ImagePageService imagePageService, IDirectoryHelper directoryHelper, ILogger logger, IDelayStrategy delayStrategy, TimeProvider timeProvider, PagedScrapeRunner pagedScrapeRunner)
 {
     private SearchProgress progress = null!;
 
@@ -84,26 +84,22 @@ public sealed class SearchWorkflow(SearchResultsPage searchResultsPage, ScrapeCo
         long startTimestamp = timeProvider.GetTimestamp();
         logger.Debug("About to visit the specific {Category} pages now...", searchCategory.Name);
 
-        for (int currentPageNumber = progress.SearchConfiguration.StartingPageNumber; currentPageNumber <= progress.SearchConfiguration.TotalPages; currentPageNumber++)
-        {
-            await delayStrategy.DelayAsync(DelayKind.PageNavigation, ct).ConfigureAwait(false);
-            logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", currentPageNumber, progress.SearchConfiguration.TotalPages, searchCategory.Name);
-            progress = progress with { SearchConfiguration = progress.SearchConfiguration with { StartingPageNumber = currentPageNumber, }, };
-            searchCategory.LastPageVisited = currentPageNumber;
+        var plan = PagedScrapePlanFactory.Create(
+            progress.SearchConfiguration.StartingPageNumber,
+            progress.SearchConfiguration.TotalPages,
+            pageNumber => RecordCategoryPageProgress(searchCategory, pageNumber),
+            pageNumber => searchResultsPage.LoadSearchPageAsync(combinedSearchString, pageNumber),
+            () => searchResultsPage.ImagePageLinksAsync(),
+            (links, innerCt) => imagePageService.GetTheImagePagesAsync(links, searchCategory.Id, searchCategory.Name, innerCt));
 
-            var pageResult = await configurationSaver.SaveUpdatedConfigurationAsync()
-                .BindAsync(_ => searchResultsPage.LoadSearchPageAsync(combinedSearchString, currentPageNumber))
-                .BindAsync(_ => searchResultsPage.ImagePageLinksAsync())
-                .BindAsync(links => imagePageService.GetTheImagePagesAsync(links, searchCategory.Id, searchCategory.Name, ct))
-                .ConfigureAwait(false);
+        return (await pagedScrapeRunner.RunAsync(plan, ct).ConfigureAwait(false))
+            .Tap(_ => logger.Information("Completed visiting the {Category}. Total time: {CategoryVisitDuration}", searchCategory.Name, timeProvider.GetElapsedTime(startTimestamp)));
+    }
 
-            var pageFailed = pageResult.Match(_ => false, _ => true);
-
-            if (pageFailed) return pageResult;
-        }
-
-        logger.Information("Completed visiting the {Category}. Total time: {CategoryVisitDuration}", searchCategory.Name, timeProvider.GetElapsedTime(startTimestamp));
-
-        return Unit.Value;
+    private void RecordCategoryPageProgress(Category searchCategory, int pageNumber)
+    {
+        logger.Debug("About to visit page {page} (of {totalPages}) for {Category} now...", pageNumber, progress.SearchConfiguration.TotalPages, searchCategory.Name);
+        progress = progress with { SearchConfiguration = progress.SearchConfiguration with { StartingPageNumber = pageNumber, }, };
+        searchCategory.LastPageVisited = pageNumber;
     }
 }

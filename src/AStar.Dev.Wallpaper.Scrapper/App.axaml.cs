@@ -49,6 +49,7 @@ public partial class App : Application
 
                 return ctx.ScrapeConfiguration.GetScrapeConfigurations().ToAppModel();
             })
+            .AddSingleton(sp => sp.GetRequiredService<ScrapeConfiguration>().SearchConfiguration)
             .AddSingleton<LogBroadcaster>()
             .AddSingleton<ImageBroadcaster>()
             .AddSingleton(sp =>
@@ -91,6 +92,11 @@ public partial class App : Application
             .AddSingleton<IPlaywrightService, PlaywrightService>()
             .AddTransient<SearchWorkflow>()
             .AddTransient<SearchResultsPage>()
+            .AddTransient<PagedScrapeRunner>()
+            .AddTransient<SubscriptionsImagesListPage>()
+            .AddTransient<SubscriptionsWorkflow>()
+            .AddTransient<ITopWallpapersPage, TopWallpapersPage>()
+            .AddTransient<TopWallpapersWorkflow>()
             .AddTransient<IImportExportService, ImportExportService>()
             .AddTransient<IFileSystem, RealFileSystem>()
             .AddTransient<ScrapeConfigurationService>()

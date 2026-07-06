@@ -12,8 +12,5 @@ public sealed class ScrapperConstantsShould
     public void HaveTheExpectedThumbnailCornerRadius() => ScrapperConstants.ThumbnailCornerRadius.ShouldBe(20f);
 
     [Fact]
-    public void HaveTheExpectedPageNavigationDelay() => ScrapperConstants.PageNavigationDelay.ShouldBe(TimeSpan.FromSeconds(2));
-
-    [Fact]
     public void HaveTheExpectedRetryDelay() => ScrapperConstants.RetryDelay.ShouldBe(TimeSpan.FromSeconds(10));
 }
