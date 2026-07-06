@@ -106,14 +106,7 @@ public partial class MainWindow : Window, IDisposable
         try
         {
             _ = await ScrapeSiteWorkflowDecision.DecideAsync(
-                ResetCancellationTokenSource().Tap(
-                    onSuccess: DisableControlsAndClearStatus,
-                    onFailure: ex =>
-                    {
-                        logger.Error(ex, "Failed to reset cancellation token source");
-                        UpdateStatus($"Error: {ex.Message}");
-                    }
-                ),
+                ResetCancellationTokenSource().Tap(onSuccess: DisableControlsAndClearStatus, onFailure: LogSetupFailure),
                 RunScrapeWorkflowAsync
             );
         }
@@ -133,6 +126,12 @@ public partial class MainWindow : Window, IDisposable
         cts = new CancellationTokenSource();
 
         return cts.Token;
+    }
+
+    private void LogSetupFailure(Exception exception)
+    {
+        logger.Error(exception, "Failed to reset cancellation token source");
+        UpdateStatus($"Error: {exception.Message}");
     }
 
     private void DisableControlsAndClearStatus(CancellationToken ct)

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.IO.Abstractions;
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scrapper.Classifications;
@@ -33,7 +34,7 @@ public partial class App : Application
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
-    public override void OnFrameworkInitializationCompleted()
+    public override async void OnFrameworkInitializationCompleted()
     {
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {
@@ -86,9 +87,9 @@ public partial class App : Application
             .AddTransient<ConfigurationSaver>()
             .AddTransient<DatabaseInitializationService>()
             .AddTransient<ScrapeConfigurationViewModel>()
-            .AddTransient<ScrapeConfigurationView>()
-            .AddTransient<ClassificationsView>()
-            .AddTransient<TagsView>()
+            .AddViewFactory<ScrapeConfigurationView>()
+            .AddViewFactory<ClassificationsView>()
+            .AddViewFactory<TagsView>()
             .AddSingleton<IPlaywrightService, PlaywrightService>()
             .AddTransient<SearchWorkflow>()
             .AddTransient<SearchResultsPage>()
@@ -104,10 +105,7 @@ public partial class App : Application
             .AddTransient<ImagePage>()
             .AddSingleton<IDirectoryHelper, DirectoryHelper>()
             .AddSingleton<IDelayStrategy, RandomDelayStrategy>()
-            .AddTransient<Func<TagsView>>(sp => () => sp.GetRequiredService<TagsView>())
-            .AddTransient<Func<ClassificationsView>>(sp => () => sp.GetRequiredService<ClassificationsView>())
             .AddTransient<MainWindow>()
-            .AddTransient<Func<ScrapeConfigurationView>>(sp => () => sp.GetRequiredService<ScrapeConfigurationView>())
             .AddTransient(_ => TimeProvider.System)
             .AddTransient<IImageSaver, ImageSaver>()
             .AddTransient<IImageDimensionReader, ImageDimensionReader>()
@@ -115,19 +113,31 @@ public partial class App : Application
 
         _host = builder.Build();
 
-        Task.Run(async () =>
-            await _host.Services.GetRequiredService<DatabaseInitializationService>().InitialiseAsync()
-        ).GetAwaiter().GetResult();
+        await _host.Services.GetRequiredService<DatabaseInitializationService>().InitialiseAsync();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = _host.Services.GetRequiredService<MainWindow>();
             desktop.Exit += OnExit;
+            desktop.MainWindow.Show();
         }
 
         _host.Start();
+        SurfaceConfigurationErrors();
         base.OnFrameworkInitializationCompleted();
     }
+
+    private void SurfaceConfigurationErrors()
+        => ScrapeConfigurationValidator.Validate(_host.Services.GetRequiredService<ScrapeConfiguration>())
+            .Match(_ => Unit.Value, errors =>
+            {
+                var broadcaster = _host.Services.GetRequiredService<LogBroadcaster>();
+
+                foreach (var error in errors)
+                    broadcaster.Broadcast($"Configuration error - {error.Property}: {error.Message}");
+
+                return Unit.Value;
+            });
 
     private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
         => _host.StopAsync().GetAwaiter().GetResult();
